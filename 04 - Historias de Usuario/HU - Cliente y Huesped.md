@@ -1,11 +1,10 @@
-# HU — Cliente y Huésped (versión 3)
+# HU — Cliente y Huésped
 
 > **Rol:** Cliente/Huésped (`HUESPED`)
 > **Plataforma:** Web pública y App Android
 > **Prefijo:** `HU-HUE`
 > **Total de historias:** 18 (Nivel 1: 17 · Nivel 2: 1)
-> **Referencias:** Documentación V3 / 01 — Alcance (secciones 5.A y 5.E)
-> **Numeración:** nueva en la versión 3. La correspondencia con la versión 2 está en cada historia ("Reemplaza a") y en el índice.
+> **Referencias:** 01 — Alcance (secciones 5.A y 5.E)
 
 Recordatorio del rol: el **Cliente** reserva en la web pública **sin iniciar sesión**. El **Huésped** entra a la **app** con su **correo + un código** que le llega por email.
 
@@ -32,7 +31,6 @@ Recordatorio del rol: el **Cliente** reserva en la web pública **sin iniciar se
 
 **Depende de:** HU-ADM-08
 **Reglas relacionadas:** RN-APP-008, RN-RES-014 (documento 10)
-**Reemplaza a:** HU-HUE-01 (v2)
 
 ---
 
@@ -56,7 +54,6 @@ Recordatorio del rol: el **Cliente** reserva en la web pública **sin iniciar se
 
 **Depende de:** HU-ADM-03
 **Reglas relacionadas:** RN-HAB-010, RN-TAR-005 (documento 10)
-**Reemplaza a:** HU-HUE-02 (v2)
 
 ---
 
@@ -81,7 +78,6 @@ Recordatorio del rol: el **Cliente** reserva en la web pública **sin iniciar se
 
 **Depende de:** HU-ADM-03
 **Reglas relacionadas:** RN-HAB-001, RN-RES-002, RN-RES-005, RN-RES-006, RN-RES-007, RN-RES-008 (documento 10)
-**Reemplaza a:** HU-HUE-03 (v2)
 **Notas técnicas:** el cálculo de disponibilidad es el mismo que usan Recepción y la API del canal; conviene una sola función en el backend.
 
 ---
@@ -106,7 +102,6 @@ Recordatorio del rol: el **Cliente** reserva en la web pública **sin iniciar se
 
 **Depende de:** HU-HUE-03, HU-ADM-03, HU-ADM-06
 **Reglas relacionadas:** RN-TAR-001, RN-TAR-002, RN-TAR-005, RN-TAR-006, RN-TAR-007, RN-TAR-008, RN-TAR-009 (documento 10)
-**Reemplaza a:** HU-HUE-04 (v2)
 
 ---
 
@@ -134,7 +129,6 @@ Recordatorio del rol: el **Cliente** reserva en la web pública **sin iniciar se
 
 **Depende de:** HU-HUE-04
 **Reglas relacionadas:** RN-PAG-009, RN-RES-001, RN-RES-002, RN-RES-009, RN-RES-010, RN-RES-011, RN-RES-018, RN-RES-019, RN-TAR-007 (documento 10)
-**Reemplaza a:** HU-HUE-05 (v2)
 
 ---
 
@@ -159,7 +153,6 @@ Recordatorio del rol: el **Cliente** reserva en la web pública **sin iniciar se
 
 **Depende de:** HU-HUE-05
 **Reglas relacionadas:** RN-CAN-013, RN-PAG-001, RN-PAG-002, RN-PAG-003, RN-PAG-004, RN-PAG-005, RN-PAG-006, RN-PAG-014, RN-RES-004, RN-RES-012 (documento 10)
-**Reemplaza a:** HU-HUE-06 (v2)
 **Notas técnicas:** se usa Stripe Checkout; la cancelación a los 30 minutos es un proceso programado en el backend.
 
 ---
@@ -184,7 +177,6 @@ Recordatorio del rol: el **Cliente** reserva en la web pública **sin iniciar se
 
 **Depende de:** HU-HUE-06, HU-REC-04
 **Reglas relacionadas:** RN-NOT-003, RN-NOT-005, RN-RES-009 (documento 10)
-**Reemplaza a:** HU-HUE-07 (v2)
 
 ---
 
@@ -211,7 +203,6 @@ Recordatorio del rol: el **Cliente** reserva en la web pública **sin iniciar se
 
 **Depende de:** HU-HUE-05, HU-REC-04
 **Reglas relacionadas:** RN-APP-001, RN-APP-002, RN-APP-003, RN-APP-010, RN-APP-011 (documento 10)
-**Reemplaza a:** HU-HUE-08 (v2)
 **Notas técnicas:** el código se guarda con hash; al verificarlo se emite un JWT con rol `HUESPED`.
 
 ---
@@ -237,7 +228,6 @@ Recordatorio del rol: el **Cliente** reserva en la web pública **sin iniciar se
 
 **Depende de:** HU-HUE-08, HU-REC-12
 **Reglas relacionadas:** RN-APP-005, RN-APP-011, RN-SEG-001, RN-SEG-006 (documento 10)
-**Reemplaza a:** HU-HUE-09 (v2), HU-HUE-12 (v2)
 
 ---
 
@@ -263,7 +253,6 @@ Recordatorio del rol: el **Cliente** reserva en la web pública **sin iniciar se
 
 **Depende de:** HU-HUE-09, HU-ADM-05
 **Reglas relacionadas:** RN-APP-005, RN-NOT-006, RN-RS-005, RN-RS-006 (documento 10)
-**Reemplaza a:** HU-HUE-13 (v2)
 
 ---
 
@@ -288,8 +277,7 @@ Recordatorio del rol: el **Cliente** reserva en la web pública **sin iniciar se
 
 **Depende de:** HU-HUE-10, HU-RS-03
 **Reglas relacionadas:** RN-NOT-007, RN-RS-004, RN-RS-010 (documento 10)
-**Reemplaza a:** HU-HUE-14 (v2)
-**Notas técnicas:** usa el evento en tiempo real "cambio de estado del pedido". La app se conecta al WebSocket con su propio JWT de huésped, sin pasar por el BFF; esto se describirá en el documento 14 (versión 3).
+**Notas técnicas:** usa el evento en tiempo real "cambio de estado del pedido". La app se conecta al WebSocket con su propio JWT de huésped, sin pasar por el BFF; esto se describirá en el documento 14.
 
 ---
 
@@ -313,7 +301,6 @@ Recordatorio del rol: el **Cliente** reserva en la web pública **sin iniciar se
 
 **Depende de:** HU-HUE-09
 **Reglas relacionadas:** RN-APP-005, RN-LIM-005, RN-LIM-006, RN-LIM-013, RN-NOT-008 (documento 10)
-**Reemplaza a:** HU-HUE-15 (v2)
 
 ---
 
@@ -337,7 +324,6 @@ Recordatorio del rol: el **Cliente** reserva en la web pública **sin iniciar se
 
 **Depende de:** HU-HUE-09
 **Reglas relacionadas:** RN-APP-005, RN-LIM-006, RN-LIM-007, RN-NOT-008 (documento 10)
-**Reemplaza a:** HU-HUE-16 (v2)
 **Notas técnicas:** la lista de artículos y su cantidad máxima se cargan en los datos iniciales del sistema.
 
 ---
@@ -361,7 +347,6 @@ Recordatorio del rol: el **Cliente** reserva en la web pública **sin iniciar se
 
 **Depende de:** HU-HUE-12, HU-HUE-13, HU-MYL-05
 **Reglas relacionadas:** RN-LIM-003, RN-LIM-008 (documento 10)
-**Reemplaza a:** HU-HUE-17 (v2)
 **Notas técnicas:** el cambio de estado de una solicitud no es uno de los 4 eventos en tiempo real; el huésped se entera por la notificación push de HU-HUE-17.
 
 ---
@@ -387,7 +372,6 @@ Recordatorio del rol: el **Cliente** reserva en la web pública **sin iniciar se
 
 **Depende de:** HU-HUE-09, HU-RS-06
 **Reglas relacionadas:** RN-APP-013, RN-PAG-011, RN-PAG-021, RN-SEG-001, RN-SEG-006, RN-TAR-009 (documento 10)
-**Reemplaza a:** HU-HUE-19 (v2)
 
 ---
 
@@ -414,7 +398,6 @@ Recordatorio del rol: el **Cliente** reserva en la web pública **sin iniciar se
 
 **Depende de:** HU-HUE-15, HU-REC-15 (usa el mismo servicio de check-out del backend que HU-REC-14)
 **Reglas relacionadas:** RN-APP-005, RN-APP-006, RN-APP-008, RN-FAC-005, RN-FAC-008, RN-HAB-008, RN-LIM-009, RN-PAG-001, RN-PAG-005, RN-PAG-013, RN-PAG-014, RN-RES-015, RN-RES-021, RN-RES-022, RN-RS-011 (documento 10)
-**Reemplaza a:** HU-HUE-20 (v2), HU-HUE-21 (v2)
 **Notas técnicas:** el check-out de la app y el de Recepción deben usar el mismo servicio del backend para que los efectos sean idénticos.
 
 ---
@@ -442,7 +425,6 @@ Recordatorio del rol: el **Cliente** reserva en la web pública **sin iniciar se
 
 **Depende de:** HU-HUE-08, HU-RS-03, HU-MYL-05
 **Reglas relacionadas:** RN-NOT-001, RN-NOT-002, RN-NOT-004 (documento 10)
-**Reemplaza a:** HU-HUE-22 (v2)
 **Notas técnicas:** Spring → Expo Push → FCM. Expo Go no recibe push: se prueba con un *development build*.
 
 ---
@@ -469,4 +451,3 @@ Recordatorio del rol: el **Cliente** reserva en la web pública **sin iniciar se
 
 **Depende de:** HU-HUE-08, HU-ADM-11
 **Reglas relacionadas:** RN-APP-012 (documento 10)
-**Reemplaza a:** HU-HUE-18 (v2)

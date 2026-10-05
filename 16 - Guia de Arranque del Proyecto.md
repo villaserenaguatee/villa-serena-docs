@@ -58,7 +58,7 @@ git clone https://github.com/villaserenaguate/<tu-repositorio>.git
    copy .env.example .env
    ```
    (En PowerShell o Git Bash: `cp .env.example .env`).
-2. Abre `.env` con VS Code o el Bloc de notas y reemplaza cada `<TU_...>` por tu valor. **Los símbolos `<` y `>` no van:** se reemplaza todo.
+2. Abre `.env` con VS Code o el Bloc de notas y sustituye cada `<TU_...>` por tu valor. **Los símbolos `<` y `>` no van:** se sustituye todo.
    ```env
    # Antes
    MINIO_ROOT_PASSWORD=<TU_CONTRASENA_MINIO>

@@ -1,12 +1,11 @@
-# 13 — Plan de Trabajo (versión 3)
+# 13 — Plan de Trabajo
 
 > **Proyecto:** PMS para el hotel boutique ficticio "Villa Serena"
 > **Fecha:** 1 de octubre de 2026
-> **Estado:** cambios T-01 a T-10 y R-01 a R-04 aprobados; calendario con bloques de hasta 3 h por día seguro. La diferencia de 6,5 h se acepta como margen de error; los tres recortes restantes se deciden el martes 6.
+> **Estado:** plan aprobado; calendario con bloques de hasta 3 h por día seguro. La diferencia de 6,5 h se acepta como margen de error; los tres recortes restantes se deciden el martes 6.
 > **Periodo:** del jueves 1 al sábado 10 de octubre de 2026
 > **Hito:** sábado 10 de octubre: el flujo completo funcionando en local con Docker (no es la entrega final)
-> **Reemplaza a:** 13 — Objetivos del Proyecto (versión 2, carpeta "Documentación Definitiva")
-> **Basado en:** 01 — Alcance (v3), 04 — Historias de Usuario (v3) y 14 — Tecnologías y Arquitectura (v3)
+> **Basado en:** 01 — Alcance, 04 — Historias de Usuario y 14 — Tecnologías y Arquitectura
 
 ---
 
@@ -68,8 +67,8 @@ Las tareas técnicas (no son HU) se estimaron aparte, con el mismo criterio.
 | Balance de estimaciones | Horas |
 |---|---:|
 | Objetivos 0 a 5 completos | 125,5 |
-| Recorte previo de 8 HU del objetivo 5 | −13 |
-| Recorte aprobado ahora: crear empleados e indicadores | −4 |
+| Exclusión del objetivo 5: HU-ADM-02 a HU-ADM-08 y HU-ADM-10 | −13 |
+| Exclusión del objetivo 5: crear empleados e indicadores | −4 |
 | **Construcción estimada del plan activo (0 a 4)** | **108,5** |
 | Capacidad nominal para construir | 102 |
 | **Exceso aceptado como margen de error** | **6,5** |
@@ -86,7 +85,7 @@ Organización de GitHub: `villaserenaguate`.
 
 | Repositorio | Contenido | Responsable |
 |---|---|---|
-| [villa-serena-docs](https://github.com/villaserenaguate/villa-serena-docs) | Documentación V3 y diseño breve de la integración con canales (ALC-CM-01) | Josué |
+| [villa-serena-docs](https://github.com/villaserenaguate/villa-serena-docs) | Documentación y diseño breve de la integración con canales (ALC-CM-01) | Josué |
 | [villa-serena-infra](https://github.com/villaserenaguate/villa-serena-infra) | `docker-compose.dev.yml` (PostgreSQL, Mailpit, MinIO, Prometheus y Grafana), configuración de Prometheus, tablero de Grafana y `.env.example`. Después del hito: VPS, Cloudflare Tunnel y backups | Josué |
 | [villa-serena-api](https://github.com/villaserenaguate/villa-serena-api) | Spring Boot, migraciones y datos iniciales de Flyway y el **contrato OpenAPI** (`openapi.yaml`) | Pablo y Hugo (las migraciones, Josué) |
 | [villa-serena-web](https://github.com/villaserenaguate/villa-serena-web) | Next.js: web pública, panel privado, BFF y canal simulado | Kim y Alex |
@@ -146,7 +145,7 @@ Capas: **BD** (Flyway y PostgreSQL) · **API** (Spring) · **Web** (Next.js) · 
 | Infra | Preparar los 5 repositorios: rama `main` protegida, README y `.env.example` | Alex | 1 |
 | Infra | `docker-compose.dev.yml` con PostgreSQL 17, Mailpit, MinIO, Prometheus y Grafana; tablero mínimo de Grafana (AD-15) | Josué | 2 |
 | BD | Esquema completo de Nivel 1 en Flyway, con las restricciones del documento 14, sección 5 (`EXCLUDE`, únicos) | Josué | 3 |
-| BD | Datos iniciales (AD-18): canales y claves, artículos, datos del hotel y fiscales, serie de la factura y usuarios de prueba con dos Administradores. Por el recorte del objetivo 5, también tipos de habitación, habitaciones, menú, temporadas y ajuste de fin de semana | Josué | 2 |
+| BD | Datos iniciales (AD-18): canales y claves, artículos, datos del hotel y fiscales, serie de la factura y usuarios de prueba con dos Administradores. Para el hito, también tipos de habitación, habitaciones, menú, temporadas y ajuste de fin de semana | Josué | 2 |
 | API | Contrato OpenAPI (endpoints y DTO), `openapi.yaml`: 0 a 2 el viernes 2 (0,5 h por persona); 3A a 4 el lunes 5 (0,5 h por persona) | Josué, Pablo y Hugo | 3 (1 c/u) |
 | API | Proyecto base: Spring Boot 4.1, Actuator + Micrometer, springdoc, CORS, manejo de errores, zona horaria (AD-19) e historial de estados | Hugo | 2 |
 | API | Spring Security + JWT (15 min y refresh de 7 días), inicio y cierre de sesión, contraseña temporal, permisos por rol (documento 09) y primer Administrador por variables de entorno (HU-EMP-01, HU-EMP-02) | Pablo | 4 |
@@ -274,9 +273,9 @@ La estimación base del objetivo es 18 h; las 0,5 h adicionales son el registro 
 
 ### Objetivo 5 — Administración (fuera del hito)
 
-**Recorte aprobado:** se quitan del hito HU-ADM-01 a HU-ADM-10. Los empleados, catálogos, tarifas y datos del hotel vienen en Flyway; no se construyen pantallas de administración ni indicadores de negocio. **Grafana permanece en el objetivo 0 y el canal simulado en el objetivo 1.**
+**Alcance para el hito:** no se incluyen pantallas de administración ni indicadores en este hito (HU-ADM-01 a HU-ADM-10). Los empleados, catálogos, tarifas y datos del hotel vienen en Flyway; no se construyen pantallas de administración ni indicadores de negocio. **Grafana permanece en el objetivo 0 y el canal simulado en el objetivo 1.**
 
-**Horas activas: 0.** El recorte inicial ahorró 13 h; quitar también crear empleados e indicadores ahorra otras 4 h. Las historias siguen en el alcance general.
+**Horas activas: 0.** Las historias se conservan en el catálogo general de historias de usuario.
 
 Si más adelante se retoman esas últimas 4 h: Carlos mantiene el API de empleados (1 h) y de indicadores (1 h); Alex sus pantallas (1 h cada una). No tienen fecha ni prompt activo para este hito.
 
@@ -424,7 +423,7 @@ Regla: se corta **desde el objetivo 6 hacia arriba**. Los objetivos 0 a 4 son el
 | # | Recorte | Ahorro | Qué pasa en su lugar |
 |---|---|---|---|
 | 1 | **Objetivo 6 completo** (las 5 HU de Nivel 2) | 8 h | Se hace solo si sobra tiempo |
-| 2 | **Objetivo 5 en su mínimo:** HU-ADM-02 a HU-ADM-08 y HU-ADM-10 | 13 h | Tipos de habitación, habitaciones, menú, temporadas, ajuste de fin de semana y datos del hotel van en los **datos iniciales de Flyway**, sin pantalla. Este era el primer recorte; se completa con la fila siguiente. Incidencias: el Administrador no las consulta |
+| 2 | **Objetivo 5 en su mínimo:** HU-ADM-02 a HU-ADM-08 y HU-ADM-10 | 13 h | Tipos de habitación, habitaciones, menú, temporadas, ajuste de fin de semana y datos del hotel van en los **datos iniciales de Flyway**, sin pantalla. Incidencias: el Administrador no las consulta |
 | 3 | **Resto del objetivo 5:** HU-ADM-01 y HU-ADM-09 | 4 h | Empleados en datos iniciales, sin pantalla para crearlos ni indicadores de negocio. Grafana se mantiene en el objetivo 0 |
 
 ### 9.2 Recortes de reserva: decisión el martes 6 (en este orden)
@@ -502,5 +501,3 @@ La tabla conserva la trazabilidad de las 68 HU: **53 activas**, 10 de Nivel 1 re
 | 3 | **Supuestos S-01 a S-04** y si basta el PDF de 80 mm sin impresora térmica: confirmar con el catedrático | Josué | Jue 8 |
 | 4 | **Documento 15:** comenzar por los prompts del objetivo 0; el arranque opcional del jueves depende de terminarlos hoy | Josué y equipo | Jue 1, antes de arrancar |
 | 5 | Decidir si se aplica algún recorte de reserva según el avance y la disponibilidad opcional real | Equipo | Mar 6, dentro del bloque diario |
-
-**Resuelto:** documentos 14 y 00 alineados con los 5 repositorios. El índice de HU y la carpeta Documentación Definitiva no se modifican.

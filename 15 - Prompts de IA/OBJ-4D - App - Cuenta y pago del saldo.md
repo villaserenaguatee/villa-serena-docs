@@ -28,7 +28,7 @@ Router; no cambies de SDK.
 
 Objetivo: las pantallas de la cuenta y del check-out del huésped CON DATOS DE
 PRUEBA. El contrato de estos endpoints se congela el lunes; por eso los datos van
-en un solo archivo (lib/mocks/cuenta.ts) con tipos propios, fáciles de reemplazar.
+en un solo archivo (lib/mocks/cuenta.ts) con tipos propios, fáciles de sustituir.
 
 1. Mi cuenta (HU-HUE-15), pantalla de solo lectura:
    - Cargo por alojamiento y cargos adicionales con fecha, concepto y monto.
@@ -69,7 +69,7 @@ Primero muéstrame el plan de archivos; después créalos por pasos.
 Seguimos en villa-serena-movil. Responde en español. Copia el openapi.yaml más
 reciente y regenera los tipos.
 
-Reemplaza los datos de prueba de lib/mocks/cuenta.ts por las llamadas reales al
+Sustituye los datos de prueba de lib/mocks/cuenta.ts por las llamadas reales al
 API (con el JWT del huésped) para la cuenta, iniciar el pago del saldo, el
 check-out y la factura, según openapi.yaml. Muestra los errores del API con su
 mensaje en español. Al terminar, borra el archivo de datos de prueba.

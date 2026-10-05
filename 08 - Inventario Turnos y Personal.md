@@ -1,10 +1,9 @@
-# 08 — Inventario, Turnos y Personal (versión 3)
+# 08 — Inventario, Turnos y Personal
 
 > **Proyecto:** Property Management System (PMS) para Hoteles Boutique — Hotel ficticio "Villa Serena"
 > **Estado:** 📝 Para revisión del equipo
 > **Fecha:** 1 de octubre de 2026
-> **Basado en:** Documentación V3 / 01 — Alcance (versión 3), 04 — Historias de Usuario (versión 3) y 07 — Estados (versión 3)
-> **Reemplaza a:** 08 — Inventario, Turnos y Personal, versión 2 (carpeta "Documentación Definitiva")
+> **Basado en:** 01 — Alcance, 04 — Historias de Usuario y 07 — Estados
 > **Documentos relacionados:** 02 — Definición de Roles · 09 — Matriz de Permisos
 
 ---
@@ -12,13 +11,12 @@
 ## Índice
 
 1. [Propósito](#1-propósito)
-2. [Decisiones de la versión 3](#2-decisiones-de-la-versión-3)
+2. [Decisiones de diseño](#2-decisiones-de-diseño)
 3. [Personal (Nivel 1)](#3-personal-nivel-1)
 4. [Perfil del huésped (Nivel 1)](#4-perfil-del-huésped-nivel-1)
 5. [Catálogo de artículos para el huésped (Nivel 1)](#5-catálogo-de-artículos-para-el-huésped-nivel-1)
 6. [Turnos (Nivel 2)](#6-turnos-nivel-2)
 7. [Inventario aislado (Nivel 2)](#7-inventario-aislado-nivel-2)
-8. [Qué cambió respecto a la versión 2](#8-qué-cambió-respecto-a-la-versión-2)
 
 ---
 
@@ -26,7 +24,7 @@
 
 Define los datos y el funcionamiento de **personal**, **perfil del huésped**, **catálogo de artículos**, **turnos** e **inventario**.
 
-En la versión 3, estos módulos **no se conectan entre sí ni con la operación**: no hay consumo de insumos, ni repuestos, ni reportes de faltantes, y los turnos no afectan el acceso. Las reglas con ID están en el documento **10 — Reglas de Negocio**; aquí se describe el modelo.
+Estos módulos **no se conectan entre sí ni con la operación**: no hay consumo de insumos, ni repuestos, ni reportes de faltantes, y los turnos no afectan el acceso. Las reglas con ID están en el documento **10 — Reglas de Negocio**; aquí se describe el modelo.
 
 | Módulo | Nivel | Historias |
 |---|---|---|
@@ -38,7 +36,7 @@ En la versión 3, estos módulos **no se conectan entre sí ni con la operación
 
 ---
 
-## 2. Decisiones de la versión 3
+## 2. Decisiones de diseño
 
 | # | Decisión | Origen |
 |---|---|---|
@@ -185,17 +183,3 @@ Cada movimiento guarda fecha, hora, tipo, cantidad, motivo y responsable, y se p
 ### 7.3 Lista de productos
 
 Muestra stock actual, stock mínimo y categoría. Los productos con stock **igual o menor** al mínimo llevan la marca **"Stock bajo"**. Se puede filtrar por categoría y por "solo stock bajo". No hay alertas ni reportes de faltantes.
-
----
-
-## 8. Qué cambió respecto a la versión 2
-
-| Tema | Versión 2 | Versión 3 |
-|---|---|---|
-| Inventario | Integrado: consumos de limpieza, de entrega de artículos y de repuestos; ajustes; alertas; reportes de faltantes | **Aislado y Nivel 2**: solo entradas y salidas manuales del Administrador; marca "Stock bajo" |
-| Catálogo de artículos | Lo administraba el Administrador; artículos vinculados al inventario | Se carga en los datos iniciales; sin pantalla y sin inventario |
-| Turnos | Panel "personal en turno", filtro "mi turno", sugerencia de técnicos, no desactivar turnos con asignaciones futuras | **Nivel 2**: definir, asignar y vista semanal; solo informativos |
-| Desactivar empleados | Bloqueado con trabajo en curso; reasignación (HU-ADM-20 de la v2); se cerraba su sesión y se borraban sus turnos futuros | Sin validación de trabajo en curso ni reasignación; la sesión abierta vence sola (máx. 15 min) |
-| Correo de empleado y huésped | Un mismo correo no podía ser empleado y huésped | Regla eliminada |
-| Historial de personal | Se registraban desactivaciones y restablecimientos | Eliminado (X-03) |
-| Perfil del huésped | Datos distintos según el origen; perfil creado en el primer acceso | **Los mismos 6 datos** en todos los orígenes; se identifica por su correo |
