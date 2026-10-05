@@ -1,11 +1,10 @@
-# HU — Mantenimiento y Limpieza (versión 3)
+# HU — Mantenimiento y Limpieza
 
 > **Rol:** Mantenimiento/Limpieza (`MANTENIMIENTO_LIMPIEZA`), con área **Limpieza**, **Mantenimiento** o **Ambas**
 > **Plataforma:** Web privada (pensada para usarse desde el teléfono del empleado)
 > **Prefijo:** `HU-MYL`
 > **Total de historias:** 8 (Nivel 1: 8 · Nivel 2: 0)
-> **Referencias:** Documentación V3 / 01 — Alcance (sección G)
-> **Numeración:** nueva en la versión 3. La correspondencia con la versión 2 está en cada historia ("Reemplaza a") y en el índice.
+> **Referencias:** 01 — Alcance (sección G)
 
 ---
 
@@ -32,7 +31,6 @@
 
 **Depende de:** HU-EMP-01
 **Reglas relacionadas:** RN-LIM-004, RN-LIM-010, RN-LIM-011, RN-NOT-009 (documento 10)
-**Reemplaza a:** HU-MYL-01 (v2)
 
 ---
 
@@ -56,7 +54,6 @@
 
 **Depende de:** HU-MYL-01
 **Reglas relacionadas:** RN-LIM-001, RN-NOT-009 (documento 10)
-**Reemplaza a:** HU-MYL-02 (v2)
 
 ---
 
@@ -79,7 +76,6 @@
 
 **Depende de:** HU-MYL-02
 **Reglas relacionadas:** RN-HAB-005, RN-LIM-002, RN-NOT-009 (documento 10)
-**Reemplaza a:** HU-MYL-03 (v2)
 
 ---
 
@@ -107,7 +103,6 @@
 
 **Depende de:** HU-HUE-12, HU-HUE-13
 **Reglas relacionadas:** RN-LIM-011, RN-LIM-013, RN-LIM-014, RN-NOT-008 (documento 10)
-**Reemplaza a:** HU-MYL-06 (v2)
 
 ---
 
@@ -131,7 +126,6 @@
 
 **Depende de:** HU-MYL-04
 **Reglas relacionadas:** RN-LIM-007, RN-LIM-015, RN-NOT-001 (documento 10)
-**Reemplaza a:** HU-MYL-07 (v2)
 
 ---
 
@@ -158,7 +152,6 @@
 
 **Depende de:** HU-EMP-01
 **Reglas relacionadas:** RN-HAB-001, RN-HAB-002, RN-HAB-006, RN-MAN-001, RN-MAN-002, RN-MAN-007, RN-NOT-009 (documento 10)
-**Reemplaza a:** HU-MYL-10 (v2)
 **Notas técnicas:** es la misma funcionalidad que usa Recepción en HU-REC-17.
 
 ---
@@ -183,7 +176,6 @@
 
 **Depende de:** HU-MYL-06
 **Reglas relacionadas:** RN-MAN-002, RN-MAN-007, RN-MAN-009, RN-MAN-013 (documento 10)
-**Reemplaza a:** HU-MYL-13 (v2), HU-MYL-14 (v2)
 **Notas técnicas:** no hay asignación por el Administrador; el técnico toma la incidencia. Esta lista no es de tiempo real: se actualiza al abrirla o con un botón "Actualizar".
 
 ---
@@ -209,4 +201,3 @@
 
 **Depende de:** HU-MYL-07
 **Reglas relacionadas:** RN-HAB-003, RN-MAN-002, RN-MAN-005, RN-MAN-006, RN-MAN-007, RN-MAN-009, RN-MAN-010 (documento 10)
-**Reemplaza a:** HU-MYL-15 (v2)

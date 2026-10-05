@@ -79,4 +79,4 @@ PMS (sistema de administración hotelera) para el hotel boutique **ficticio** "V
 - Comando: `npx expo start`.
 
 ### villa-serena-docs
-- Documentación V3. No se genera código aquí.
+- Documentación del proyecto. No se genera código aquí.

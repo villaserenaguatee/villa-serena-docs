@@ -28,7 +28,7 @@ y los documentos adjuntos). Responde en español.
 Objetivo: las pantallas de Recepción para la cuenta, el check-out y la factura,
 CON DATOS DE PRUEBA. El contrato de estos endpoints se congela el lunes; por eso
 los datos van en un solo archivo (lib/mocks/cuenta.ts) con tipos propios, fáciles
-de reemplazar después.
+de sustituir después.
 
 1. Cuenta (HU-REC-13) en app/panel/recepcion/reservas/[codigo]/cuenta:
    - Cargo por alojamiento con detalle por noche (o una línea si es de canal),
@@ -70,7 +70,7 @@ Primero muéstrame el plan de archivos; después créalos por pasos.
 Seguimos en villa-serena-web. Responde en español. Copia el openapi.yaml más
 reciente y regenera los tipos.
 
-Reemplaza los datos de prueba de lib/mocks/cuenta.ts por las llamadas reales al
+Sustituye los datos de prueba de lib/mocks/cuenta.ts por las llamadas reales al
 API (a través del BFF) para la cuenta, agregar y anular cargos, el check-out y el
 detalle de la factura, según openapi.yaml. Muestra los errores del API con su
 mensaje en español. Al terminar, borra el archivo de datos de prueba.

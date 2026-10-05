@@ -1,11 +1,10 @@
-# HU — Room Service (versión 3)
+# HU — Room Service
 
 > **Rol:** Room Service (`ROOM_SERVICE`)
 > **Plataforma:** Web privada
 > **Prefijo:** `HU-RS`
 > **Total de historias:** 7 (Nivel 1: 7 · Nivel 2: 0)
-> **Referencias:** Documentación V3 / 01 — Alcance (sección F)
-> **Numeración:** nueva en la versión 3. La correspondencia con la versión 2 está en cada historia ("Reemplaza a") y en el índice.
+> **Referencias:** 01 — Alcance (sección F)
 
 ---
 
@@ -33,7 +32,6 @@
 
 **Depende de:** HU-EMP-01, HU-HUE-10
 **Reglas relacionadas:** RN-NOT-006, RN-NOT-007, RN-RS-012, RN-SEG-002 (documento 10)
-**Reemplaza a:** HU-RS-01 (v2)
 
 ---
 
@@ -57,7 +55,6 @@
 
 **Depende de:** HU-RS-01
 **Reglas relacionadas:** RN-RS-006, RN-SEG-002 (documento 10)
-**Reemplaza a:** HU-RS-02 (v2)
 
 ---
 
@@ -83,7 +80,6 @@
 
 **Depende de:** HU-RS-02
 **Reglas relacionadas:** RN-NOT-001, RN-NOT-007, RN-RS-001, RN-RS-002, RN-RS-007 (documento 10)
-**Reemplaza a:** HU-RS-04 (v2)
 **Notas técnicas:** mientras un pedido esté `En camino`, el check-out de esa reserva no se permite (HU-REC-14).
 
 ---
@@ -109,7 +105,6 @@
 
 **Depende de:** HU-RS-02
 **Reglas relacionadas:** RN-RS-003, RN-RS-004, RN-RS-010 (documento 10)
-**Reemplaza a:** HU-RS-05 (v2)
 **Notas técnicas:** los pedidos `Nuevo` o `En preparación` que siguen abiertos al hacer el check-out se cancelan solos, sin cargo (HU-REC-14).
 
 ---
@@ -137,7 +132,6 @@
 
 **Depende de:** HU-ADM-05
 **Reglas relacionadas:** RN-RS-005, RN-RS-008 (documento 10)
-**Reemplaza a:** HU-RS-06 (v2), HU-RS-07 (v2)
 
 ---
 
@@ -164,7 +158,6 @@
 
 **Depende de:** HU-RS-03
 **Reglas relacionadas:** RN-PAG-010, RN-RS-007 (documento 10)
-**Reemplaza a:** HU-RS-08 (v2)
 **Notas técnicas:** una restricción única (pedido → cargo) en la base de datos evita el cargo doble.
 
 ---
@@ -190,5 +183,4 @@
 
 **Depende de:** HU-RS-01
 **Reglas relacionadas:** RN-NOT-006 (documento 10)
-**Reemplaza a:** HU-RS-10 (v2)
 **Notas técnicas:** el aviso es solo visual. El sonido queda como Nivel 2 (si da tiempo).

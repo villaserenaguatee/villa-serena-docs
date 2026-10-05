@@ -1,11 +1,10 @@
-# 14 — Tecnologías y Arquitectura (versión 3)
+# 14 — Tecnologías y Arquitectura
 
 > **Proyecto:** Property Management System (PMS) para Hoteles Boutique — Hotel ficticio "Villa Serena"
 > **Estado:** 📝 Para revisión del equipo (con 4 supuestos y 1 pendiente por confirmar, sección 14)
 > **Fecha:** 1 de octubre de 2026
-> **Basado en:** 14 — Tecnologías y Arquitectura, versión 2 (vigente en lo técnico) y Documentación V3 / 01, 07 y 09
-> **Reemplaza a:** 14 — Tecnologías y Arquitectura, versión 2 (carpeta "Documentación Definitiva")
-> **Motivo:** ajustar la arquitectura al alcance v3. **Hito del 10 de octubre: flujo principal funcionando en local con Docker, con los recortes aprobados del documento 13.** La VPS, Cloudflare, CI/CD y los backups van después (D-12, D-22).
+> **Basado en:** 01 — Alcance, 07 — Estados y 09 — Matriz de Permisos
+> **Hito del 10 de octubre: flujo principal funcionando en local con Docker, con los recortes aprobados del documento 13.** La VPS, Cloudflare, CI/CD y los backups van después (D-12, D-22).
 
 ---
 
@@ -25,13 +24,12 @@
 12. [Limitaciones conocidas y mitigaciones](#12-limitaciones-conocidas-y-mitigaciones)
 13. [Cuentas y costos](#13-cuentas-y-costos)
 14. [Supuestos y pendientes por confirmar](#14-supuestos-y-pendientes-por-confirmar)
-15. [Qué cambió respecto a la versión 2](#15-qué-cambió-respecto-a-la-versión-2)
 
 ---
 
 ## 1. Tecnologías obligatorias
 
-Confirmadas por el catedrático. No se reemplazan.
+Confirmadas por el catedrático. No se sustituyen.
 
 | Tecnología | Uso en el proyecto | Cuándo |
 |---|---|---|
@@ -305,7 +303,7 @@ Organización: **`villaserenaguate`**. Los cinco repositorios son obligatorios y
 
 | Repositorio | Contenido |
 |---|---|
-| `villa-serena-docs` | Documentación V3 y diseño breve del Channel Manager (ALC-CM-01) |
+| `villa-serena-docs` | Documentación y diseño breve del Channel Manager (ALC-CM-01) |
 | `villa-serena-infra` | `docker-compose.dev.yml`, `.env.example`, configuración de Prometheus y Grafana. Después: Compose de despliegue, Cloudflare y backups |
 | `villa-serena-api` | Spring Boot/Maven, `openapi.yaml`, migraciones Flyway y datos iniciales |
 | `villa-serena-web` | Next.js: web pública, panel privado, BFF y canal simulado; copia de `openapi.yaml` y tipos generados localmente |
@@ -422,7 +420,6 @@ ALC-TRA-07. Se configura después del hito.
 | RNF-REN-001 | Objetivo: hotel pequeño (≈ 12–30 habitaciones) y tráfico bajo. |
 | RNF-REN-002 | La búsqueda de disponibilidad responde en menos de 2 segundos. |
 | RNF-REN-003 | Los 4 eventos en tiempo real llegan en menos de 3 segundos. |
-| RNF-REN-004 | *Eliminado en la versión 3* (índices y paginación: decisión de cada módulo, no un requisito). |
 
 ### Observabilidad
 
@@ -431,7 +428,6 @@ ALC-TRA-07. Se configura después del hito.
 | RNF-OBS-001 | Grafana muestra el estado del API, las peticiones, los errores HTTP, la CPU y la RAM. | Hito (ALC-TRA-09) |
 | RNF-OBS-002 | Una alerta por caída del API o consumo alto. | Nivel 2 (ALC-TRA-09b) |
 | RNF-OBS-003 | Los logs de los contenedores se centralizan (Loki). | Nivel 2 (ALC-TRA-09b) |
-| RNF-OBS-004 | *Eliminado en la versión 3* (registro de todas las peticiones del canal: regla eliminada). | — |
 
 ### Mantenibilidad
 
@@ -495,28 +491,3 @@ ALC-TRA-07. Se configura después del hito.
 | S-03 | **Sincronización en segundo plano** se refiere a las tareas del backend (`@Scheduled` + Outbox) | App con funcionamiento sin conexión (mucho más trabajo) |
 | S-04 | **Proveedor de la VPS:** cualquiera con Ubuntu 24.04 y al menos 4 GB de RAM | — |
 | P-01 | **Versión de Next.js:** 15 (documentada) o 16 (renombró `middleware` a `proxy`) | Decidir antes de crear el proyecto web |
-
----
-
-## 15. Qué cambió respecto a la versión 2
-
-| Tema | Versión 2 | Versión 3 |
-|---|---|---|
-| Hito | Todo en la VPS | **Todo en local con Docker** para el 10 de octubre; VPS, Cloudflare, CI/CD y backups después |
-| Archivos | Cloudflare R2 desde el inicio; fotos de documentos de identidad | MinIO en local y R2 después; sin documentos de identidad |
-| Correo | Resend; 6 tipos de correo | Mailpit en local y Resend después; 3 correos (OTP, confirmación y factura) |
-| Personal | Enlace por correo para definir la contraseña | Contraseña temporal mostrada al Administrador; cambio obligatorio |
-| Empleado desactivado | Se revisaba su estado en cada petición | Se revocan sus refresh tokens; el acceso vence solo (máx. 15 min) |
-| Tiempo real | Pedidos, solicitudes, habitaciones y avisos generales | **Solo 4 eventos**; la app se conecta con su propio JWT |
-| Push | En camino, entregado, atendida y recordatorio de salida | Solo **entregado** y **atendida** |
-| Tareas programadas | Vencimiento de pago, no-show, reembolsos, sincronización de canales | Solo **cancelación a los 30 minutos** y reintentos del Outbox |
-| Stripe | Varios eventos; reembolsos parciales | Solo 2 avisos (pagado y vencido); reembolso solo total |
-| Channel Manager | OTA-JSON, HMAC, cancelación, pantalla de canales | REST/JSON simple con clave por canal; sin cancelación ni pantalla |
-| Facturación | Desglose de impuestos, comprobantes, anulación, "COPIA", serie configurable | "IVA incluido", sin anulación ni "COPIA"; serie fija en datos iniciales |
-| Monitoreo | Grafana Cloud + Alloy + Loki + alertas | **Grafana local** con Prometheus; logs y alertas en Nivel 2 |
-| App | Datepicker y caché persistente | Sin datepicker (la app no reserva) y sin modo sin conexión |
-| Web | Recharts para indicadores | Se quita: los indicadores son 3 tarjetas |
-| Expo | "Expo Go de las tiendas soporta SDK 54" | Se queda en SDK 54; su Expo Go se instala desde expo.dev/go |
-| Nuevos | — | AD-18 (datos iniciales con Flyway) y AD-19 (zona horaria) |
-| Sesión de la web | Los detalles (CSRF, renovación, cierre de sesión, protección de rutas) solo estaban en el prompt OBJ-05 | Sección 6.1 "Patrón BFF y seguridad de sesión", con la contraseña temporal y la app |
-| IDs de requisitos no funcionales | — | Se conservan los IDs de la v2; los que ya no aplican se marcan "Eliminado" |

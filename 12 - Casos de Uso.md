@@ -1,10 +1,9 @@
-# 12 — Casos de Uso (versión 3)
+# 12 — Casos de Uso
 
 > **Proyecto:** Property Management System (PMS) para Hoteles Boutique — Hotel ficticio "Villa Serena"
 > **Estado:** 📝 Para revisión del equipo
 > **Fecha:** 1 de octubre de 2026
-> **Basado en:** Documentación V3 / 01 — Alcance, 02 — Roles, 04 — Historias de Usuario, 07 — Estados y 09 — Matriz de Permisos (versión 3)
-> **Reemplaza a:** 12 — Casos de Uso, versión 2 (carpeta "Documentación Definitiva")
+> **Basado en:** 01 — Alcance, 02 — Roles, 04 — Historias de Usuario, 07 — Estados y 09 — Matriz de Permisos
 
 ---
 
@@ -22,20 +21,19 @@
 10. [Channel Manager](#10-channel-manager) — UC-16
 11. [Administración y acceso del personal](#11-administración-y-acceso-del-personal) — UC-17, UC-19, UC-21, UC-18
 12. [Historias que no necesitan un caso de uso](#12-historias-que-no-necesitan-un-caso-de-uso)
-13. [Qué cambió respecto a la versión 2](#13-qué-cambió-respecto-a-la-versión-2)
 
 ---
 
 ## 1. Propósito y plantilla
 
-Un **caso de uso** describe **una interacción completa** entre un actor y el sistema para lograr un objetivo, incluido qué pasa cuando algo sale mal. Recorre varias historias de principio a fin. **No agrega reglas:** todo sale de las historias v3, del 07 y del 09.
+Un **caso de uso** describe **una interacción completa** entre un actor y el sistema para lograr un objetivo, incluido qué pasa cuando algo sale mal. Recorre varias historias de principio a fin. **No agrega reglas:** todo sale de las historias, del 07 y del 09.
 
-Se conservan los IDs de la versión 2 cuando el caso sigue existiendo. Los eliminados (UC-09 y UC-12) no se reutilizan.
+Los IDs UC-09 y UC-12 no se utilizan.
 
 | Campo | Contenido |
 |---|---|
 | Actores | Principal y secundarios (documento 02) |
-| Historias | Historias v3 que cubre |
+| Historias | Historias que cubre |
 | Nivel | 1 (obligatorio para el 10 de octubre) o 2 (si da tiempo) |
 | Precondiciones | Qué debe ser cierto antes de empezar |
 | Estados (07) | Transiciones del documento 07 que ocurren en el caso |
@@ -559,8 +557,6 @@ Se conservan los IDs de la versión 2 cuando el caso sigue existiendo. Los elimi
 
 **Postcondiciones:** no quedan reservas apartadas sin pago.
 
-> **Ya no existen** en la versión 3: el no-show automático y el recordatorio push de salida.
-
 ---
 
 ## 10. Channel Manager
@@ -731,33 +727,3 @@ Son consultas o mantenimientos de catálogo de un solo paso; las historias ya la
 | HU-ADM-11, HU-HUE-18 | Amenidades y Wi-Fi (Nivel 2) |
 
 Todas las demás historias están en algún caso de uso.
-
----
-
-## 13. Qué cambió respecto a la versión 2
-
-| UC | Cambio |
-|---|---|
-| UC-01 | Tipos activos; sin listado de habitaciones específicas |
-| UC-02 | Los mismos 6 datos y el huésped por correo; sin recálculo de tarifa durante la reserva; sin modificaciones |
-| UC-03 | Se permite hasta el día anterior a la salida; sin vista del día ni check-in anticipado |
-| UC-04 | Pago único; solo un pedido `EN_CAMINO` bloquea; se cancelan solicitudes `EN_PROCESO`; sin saldo a favor ni correo de resumen |
-| UC-05 | Un intento rechazado no cambia el pago; `FALLIDO` solo cuando vence la sesión |
-| UC-06 | Sin pedidos telefónicos; el Administrador no cancela; push solo al entregar |
-| UC-07 | Sin insumos, objetos olvidados ni observaciones |
-| UC-08 | 3 estados; el técnico toma la incidencia; el Administrador solo consulta |
-| **UC-09** | **Eliminado:** las reservas no se modifican (D-15) |
-| UC-10 | Solo Recepción, solo `CONFIRMADA`, sin reservas de canal; todo o nada; sin correo |
-| UC-11 | Solo en la app; sesión con refresh de 7 días |
-| **UC-12** | **Eliminado:** check-in anticipado descartado (ALC-PUB-09) |
-| UC-13 | Solo desde la app; sin inventario |
-| UC-14 | Solo consulta y "Nueva reserva"; crear seleccionando días pasa a Nivel 2; sin tiempo real |
-| UC-15 | Solo la cancelación a los 30 minutos (sin no-show ni recordatorio) |
-| UC-16 | Sin cancelación, sin firma HMAC y sin pantalla de canales |
-| UC-17 | Sin vista previa de tarifas |
-| UC-18 | Nivel 2, aislado: solo entradas y salidas manuales |
-| UC-19 | Contraseña temporal sin correo; sin validar trabajo en curso; turnos en Nivel 2 |
-| UC-20 | Sin anulación, sin "COPIA" y sin desglose de impuestos; serie fija |
-| **UC-21** | **Nuevo:** acceso del personal (HU-EMP-01, HU-EMP-02) |
-
-**Total:** 19 casos de uso (17 de Nivel 1, 1 de Nivel 2 y UC-19 con una parte de Nivel 2), frente a 20 en la versión 2.

@@ -1,4 +1,4 @@
-# 00 — Cómo usar los prompts (versión 3)
+# 00 — Cómo usar los prompts
 
 > **Para qué sirve:** guía paso a paso para que cada integrante use su prompt con la IA, aunque no tenga experiencia con estas tecnologías.
 > **Basado en:** 13 — Plan de Trabajo y 14 — Tecnologías y Arquitectura.
@@ -64,7 +64,7 @@ El **contrato del API** (`openapi.yaml`, objetivos 0 a 2) se congela el viernes 
 
 Cada quien trabaja en **su computadora**, con su copia del repositorio y **su propia rama**. Nadie trabaja directo en `main`.
 
-**1. La primera vez: clonar el repositorio** en una carpeta de trabajo (no dentro de `Documentación V3`):
+**1. La primera vez: clonar el repositorio** en una carpeta de trabajo:
 
 ```bat
 cd /d "D:\Proyectos"
@@ -124,7 +124,7 @@ Está en la **`16 - Guia de Arranque del Proyecto.md`**: qué es el `.env` y có
 ## 5. Cómo usar un prompt con la IA
 
 1. Asegúrate de que `AGENTS.md` y `CLAUDE.md` están en la raíz de tu repositorio (sección 6).
-2. Abre tu prompt (archivo `OBJ-0x`) y adjunta a la IA **solo** los documentos de "Documentos que debes adjuntar". Están en el repositorio `villa-serena-docs` o en la carpeta `Documentación V3`.
+2. Abre tu prompt (archivo `OBJ-0x`) y adjunta a la IA **solo** los documentos de "Documentos que debes adjuntar". Están en el repositorio `villa-serena-docs`.
 3. Abre la herramienta de IA **dentro de tu repositorio** y pega el bloque del prompt.
 4. La IA primero debe mostrar un plan. **Léelo antes de aceptar.** Si propone algo que no está en el prompt, dile que lo quite.
 5. Deja que avance en pasos pequeños. Si un comando falla, pega el error completo a la IA y pídele que lo explique antes de cambiar nada.
@@ -141,7 +141,7 @@ Está en la **`16 - Guia de Arranque del Proyecto.md`**: qué es el `.env` y có
 
 ## 6. Preparar los 5 repositorios (Alex, 1 h)
 
-Organización: `villaserenaguate`. Repositorios: `villa-serena-docs`, `villa-serena-infra`, `villa-serena-api`, `villa-serena-web` y `villa-serena-movil`. (`villa-serena-docs` ya tiene la documentación V3.)
+Organización: `villaserenaguate`. Repositorios: `villa-serena-docs`, `villa-serena-infra`, `villa-serena-api`, `villa-serena-web` y `villa-serena-movil`. (`villa-serena-docs` contiene la documentación.)
 
 En cada uno de los otros cuatro:
 
