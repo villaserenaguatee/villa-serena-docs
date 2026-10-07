@@ -37,6 +37,8 @@ Las issues se consultan mediante GitHub CLI (`gh`) o el complemento/plugin dispo
 
 El alcance de la issue se contrasta con la documentación vigente y el código existente. Si GitHub no está accesible, el agente informa esa limitación y avanza con la información verificable, sin asumir que conoce el estado remoto de las tareas.
 
+La búsqueda y lectura de documentación se limita a lo necesario para la tarea: archivos, secciones y referencias pertinentes. El agente amplía esa lectura cuando una dependencia, discrepancia o falta de información lo requiere, sin examinar todo el repositorio de documentación por defecto. Así se conserva el contexto de la sesión y se evita consumir tokens con contenido ajeno al trabajo.
+
 ## 4. Autonomía y decisiones
 
 El agente presenta un plan breve de los archivos o componentes que espera cambiar y continúa con la implementación autorizada. Presentar el plan no implica esperar una aprobación adicional.
