@@ -4,15 +4,17 @@
 |---|---|
 | Objetivo | 1 — Reservar (documento 13) |
 | Repositorio | `villa-serena-api` |
-| Responsable | Hugo |
+| Responsable inicial | Hugo |
 | Horas estimadas | 2,5 h (Outbox y correo 1 h; canal 1,5 h) |
 | Cubre | HU-HUE-07, HU-CM-01 |
 | Depende de | OBJ-0B (proyecto base), OBJ-0C (tablas `outbox`, `canales`, `reservas`) y contrato parte 1 (OBJ-0G). La creación de la reserva es de Pablo (OBJ-1B) |
 | Calendario | Vie 2 (2,5 h) |
 
-> **Antes de empezar:** prepara tu computadora con la `16 - Guia de Arranque del Proyecto.md`. Para crear tu rama y subir tu trabajo con un pull request, sigue la sección 3 de `00 - Como usar los prompts.md`.
+> **Referencias de trabajo:** la guía 16 describe el entorno; la guía 00, sección 3, describe el flujo con issues, ramas y PR hacia `develop`.
 
-## Documentos que debes adjuntar a la IA
+## Referencias para la tarea
+
+La lectura se limita a las secciones necesarias para la issue. AGENTS.md contiene los acuerdos de colaboración; estas referencias se amplían solo si hay una dependencia o discrepancia.
 
 - `AGENTS.md`
 - `openapi.yaml` (contrato, parte 1)
@@ -21,11 +23,13 @@
 - `10 - Reglas de Negocio.md` (reglas RN-NOT y RN-CM)
 - `14 - Tecnologias y Arquitectura.md` (secciones 2, 4.1 y 5)
 
-## Prompt
+El agente presenta un plan breve y continúa con el trabajo autorizado. La implementación puede adaptarse a la estructura existente; el resultado cumple los criterios siguientes.
+
+## Resultado esperado
 
 ```text
-Trabajas en el repositorio villa-serena-api del proyecto Villa Serena (lee AGENTS.md
-y los documentos adjuntos). Responde en español.
+Contexto: repositorio villa-serena-api del proyecto Villa Serena (acuerdos en AGENTS.md
+y referencias pertinentes de la tarea). Comunicación en español.
 
 Objetivo: dos piezas del objetivo 1, en los paquetes notificaciones y canal.
 
@@ -56,17 +60,14 @@ PARTE B — Endpoint del canal (HU-CM-01), según openapi.yaml
    externo, responde 200 con esa reserva y no crea otra.
 4. La disponibilidad y la creación de la reserva NO se programan aquí: se llaman
    al servicio de reservas de Pablo (por ejemplo,
-   ReservaService.crearReservaCanal(...)). Acuerda con Pablo el nombre y los
-   parámetros. Si todavía no existe, crea la interfaz y una implementación
-   temporal marcada con TODO, para no bloquearte.
+   ReservaService.crearReservaCanal(...)). El nombre y los parámetros se
+   coordinan mediante issue y PR. Mientras falta el servicio, una interfaz con
+   implementación temporal marcada TODO permite avanzar.
 5. Resultado 201 con el código de reserva; 409 si no hay disponibilidad.
 6. Al crearse, llama a ConfirmacionReservaNotifier.notificar(...).
 
 Pruebas: idempotencia, clave incorrecta (401), datos inválidos (400) y que el
-correo quede en outbox. No crees migraciones: si falta una columna, pídesela a
-Josué.
-
-Primero muéstrame el plan de clases; después impleméntalo por pasos.
+correo quede en outbox. Una columna faltante se coordina mediante issue y PR, conservando las migraciones ya aplicadas.
 ```
 
 ## Cómo saber que quedó terminado
@@ -78,4 +79,4 @@ Primero muéstrame el plan de clases; después impleméntalo por pasos.
 
 ## Al terminar
 
-Cuando tu pull request se fusione, abre `17 - Avance del Proyecto.md` (repositorio `villa-serena-docs`), cambia tu casilla de `[ ]` a `[x]` y agrega el número del PR. Si no sabes cómo, avisa en el grupo y Josué la marca.
+Después de integrar la PR en `develop` y verificar el resultado, la issue queda actualizada o cerrada y la casilla correspondiente de `17 - Avance del Proyecto.md` incluye el número de PR (guía 00, sección 3). Si hay un bloqueo, Alex facilita su resolución; el avance puede actualizarlo quien completó la tarea.

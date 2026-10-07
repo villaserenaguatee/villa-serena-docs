@@ -4,17 +4,19 @@
 |---|---|
 | Objetivo | 1 — Reservar (documento 13) |
 | Repositorios | `villa-serena-api` (API del hotel y catálogo) y `villa-serena-docs` (diseño del canal y guía de Stripe CLI) |
-| Responsable | Josué |
+| Responsable inicial | Josué |
 | Horas estimadas | 2,5 h (guía de Stripe CLI 0,5 h; API del hotel y catálogo 1 h; diseño del canal 1 h) |
 | Cubre | HU-HUE-01 y HU-HUE-02 (lado API); tarea técnica ALC-CM-01 |
 | Depende de | OBJ-0C (datos iniciales del hotel y de los tipos de habitación) y contrato parte 1 (OBJ-0G) |
 | Calendario | Mar 6: **primero la guía de Stripe CLI** (Pablo la necesita ese día), luego el API del hotel y el catálogo. Jue 8: diseño del canal |
 
-> **Antes de empezar:** prepara tu computadora con la `16 - Guia de Arranque del Proyecto.md`. Para crear tu rama y subir tu trabajo con un pull request, sigue la sección 3 de `00 - Como usar los prompts.md`.
+> **Referencias de trabajo:** la guía 16 describe el entorno; la guía 00, sección 3, describe el flujo con issues, ramas y PR hacia `develop`.
 
 > **Avance (1 de octubre):** la guía de Stripe CLI (prompt 1) y el diseño del canal (prompt 3) ya están hechos: `18 - Guia de Stripe CLI.md` y `19 - Diseno de Integracion con Canales.md`. Solo falta el **prompt 2** (API del hotel y del catálogo).
 
-## Documentos que debes adjuntar a la IA
+## Referencias para la tarea
+
+La lectura se limita a las secciones necesarias para la issue. AGENTS.md contiene los acuerdos de colaboración; estas referencias se amplían solo si hay una dependencia o discrepancia.
 
 - `AGENTS.md`
 - `openapi.yaml` (contrato, parte 1)
@@ -22,13 +24,15 @@
 - `14 - Tecnologias y Arquitectura.md` (secciones 2, 4.4, 6 y 8)
 - `01 - Alcance del Proyecto.md` (ALC-CM-01 a ALC-CM-04)
 
-## Prompt 1 — Guía de Stripe CLI (en `villa-serena-docs`)
+El agente presenta un plan breve y continúa con el trabajo autorizado. La implementación puede adaptarse a la estructura existente; el resultado cumple los criterios siguientes.
+
+## Resultado esperado 1 — Guía de Stripe CLI (en `villa-serena-docs`)
 
 ```text
-Trabajas en el repositorio villa-serena-docs del proyecto Villa Serena. Responde en
+Contexto: repositorio villa-serena-docs del proyecto Villa Serena. Responde en
 español.
 
-Escribe "Guia de Stripe CLI.md": una guía corta, para principiantes en Windows, de
+Entregable: guía 18 de Stripe CLI, corta y para principiantes en Windows, de
 cómo probar los pagos de Stripe en local (modo prueba):
 1. Crear una cuenta de Stripe y quedarse en modo prueba (sin datos bancarios).
 2. Dónde copiar la clave secreta de prueba (sk_test_...) y en qué variable del .env
@@ -42,11 +46,11 @@ cómo probar los pagos de Stripe en local (modo prueba):
 6. Errores comunes (firma inválida, puerto equivocado, CLI cerrado).
 ```
 
-## Prompt 2 — API del hotel y del catálogo (en `villa-serena-api`)
+## Resultado esperado 2 — API del hotel y del catálogo (en `villa-serena-api`)
 
 ```text
-Trabajas en el repositorio villa-serena-api del proyecto Villa Serena (lee AGENTS.md
-y los documentos adjuntos). Responde en español.
+Contexto: repositorio villa-serena-api del proyecto Villa Serena (acuerdos en AGENTS.md
+y referencias pertinentes de la tarea). Comunicación en español.
 
 Objetivo: los endpoints públicos (sin sesión) de HU-HUE-01 y HU-HUE-02, tal como
 están en openapi.yaml, en los paquetes catalogos y config.
@@ -61,16 +65,15 @@ están en openapi.yaml, en los paquetes catalogos y config.
 4. DTO públicos: nunca devuelvas la entidad completa.
 5. Pruebas: tipos inactivos no aparecen; el detalle de un tipo inactivo da 404.
 
-No crees pantallas de administración (los catálogos vienen en Flyway en el hito).
-Primero muéstrame el plan; después impleméntalo.
+Las pantallas de administración están fuera del hito; los catálogos vienen en Flyway.
 ```
 
-## Prompt 3 — Diseño breve de la integración con canales (en `villa-serena-docs`)
+## Resultado esperado 3 — Diseño breve de la integración con canales (en `villa-serena-docs`)
 
 ```text
-Trabajas en el repositorio villa-serena-docs. Responde en español.
+Contexto: repositorio villa-serena-docs. Comunicación en español.
 
-Escribe "Diseno de Integracion con Canales.md" (ALC-CM-01): un documento de 2 a 3
+Entregable: guía 19 de integración con canales (ALC-CM-01), un documento de 2 a 3
 páginas que explique, en lenguaje simple:
 1. Qué hace hoy el sistema: canal simulado, API REST/JSON con clave por canal (hash),
    sin duplicados por identificador externo, misma disponibilidad que la web
@@ -91,4 +94,4 @@ páginas que explique, en lenguaje simple:
 
 ## Al terminar
 
-Cuando tu pull request se fusione, abre `17 - Avance del Proyecto.md` (repositorio `villa-serena-docs`), cambia tu casilla de `[ ]` a `[x]` y agrega el número del PR.
+Después de integrar la PR en `develop` y verificar el resultado, la issue queda actualizada o cerrada y la casilla correspondiente de `17 - Avance del Proyecto.md` incluye el número de PR (guía 00, sección 3).

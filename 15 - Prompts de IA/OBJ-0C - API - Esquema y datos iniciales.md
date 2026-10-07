@@ -4,15 +4,17 @@
 |---|---|
 | Objetivo | 0 — Base (documento 13) |
 | Repositorio | `villa-serena-api` |
-| Responsable | Josué (único que crea migraciones) |
+| Responsable inicial | Josué (reparto inicial; las migraciones se coordinan en equipo) |
 | Horas estimadas | 5 h (esquema 3 h + datos iniciales 2 h) |
 | Cubre | Tarea técnica: datos iniciales con Flyway (AD-18); restricciones de la base de datos (documento 14, sección 5) |
-| Depende de | OBJ-0A (PostgreSQL) y OBJ-0B (proyecto base). Si OBJ-0B no está en `main`, parte de la rama de Hugo |
+| Depende de | OBJ-0B (base mínima y configuración) y OBJ-0A (PostgreSQL para verificar). La base se integra en `develop` o se coordina desde la PR de OBJ-0B; el esquema no es un requisito previo de OBJ-0B. |
 | Calendario | Vie 2: esquema (2,5 h). Lun 5: terminar esquema y datos iniciales (2,5 h) |
 
-> **Antes de empezar:** prepara tu computadora con la `16 - Guia de Arranque del Proyecto.md` (instalar, `.env` y encender Docker). Para crear tu rama y subir tu trabajo con un pull request, sigue la sección 3 de `00 - Como usar los prompts.md`.
+> **Referencias de trabajo:** la guía 16 describe el entorno; la guía 00, sección 3, describe el flujo con issues, ramas y PR hacia `develop`.
 
-## Documentos que debes adjuntar a la IA
+## Referencias para la tarea
+
+La lectura se limita a las secciones necesarias para la issue. AGENTS.md contiene los acuerdos de colaboración; estas referencias se amplían solo si hay una dependencia o discrepancia.
 
 - `AGENTS.md`
 - `14 - Tecnologias y Arquitectura.md` (secciones 2, 5 y 6)
@@ -21,30 +23,32 @@
 - `10 - Reglas de Negocio.md` (parámetros PAR y reglas citadas en la sección 5 del documento 14)
 - `04 - Historias de Usuario/HU - Administrador.md` (campos de tipos de habitación, habitaciones, menú, temporadas, fin de semana y datos del hotel, que ahora van como datos iniciales)
 
-## Prompt
+El agente presenta un plan breve y continúa con el trabajo autorizado. La implementación puede adaptarse a la estructura existente; el resultado cumple los criterios siguientes.
+
+## Resultado esperado
 
 ```text
-Trabajas en el repositorio villa-serena-api del proyecto Villa Serena (lee AGENTS.md
-y los documentos adjuntos). Responde en español.
+Contexto: repositorio villa-serena-api del proyecto Villa Serena (acuerdos en AGENTS.md
+y referencias pertinentes de la tarea). Comunicación en español.
 
 Objetivo: crear con Flyway el esquema completo de Nivel 1 en PostgreSQL 17 y los
-datos iniciales de la demostración. Solo SQL de migraciones en
-src/main/resources/db/migration/; no crees entidades JPA ni servicios (cada
-responsable crea las suyas).
+datos iniciales de la demostración. Esquema y datos iniciales en
+src/main/resources/db/migration/; las entidades JPA y servicios pertenecen a
+los objetivos que consumen el esquema.
 
-PASO 1 — Propuesta (no escribas SQL todavía)
-Lee los documentos 07, 08, 10 y 14 y muéstrame una tabla con: nombre de cada tabla,
-sus columnas principales, sus claves foráneas y de qué documento sale. Como guía,
+Diseño esperado del esquema
+El diseño identifica cada tabla, sus columnas principales, claves foráneas y
+la referencia pertinente de los documentos 07, 08, 10 y 14. Como guía,
 debería incluir al menos: empleados, refresh_tokens, huespedes, codigos_otp,
 dispositivos_push, huespedes_adicionales, tipos_habitacion, habitaciones,
 temporadas, configuracion_hotel (datos del hotel, fiscales y ajuste de fin de
 semana), series_factura, canales, reservas, cuentas, cargos, pagos, facturas,
 items_menu, pedidos, pedido_items, articulos, solicitudes, solicitud_items,
 incidencias, outbox e historial_estados.
-NO incluyas tablas de Nivel 2: turnos, inventario, amenidades ni Wi-Fi.
-Espera mi aprobación antes del paso 2.
+Fuera de este objetivo: tablas de Nivel 2, turnos, inventario, amenidades y Wi-Fi.
+El esquema se implementa dentro del alcance autorizado; las discrepancias de impacto se registran como issues.
 
-PASO 2 — Esquema (V1__esquema.sql y las que hagan falta)
+Resultado esperado — Esquema (V1__esquema.sql y las que hagan falta)
 - CREATE EXTENSION IF NOT EXISTS btree_gist.
 - Estados como VARCHAR con CHECK de los valores exactos del documento 07
   (por ejemplo, reserva: PENDIENTE_PAGO, CONFIRMADA, EN_ESTADIA, FINALIZADA,
@@ -63,7 +67,7 @@ PASO 2 — Esquema (V1__esquema.sql y las que hagan falta)
   id_responsable (nulo si fue el SISTEMA), tipo_responsable, fecha.
 - refresh_tokens y codigos_otp guardan solo el hash, nunca el valor.
 
-PASO 3 — Datos iniciales (V2__datos_iniciales.sql)
+Resultado esperado — Datos iniciales (V2__datos_iniciales.sql)
 Valores ficticios y realistas para Guatemala, en español:
 - configuracion_hotel: nombre "Villa Serena", dirección, teléfono, correo,
   descripción, NIT y razón social ficticios, horas fijas 15:00 y 12:00, y ajuste
@@ -82,14 +86,15 @@ Valores ficticios y realistas para Guatemala, en español:
   ACTIVO y sin contraseña temporal. La contraseña es un hash BCrypt tomado del
   placeholder ${demo_password_hash}; nunca escribas una contraseña ni un hash
   real en el SQL.
-- Configura en application.yml: spring.flyway.placeholders.* leyendo
-  DEMO_PASSWORD_HASH, CANAL1_KEY_HASH y CANAL2_KEY_HASH del entorno, y agrégalos
-  a .env.example con una nota de cómo generarlos.
+- Los perfiles local, dev y prod aprovechan la configuración existente.
+  spring.flyway.placeholders.* lee DEMO_PASSWORD_HASH, CANAL1_KEY_HASH y
+  CANAL2_KEY_HASH del entorno; .env.example explica cómo generarlos.
 
-No hagas:
-- No crees reservas de prueba todavía (van en el objetivo 2).
-- No agregues columnas o tablas que no salgan de los documentos. Si dudas, pregunta.
-- No guardes secretos ni contraseñas en texto plano.
+Fuera de alcance:
+- Las reservas de prueba corresponden al objetivo 2.
+- El esquema cubre las historias y restricciones acordadas. Una discrepancia
+  de alcance se registra como issue; los detalles técnicos se resuelven dentro de la tarea.
+- Los datos iniciales están libres de secretos y contraseñas en texto plano.
 ```
 
 ## Cómo saber que quedó terminado
@@ -102,4 +107,4 @@ No hagas:
 
 ## Al terminar
 
-Cuando tu pull request se fusione, abre `17 - Avance del Proyecto.md` (repositorio `villa-serena-docs`), cambia tu casilla de `[ ]` a `[x]` y agrega el número del PR. Si no sabes cómo, avisa en el grupo y Josué la marca.
+Después de integrar la PR en `develop` y verificar el resultado, la issue queda actualizada o cerrada y la casilla correspondiente de `17 - Avance del Proyecto.md` incluye el número de PR (guía 00, sección 3). Si hay un bloqueo, Alex facilita su resolución; el avance puede actualizarlo quien completó la tarea.

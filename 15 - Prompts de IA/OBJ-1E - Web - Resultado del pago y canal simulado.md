@@ -4,27 +4,31 @@
 |---|---|
 | Objetivo | 1 — Reservar (documento 13) |
 | Repositorio | `villa-serena-web` |
-| Responsable | Alex |
+| Responsable inicial | Alex |
 | Horas estimadas | 2,5 h (resultado del pago 1 h; canal simulado 1,5 h) |
 | Cubre | HU-HUE-06 (criterio 6, página al volver de Stripe) y HU-CM-03 |
 | Depende de | OBJ-0E (proyecto web y BFF) y contrato parte 1 (OBJ-0G). Para probar de punta a punta: el pago de Pablo (OBJ-1B) y el endpoint del canal de Hugo (OBJ-1C) |
 | Calendario | Vie 2 (resultado del pago, 0,5 h) y Lun 5 (resto) |
 
-> **Antes de empezar:** prepara tu computadora con la `16 - Guia de Arranque del Proyecto.md`. Para crear tu rama y subir tu trabajo con un pull request, sigue la sección 3 de `00 - Como usar los prompts.md`.
+> **Referencias de trabajo:** la guía 16 describe el entorno; la guía 00, sección 3, describe el flujo con issues, ramas y PR hacia `develop`.
 
-## Documentos que debes adjuntar a la IA
+## Referencias para la tarea
+
+La lectura se limita a las secciones necesarias para la issue. AGENTS.md contiene los acuerdos de colaboración; estas referencias se amplían solo si hay una dependencia o discrepancia.
 
 - `AGENTS.md`
 - `openapi.yaml` (contrato, parte 1; copia del repositorio `villa-serena-api`)
 - `HU - Cliente y Huesped.md` (HU-HUE-06) y `HU - Channel Manager.md` (HU-CM-01 y HU-CM-03)
 - `14 - Tecnologias y Arquitectura.md` (sección 6.1)
 
-## Prompt
+El agente presenta un plan breve y continúa con el trabajo autorizado. La implementación puede adaptarse a la estructura existente; el resultado cumple los criterios siguientes.
+
+## Resultado esperado
 
 ```text
-Trabajas en el repositorio villa-serena-web del proyecto Villa Serena (lee AGENTS.md
-y los documentos adjuntos). Responde en español. Copia openapi.yaml a la raíz y
-regenera los tipos con el script "tipos" antes de empezar.
+Contexto: repositorio villa-serena-web del proyecto Villa Serena (acuerdos en AGENTS.md
+y referencias pertinentes de la tarea). Comunicación en español. Los tipos se generan desde la copia local de
+openapi.yaml mediante el script "tipos".
 
 PARTE A — Página del resultado del pago (HU-HUE-06, criterio 6)
 1. Página pública app/(publico)/reserva/resultado/page.tsx a la que Stripe regresa
@@ -38,8 +42,8 @@ PARTE A — Página del resultado del pago (HU-HUE-06, criterio 6)
    - Pago no completado: mensaje claro y botón "Reintentar pago" mientras la
      reserva siga PENDIENTE_PAGO (usa el enlace de pago que devuelva el API).
      Si ya está CANCELADA, explica que venció el tiempo de 30 minutos.
-3. Usa el diseño público de Kim (components/publico). Mientras el API no exista,
-   prueba con datos de prueba de los tres casos.
+3. La página reutiliza el diseño público (components/publico). Mientras falta
+   el API, los tres casos se comprueban con datos de prueba.
 
 PARTE B — Canal simulado (HU-CM-03), solo ADMIN
 1. Pantalla app/panel/admin/canal-simulado. Otros roles ven "Acceso denegado".
@@ -59,10 +63,8 @@ PARTE B — Canal simulado (HU-CM-03), solo ADMIN
 5. Botón "Reenviar la misma reserva" (mismo identificador externo) para
    demostrar que no se duplica (la API responde 200 con la reserva existente).
 
-No hagas: no envíes cancelaciones, no agregues pantallas de administración de
-canales ni guardes las claves en el código.
-
-Primero muéstrame el plan de archivos; después créalos por pasos.
+Fuera de alcance: cancelaciones y pantallas de administración de canales.
+Las claves permanecen fuera del código.
 ```
 
 ## Cómo saber que quedó terminado
@@ -74,4 +76,4 @@ Primero muéstrame el plan de archivos; después créalos por pasos.
 
 ## Al terminar
 
-Cuando tu pull request se fusione, abre `17 - Avance del Proyecto.md` (repositorio `villa-serena-docs`), cambia tu casilla de `[ ]` a `[x]` y agrega el número del PR. Si no sabes cómo, avisa en el grupo y Josué la marca.
+Después de integrar la PR en `develop` y verificar el resultado, la issue queda actualizada o cerrada y la casilla correspondiente de `17 - Avance del Proyecto.md` incluye el número de PR (guía 00, sección 3). Si hay un bloqueo, Alex facilita su resolución; el avance puede actualizarlo quien completó la tarea.

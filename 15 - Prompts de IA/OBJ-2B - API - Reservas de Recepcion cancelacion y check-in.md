@@ -4,15 +4,17 @@
 |---|---|
 | Objetivo | 2 — Recepción (documento 13) |
 | Repositorio | `villa-serena-api` |
-| Responsable | Pablo |
+| Responsable inicial | Pablo |
 | Horas estimadas | 3,5 h (disponibilidad y creación desde Recepción 1,5 h; cancelación 1 h; check-in 1 h) |
 | Cubre | HU-REC-03, HU-REC-04, HU-REC-05 y HU-REC-12 (lado API) |
 | Depende de | OBJ-1B (tus servicios de disponibilidad, tarifa, reserva y Stripe), OBJ-1C (aviso de confirmación de Hugo) y OBJ-2C (asignación de habitación de Hugo) |
 | Calendario | Mié 7: reservas de Recepción. Jue 8: check-in. La cancelación queda entre tus pendientes previstos (documento 13, sección 7.3): hazla con tus horas opcionales o en cuanto termines lo demás |
 
-> **Antes de empezar:** prepara tu computadora con la `16 - Guia de Arranque del Proyecto.md`. Para crear tu rama y subir tu trabajo con un pull request, sigue la sección 3 de `00 - Como usar los prompts.md`.
+> **Referencias de trabajo:** la guía 16 describe el entorno; la guía 00, sección 3, describe el flujo con issues, ramas y PR hacia `develop`.
 
-## Documentos que debes adjuntar a la IA
+## Referencias para la tarea
+
+La lectura se limita a las secciones necesarias para la issue. AGENTS.md contiene los acuerdos de colaboración; estas referencias se amplían solo si hay una dependencia o discrepancia.
 
 - `AGENTS.md`
 - `openapi.yaml`
@@ -20,13 +22,14 @@
 - `07 - Estados.md` (secciones 3, 4, 5 y 11)
 - `10 - Reglas de Negocio.md` (reglas RN-RES, RN-CAN y RN-PAG)
 
-## Prompt
+El agente presenta un plan breve y continúa con el trabajo autorizado. La implementación puede adaptarse a la estructura existente; el resultado cumple los criterios siguientes.
+
+## Resultado esperado
 
 ```text
-Trabajas en el repositorio villa-serena-api del proyecto Villa Serena (lee AGENTS.md
-y los documentos adjuntos). Responde en español. REUTILIZA DisponibilidadService,
-TarifaService, ReservaService y la integración con Stripe que ya hiciste en OBJ-1B;
-no dupliques reglas.
+Contexto: repositorio villa-serena-api del proyecto Villa Serena (acuerdos en AGENTS.md
+y referencias pertinentes de la tarea). Comunicación en español. La solución reutiliza DisponibilidadService,
+TarifaService, ReservaService y Stripe de OBJ-1B, con reglas compartidas.
 
 1. Disponibilidad para Recepción (HU-REC-03): mismas reglas de la web, mostrando
    además cuántas habitaciones quedan por tipo, precio por noche y total.
@@ -49,8 +52,7 @@ no dupliques reglas.
    transacción; publica el cambio de habitación (HabitacionEventos de Hugo).
 5. Pruebas: cancelación con 48 h exactas, con menos, sin pagos y de canal; check-in
    fuera de fecha, sin habitación y con habitación sucia.
-No crees migraciones: pídeselas a Josué.
-Primero muéstrame el plan; después impleméntalo.
+Los cambios de esquema necesarios se coordinan mediante issues y PR, conservando las migraciones ya aplicadas.
 ```
 
 ## Cómo saber que quedó terminado
@@ -62,4 +64,4 @@ Primero muéstrame el plan; después impleméntalo.
 
 ## Al terminar
 
-Cuando tu pull request se fusione, abre `17 - Avance del Proyecto.md` (repositorio `villa-serena-docs`), cambia tu casilla de `[ ]` a `[x]` y agrega el número del PR.
+Después de integrar la PR en `develop` y verificar el resultado, la issue queda actualizada o cerrada y la casilla correspondiente de `17 - Avance del Proyecto.md` incluye el número de PR (guía 00, sección 3).

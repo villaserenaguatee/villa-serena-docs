@@ -4,17 +4,19 @@
 |---|---|
 | Objetivo | 1 — Reservar (documento 13) |
 | Repositorio | `villa-serena-api` |
-| Responsable | Pablo |
+| Responsable inicial | Pablo |
 | Horas estimadas | 5,5 h (disponibilidad y precio 1,5 h; reserva y registro de cargos 1,5 h; Stripe y cancelación a los 30 min 2,5 h) |
 | Cubre | HU-HUE-03, HU-HUE-04, HU-HUE-05, HU-HUE-06 (lado API) |
 | Depende de | OBJ-0C (tablas), OBJ-0D (seguridad), contrato parte 1 (OBJ-0G), guía de Stripe CLI de Josué (OBJ-1A) y el aviso de confirmación de Hugo (OBJ-1C) |
 | Calendario | Lun 5: disponibilidad y precio. Mar 6: reserva, registro de cargos y Stripe. Mié 7: terminar Stripe |
 
-> **Antes de empezar:** prepara tu computadora con la `16 - Guia de Arranque del Proyecto.md`. Para crear tu rama y subir tu trabajo con un pull request, sigue la sección 3 de `00 - Como usar los prompts.md`.
+> **Referencias de trabajo:** la guía 16 describe el entorno; la guía 00, sección 3, describe el flujo con issues, ramas y PR hacia `develop`.
 
 **Este es el corazón del sistema:** Recepción (objetivo 2) y el canal (Hugo) reutilizan tu servicio de disponibilidad y de creación de reservas. Diséñalo para que lo puedan llamar sin copiar código.
 
-## Documentos que debes adjuntar a la IA
+## Referencias para la tarea
+
+La lectura se limita a las secciones necesarias para la issue. AGENTS.md contiene los acuerdos de colaboración; estas referencias se amplían solo si hay una dependencia o discrepancia.
 
 - `AGENTS.md`
 - `openapi.yaml` (contrato, parte 1)
@@ -24,15 +26,17 @@
 - `10 - Reglas de Negocio.md` (reglas RN-RES, RN-TAR, RN-PAG y RN-CAN, y los parámetros PAR)
 - `14 - Tecnologias y Arquitectura.md` (secciones 2, 5 y 6)
 
-## Prompt
+El agente presenta un plan breve y continúa con el trabajo autorizado. La implementación puede adaptarse a la estructura existente; el resultado cumple los criterios siguientes.
+
+## Resultado esperado
 
 ```text
-Trabajas en el repositorio villa-serena-api del proyecto Villa Serena (lee AGENTS.md
-y los documentos adjuntos). Responde en español.
+Contexto: repositorio villa-serena-api del proyecto Villa Serena (acuerdos en AGENTS.md
+y referencias pertinentes de la tarea). Comunicación en español.
 
 Objetivo: el flujo de reserva web de principio a fin, en el paquete reservas.
 
-PASO 1 — Disponibilidad y precio (HU-HUE-03 y HU-HUE-04)
+Resultado esperado — Disponibilidad y precio (HU-HUE-03 y HU-HUE-04)
 - DisponibilidadService: por tipo y noche = habitaciones activas del tipo que no
   están FUERA_DE_SERVICIO − reservas del tipo en PENDIENTE_PAGO, CONFIRMADA o
   EN_ESTADIA (con o sin habitación asignada). Un tipo solo aparece si tiene cupo
@@ -43,20 +47,20 @@ PASO 1 — Disponibilidad y precio (HU-HUE-03 y HU-HUE-04)
   el desglose por noche. "Hoy" y las noches se calculan en America/Guatemala.
 - Endpoint público de búsqueda según openapi.yaml.
 
-PASO 2 — Crear la reserva (HU-HUE-05)
+Resultado esperado — Crear la reserva (HU-HUE-05)
 - ReservaService.crearReserva(datos, canalOrigen): busca el huésped por correo (si
   existe, usa ese perfil sin cambiar sus datos), vuelve a validar la
   disponibilidad DENTRO de la transacción (con bloqueo), crea la reserva con
   código único no secuencial (ej. VS-7K2M9Q), precio fijo, y la cuenta ABIERTA con
   el cargo por alojamiento.
-- Web: estado PENDIENTE_PAGO, canal "Directo web". Deja el método listo para que
+- Web: estado PENDIENTE_PAGO, canal "Directo web". El método permite que
   Recepción (CONFIRMADA, canal Recepción) y el canal de Hugo (CONFIRMADA, con pago
-  APROBADO método CANAL) lo reutilicen. Acuerda con Hugo el nombre exacto.
+  APROBADO método CANAL) lo reutilicen. El nombre y la firma se coordinan en la issue y la PR.
 - CargoService.registrarCargo(cuentaId, concepto, cantidad, precioUnitario,
   responsable): registro común de cargos que Hugo usará desde Room Service.
-- Registra cada cambio de estado con HistorialEstadoService.
+- Cada cambio de estado queda registrado con HistorialEstadoService.
 
-PASO 3 — Pago con Stripe (HU-HUE-06)
+Resultado esperado — Pago con Stripe (HU-HUE-06)
 - Iniciar pago: crea UNA sesión de Stripe Checkout por el 100 % del total (o
   devuelve la misma si ya existe y sigue abierta), con success_url y cancel_url
   hacia la página de resultado de la web. El pago queda PENDIENTE.
@@ -65,17 +69,14 @@ PASO 3 — Pago con Stripe (HU-HUE-06)
   reserva CONFIRMADA, y llama a ConfirmacionReservaNotifier.notificar (de Hugo);
   sesión vencida → pago FALLIDO.
 - @Scheduled: reservas PENDIENTE_PAGO con más de 30 minutos. Antes de cancelar,
-  consulta la sesión en Stripe: si ya estaba pagada, confírmala. Si no, CANCELADA,
+  consulta la sesión en Stripe: si ya estaba pagada, la reserva queda confirmada. Si no, CANCELADA,
   cuenta CERRADA y cupo libre.
 - Endpoint público de estado de la reserva para la página de resultado.
 - Claves de Stripe solo en el .env (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET).
 
 Pruebas: disponibilidad con reservas que se cruzan, precio con temporada y fin de
 semana, webhook repetido (un solo pago) y cancelación a los 30 minutos.
-No crees migraciones: pídeselas a Josué.
-
-Primero muéstrame el plan de clases; después impleméntalo por pasos, empezando por
-el paso 1.
+Los cambios de esquema necesarios se coordinan mediante issues y PR, conservando las migraciones ya aplicadas.
 ```
 
 ## Cómo saber que quedó terminado
@@ -88,4 +89,4 @@ el paso 1.
 
 ## Al terminar
 
-Cuando tu pull request se fusione, abre `17 - Avance del Proyecto.md` (repositorio `villa-serena-docs`), cambia tu casilla de `[ ]` a `[x]` y agrega el número del PR.
+Después de integrar la PR en `develop` y verificar el resultado, la issue queda actualizada o cerrada y la casilla correspondiente de `17 - Avance del Proyecto.md` incluye el número de PR (guía 00, sección 3).

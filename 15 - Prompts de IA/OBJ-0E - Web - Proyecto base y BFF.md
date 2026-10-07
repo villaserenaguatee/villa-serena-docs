@@ -4,14 +4,16 @@
 |---|---|
 | Objetivo | 0 — Base (documento 13) |
 | Repositorio | `villa-serena-web` |
-| Responsables | Alex (proyecto y BFF, 3,5 h) · Kim (diseño base de la web pública, 1 h) |
+| Responsables iniciales | Alex (proyecto y BFF, 3,5 h) · Kim (diseño base de la web pública, 1 h) |
 | Cubre | HU-EMP-01 y HU-EMP-02 (lado web); patrón BFF (documento 14, sección 6.1) |
 | Depende de | Repositorio creado. Para probar el login de punta a punta: OBJ-0D (Pablo) |
 | Calendario | Alex: Jue 1 (opcional, proyecto Next.js) y Vie 2 (BFF). Kim: Vie 2 |
 
-> **Antes de empezar:** prepara tu computadora con la `16 - Guia de Arranque del Proyecto.md` (instalar, `.env` y encender Docker). Para crear tu rama y subir tu trabajo con un pull request, sigue la sección 3 de `00 - Como usar los prompts.md`.
+> **Referencias de trabajo:** la guía 16 describe el entorno; la guía 00, sección 3, describe el flujo con issues, ramas y PR hacia `develop`.
 
-## Documentos que debes adjuntar a la IA
+## Referencias para la tarea
+
+La lectura se limita a las secciones necesarias para la issue. AGENTS.md contiene los acuerdos de colaboración; estas referencias se amplían solo si hay una dependencia o discrepancia.
 
 - `AGENTS.md`
 - `14 - Tecnologias y Arquitectura.md` (secciones 4.2, 6 y 6.1)
@@ -19,18 +21,20 @@
 - `02 - Definicion de Roles.md` (sección 5, regla R-ROL-08: cada rol usa solo sus pantallas)
 - `04 - Historias de Usuario/HU - Personal del Hotel.md`
 
-## Prompt para Alex (proyecto base y BFF)
+El agente presenta un plan breve y continúa con el trabajo autorizado. La implementación puede adaptarse a la estructura existente; el resultado cumple los criterios siguientes.
+
+## Resultado esperado — proyecto base y BFF
 
 ```text
-Trabajas en el repositorio villa-serena-web del proyecto Villa Serena (lee AGENTS.md
-y los documentos adjuntos). Responde en español.
+Contexto: repositorio villa-serena-web del proyecto Villa Serena (acuerdos en AGENTS.md
+y referencias pertinentes de la tarea). Comunicación en español.
 
 Objetivo: proyecto Next.js y BFF para la sesión del personal (HU-EMP-01, HU-EMP-02).
 
-PASO 1 — Proyecto
+Resultado esperado — Proyecto
 - Next.js 15 (App Router) con TypeScript, pnpm, Tailwind CSS 4, shadcn/ui,
   lucide-react y TanStack Query. ESLint + Prettier.
-- Estructura: app/(publico)/ para la web pública (la llena Kim) y app/panel/ para
+- Estructura: app/(publico)/ para la web pública (OBJ-1D) y app/panel/ para
   el personal. Componentes en components/ui (shadcn), components/publico y
   components/panel.
 - API_URL de Spring (http://localhost:8080) solo en variables del servidor
@@ -38,9 +42,9 @@ PASO 1 — Proyecto
 - Script "tipos": openapi-typescript desde ./openapi.yaml (copia del contrato que
   vive en villa-serena-api) hacia lib/api/schema.d.ts, y un cliente con
   openapi-fetch que solo se use en el servidor. Mientras no exista el contrato,
-  deja el script listo y usa tipos mínimos escritos a mano para auth.
+  el script queda disponible y auth utiliza tipos mínimos temporales.
 
-PASO 2 — BFF (Route Handlers en app/api/)
+Resultado esperado — BFF (Route Handlers en app/api/)
 - POST /api/auth/login: llama a POST {API_URL}/api/v1/auth/login. Guarda el token
   de acceso y el refresh en cookies httpOnly, SameSite=Lax, path=/, Secure fuera
   de localhost. Nunca devuelve los tokens al navegador: solo nombre, rol, área y
@@ -55,7 +59,7 @@ PASO 2 — BFF (Route Handlers en app/api/)
   borra las cookies y responde 401.
 - CSRF: rechaza POST, PUT, PATCH y DELETE si el encabezado Origin no es el propio.
 
-PASO 3 — Protección y pantallas del panel
+Resultado esperado — Protección y pantallas del panel
 - middleware.ts: si no hay cookie de sesión en /panel/**, redirige a /panel/login.
 - Layout de /panel (servidor): consulta /api/v1/auth/yo; si
   debeCambiarContrasena es verdadero, lleva a /panel/cambiar-contrasena.
@@ -69,26 +73,24 @@ PASO 3 — Protección y pantallas del panel
 - Si un rol entra a una sección que no es suya: "Acceso denegado" (cada rol usa
   solo sus pantallas).
 
-No hagas:
-- No guardes tokens en localStorage ni los expongas al navegador.
-- No crees pantallas de negocio (reservas, Gantt, pedidos...): son de otros
+Fuera de alcance:
+- Los tokens de sesión permanecen fuera de localStorage y del código del navegador.
+- Las pantallas de negocio (reservas, Gantt, pedidos...) pertenecen a otros
   objetivos.
-- No agregues registro de usuarios ni "olvidé mi contraseña".
-
-Primero muéstrame el plan de archivos; después créalos por pasos.
+- Registro de usuarios y "olvidé mi contraseña" están fuera de alcance.
 ```
 
-## Prompt para Kim (diseño base de la web pública)
+## Resultado esperado — diseño base de la web pública
 
 ```text
-Trabajas en el repositorio villa-serena-web del proyecto Villa Serena (lee
-AGENTS.md). Responde en español. Alex ya creó el proyecto Next.js 15 con
+Contexto: repositorio villa-serena-web del proyecto Villa Serena (acuerdos en
+AGENTS.md). Comunicación en español. La base de OBJ-0E utiliza Next.js 15 con
 Tailwind 4 y shadcn/ui.
 
 Objetivo: diseño base de la web pública del hotel boutique ficticio "Villa Serena",
 solo dentro de app/(publico)/ y components/publico/.
 
-Crea:
+Entregables esperados:
 1. Layout público con encabezado (logo de texto "Villa Serena", enlaces: Inicio,
    Habitaciones, Reservar) y pie de página (dirección, teléfono y correo
    ficticios de Guatemala, año).
@@ -98,10 +100,11 @@ Crea:
    "Reservar") y espacios vacíos para las secciones del objetivo 1 (información
    del hotel y catálogo de habitaciones), sin datos reales todavía.
 
-No hagas:
-- No toques app/panel/, app/api/ ni la configuración del BFF (son de Alex).
-- No crees la búsqueda, el formulario ni el pago (objetivo 1).
-- No uses imágenes con derechos de autor: solo marcadores o imágenes libres.
+Fuera de alcance:
+- El diseño público reutiliza la base existente; los cambios de panel o BFF
+  que una integración requiera se coordinan mediante issue y PR.
+- Búsqueda, formulario de reserva y pago corresponden al objetivo 1.
+- Las imágenes son marcadores o recursos con licencia que permite su uso.
 ```
 
 ## Cómo saber que quedó terminado
@@ -115,4 +118,4 @@ No hagas:
 
 ## Al terminar
 
-Cuando tu pull request se fusione, abre `17 - Avance del Proyecto.md` (repositorio `villa-serena-docs`), cambia tu casilla de `[ ]` a `[x]` y agrega el número del PR. Si no sabes cómo, avisa en el grupo y Josué la marca.
+Después de integrar la PR en `develop` y verificar el resultado, la issue queda actualizada o cerrada y la casilla correspondiente de `17 - Avance del Proyecto.md` incluye el número de PR (guía 00, sección 3). Si hay un bloqueo, Alex facilita su resolución; el avance puede actualizarlo quien completó la tarea.

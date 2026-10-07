@@ -4,30 +4,34 @@
 |---|---|
 | Objetivo | 3A — Estadía y Room Service (documento 13) |
 | Repositorio | `villa-serena-movil` |
-| Responsable | Carlos |
+| Responsable inicial | Carlos |
 | Horas estimadas | 6,5 h (inicio de sesión 1 h; mis reservas 1,5 h; pedir room service 1,5 h; seguir el pedido en vivo 1,5 h; token de push 1 h) |
 | Cubre | HU-HUE-08 a HU-HUE-11 y HU-HUE-17 (lado app) |
 | Depende de | OBJ-0F (proyecto Expo y development build), contrato parte 2 (OBJ-0G). Para conectar: OBJ-3A-2 (acceso y push) y OBJ-3A-1 (pedidos y WebSocket) |
 | Calendario | Lun 5: inicio de sesión y mis reservas. Mar 6: pedidos y push. Mié 7: seguimiento en vivo. Jue 8: conectar todo al API |
 
-> **Antes de empezar:** prepara tu computadora con la `16 - Guia de Arranque del Proyecto.md`. Para crear tu rama y subir tu trabajo con un pull request, sigue la sección 3 de `00 - Como usar los prompts.md`.
+> **Referencias de trabajo:** la guía 16 describe el entorno; la guía 00, sección 3, describe el flujo con issues, ramas y PR hacia `develop`.
 
-## Documentos que debes adjuntar a la IA
+## Referencias para la tarea
+
+La lectura se limita a las secciones necesarias para la issue. AGENTS.md contiene los acuerdos de colaboración; estas referencias se amplían solo si hay una dependencia o discrepancia.
 
 - `AGENTS.md`
 - `openapi.yaml` (contrato, partes 1 y 2, con la sección `x-websocket`)
 - `HU - Cliente y Huesped.md` (HU-HUE-08 a HU-HUE-11 y HU-HUE-17)
 - `14 - Tecnologias y Arquitectura.md` (secciones 4.3, 6 y 6.1, punto 8)
 
-## Prompt
+El agente presenta un plan breve y continúa con el trabajo autorizado. La implementación puede adaptarse a la estructura existente; el resultado cumple los criterios siguientes.
+
+## Resultado esperado
 
 ```text
-Trabajas en el repositorio villa-serena-movil del proyecto Villa Serena (lee
-AGENTS.md y los documentos adjuntos). Responde en español. Expo SDK 54 y Expo
-Router; no cambies de SDK. Copia openapi.yaml y genera los tipos.
+Contexto: repositorio villa-serena-movil del proyecto Villa Serena (acuerdos en
+AGENTS.md y referencias pertinentes de la tarea). Comunicación en español. Expo SDK 54 y Expo
+Router, manteniendo SDK 54. Los tipos se generan desde la copia local de openapi.yaml.
 
-Mientras el API no esté listo, usa datos de prueba con los tipos de openapi.yaml en
-lib/mocks/estadia.ts, y deja un interruptor para pasar al API real.
+Mientras falta el API, la pantalla utiliza datos de prueba con los tipos de openapi.yaml en
+lib/mocks/estadia.ts, con un interruptor para pasar al API real.
 
 1. Inicio de sesión (HU-HUE-08): pantalla del correo → pantalla del código de 6
    dígitos. Mensajes para código vencido o usado (con "Pedir otro código"), para el
@@ -47,14 +51,14 @@ lib/mocks/estadia.ts, y deja un interruptor para pasar al API real.
    total; el estado cambia solo, sin recargar, con @stomp/stompjs conectado
    directo a Spring con el JWT del huésped y suscrito a /user/queue/pedidos. Si
    el pedido se cancela, muestra el motivo. Al reconectar, vuelve a cargar los
-   pedidos. Si @stomp/stompjs pide TextEncoder en React Native, agrega el polyfill
-   necesario. El huésped no puede cancelar ni modificar pedidos.
+   pedidos. La integración incluye el polyfill de TextEncoder si
+   @stomp/stompjs lo requiere en React Native. El huésped no puede cancelar ni modificar pedidos.
 5. Push (HU-HUE-17): al entrar, pide permiso (si lo niega, la app sigue igual);
    registra el Expo push token en el API; al tocar la notificación abre la
    pantalla del pedido (o de la solicitud). Se prueba con el development build.
 
-No hagas: AsyncStorage para tokens, modo sin conexión, ni cambios de SDK.
-Primero muéstrame el plan de archivos; después créalos por pasos.
+Los tokens utilizan expo-secure-store. Modo sin conexión y cambios de SDK
+quedan fuera de este objetivo.
 ```
 
 ## Cómo saber que quedó terminado
@@ -66,4 +70,4 @@ Primero muéstrame el plan de archivos; después créalos por pasos.
 
 ## Al terminar
 
-Cuando tu pull request se fusione, abre `17 - Avance del Proyecto.md` (repositorio `villa-serena-docs`), cambia tu casilla de `[ ]` a `[x]` y agrega el número del PR.
+Después de integrar la PR en `develop` y verificar el resultado, la issue queda actualizada o cerrada y la casilla correspondiente de `17 - Avance del Proyecto.md` incluye el número de PR (guía 00, sección 3).
