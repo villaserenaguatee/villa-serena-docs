@@ -107,7 +107,7 @@ git push -u origin obj0-<nombre-corto>
 3. Escribe qué hiciste y cómo lo probaste. Pulsa **Create pull request** y avisa al grupo.
 4. Otro integrante lo revisa y pulsa **Squash and merge** → **Confirm**.
 
-**7. Marcar tu avance:** cuando el PR se fusione, marca tu casilla en `17 - Avance del Proyecto.md` (de `[ ]` a `[x]`, con el número del PR). Si no sabes cómo, avisa a Josué.
+**7. Título del PR:** debe **empezar con el código del prompt** (por ejemplo `OBJ-1B: disponibilidad y Stripe`). Así el avance se marca solo (sección 10). Cada prompt trae al final el mensaje para que la IA lo haga.
 
 **8. Después del merge**
 
@@ -169,3 +169,24 @@ Están en la **`16 - Guia de Arranque del Proyecto.md`**, sección 7.
 ## 9. Si te atrasas
 
 No trabajes más de 3 h en un día seguro. Avisa en la reunión diaria qué quedó pendiente; el martes 6 se decide si se aplica algún recorte de reserva (documento 13, sección 9.2).
+
+## 10. Actualizar el avance (Josué, una vez al día)
+
+El archivo `17 - Avance del Proyecto.md` no lo edita cada integrante. Una vez al día (por ejemplo, al final de la tarde), Josué abre Claude Code **en la carpeta de `villa-serena-docs`** y pega:
+
+```text
+Actualiza "17 - Avance del Proyecto.md" con GitHub CLI:
+1. git switch main y git pull.
+2. Lista los pull requests FUSIONADOS en villaserenaguate/villa-serena-api,
+   -web, -movil, -infra y -docs.
+3. Cada PR empieza su título con un código de prompt (por ejemplo "OBJ-1B:"). Lee
+   su descripción para saber qué tareas de ese código quedaron completas y marca
+   esas líneas del archivo 17: cambia [ ] por [x] y agrega al final
+   " — <repo> PR #<número>". No marques nada que no esté en un PR fusionado; si un
+   PR no dice claramente qué tareas completa, pregúntame.
+4. Actualiza la tabla de estado de los objetivos de arriba (Pendiente, En curso o
+   Terminado).
+5. Muéstrame el cambio, crea la rama avance-<fecha>, haz commit y push, abre el
+   pull request y fusiónalo con squash.
+6. Dame un resumen de una línea por objetivo: tareas hechas / total.
+```

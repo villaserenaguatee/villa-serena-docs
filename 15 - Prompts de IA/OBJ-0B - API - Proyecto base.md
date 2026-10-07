@@ -102,4 +102,14 @@ Primero muéstrame el plan de archivos; después créalos.
 
 ## Al terminar
 
-Cuando tu pull request se fusione, abre `17 - Avance del Proyecto.md` (repositorio `villa-serena-docs`), cambia tu casilla de `[ ]` a `[x]` y agrega el número del PR. Si no sabes cómo, avisa en el grupo y Josué la marca.
+Cuando todo lo de "Cómo saber que quedó terminado" funcione, pega esto a la IA:
+
+```text
+Terminamos esta tarea. Muéstrame git status y confirma que no se sube ningún .env
+ni claves. Luego haz commit, push y abre el pull request a main con un título que
+EMPIECE con "OBJ-0B:" (por ejemplo "OBJ-0B: <resumen corto>"). En la descripción
+pon qué se hizo, cómo se probó y la lista de tareas de "17 - Avance del Proyecto.md"
+con código OBJ-0B que quedan completas.
+```
+
+Pide a un compañero que revise el PR. No marques el archivo 17: Josué lo actualiza una vez al día.

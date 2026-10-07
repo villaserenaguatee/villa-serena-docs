@@ -87,4 +87,4 @@ funciones nuevas ni cambies versiones. Muéstrame el cambio antes de aplicarlo.
 
 ## Al terminar
 
-Marcar en `17 - Avance del Proyecto.md` las casillas de integración y del ensayo.
+Cada corrección de errores se sube como un PR pequeño con un título que empiece con "OBJ-INT:". Al terminar el viernes 9 y el ensayo del sábado 10, Josué marca las dos casillas de integración en el archivo 17 con la rutina de la guía de prompts (sección 10).

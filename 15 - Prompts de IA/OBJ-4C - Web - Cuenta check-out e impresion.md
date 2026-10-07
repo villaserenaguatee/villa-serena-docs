@@ -86,4 +86,14 @@ No cambies el diseño ni agregues funciones.
 
 ## Al terminar
 
-Cuando tu pull request se fusione, abre `17 - Avance del Proyecto.md` (repositorio `villa-serena-docs`), cambia tu casilla de `[ ]` a `[x]` y agrega el número del PR. Si no sabes cómo, avisa en el grupo y Josué la marca.
+Cuando todo lo de "Cómo saber que quedó terminado" funcione, pega esto a la IA:
+
+```text
+Terminamos esta tarea. Muéstrame git status y confirma que no se sube ningún .env
+ni claves. Luego haz commit, push y abre el pull request a main con un título que
+EMPIECE con "OBJ-4C:" (por ejemplo "OBJ-4C: <resumen corto>"). En la descripción
+pon qué se hizo, cómo se probó y la lista de tareas de "17 - Avance del Proyecto.md"
+con código OBJ-4C que quedan completas.
+```
+
+Pide a un compañero que revise el PR. No marques el archivo 17: Josué lo actualiza una vez al día.
