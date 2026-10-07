@@ -10,11 +10,11 @@
 
 Un **canal** es un sitio que vende habitaciones del hotel por su cuenta, por ejemplo **Booking** o **Expedia**. Cuando un cliente reserva allí, el canal debe avisar al hotel para que la habitación no se venda dos veces.
 
-Villa Serena es un hotel **ficticio**: no tiene contrato con Booking ni con Expedia. Por eso la versión 3 demuestra la integración con un **canal simulado** que usa la **API real** del sistema.
+Villa Serena es un hotel **ficticio**: no tiene contrato con Booking ni con Expedia. Por eso el sistema demuestra la integración con un **canal simulado** que usa la **API real** del sistema.
 
 ---
 
-## 2. Qué hace hoy el sistema (versión 3)
+## 2. Qué hace hoy el sistema
 
 | Pieza | Qué hace | Dónde está |
 |---|---|---|
@@ -61,7 +61,7 @@ En una integración real, en lugar del Administrador y el BFF, sería el **servi
 
 Esto **no se programa** en este proyecto. Queda como diseño para una versión futura.
 
-| Tema | Hoy (versión 3) | Integración real |
+| Tema | Hoy | Integración real |
 |---|---|---|
 | **Formato de los mensajes** | JSON propio, documentado en OpenAPI | Los canales grandes usan sus propios formatos, a menudo basados en el estándar **OTA** (OpenTravel Alliance) en XML: mensajes de reserva, de disponibilidad y de tarifas |
 | **Conexión** | API propia con clave por canal | Registrarse en el programa de conectividad de cada canal (por ejemplo, el de socios de Booking o el de Expedia) o contratar un **channel manager** intermediario que ya esté conectado |
@@ -76,9 +76,9 @@ Esto **no se programa** en este proyecto. Queda como diseño para una versión f
 
 ---
 
-## 4. Limitaciones aceptadas en la versión 3
+## 4. Limitaciones aceptadas
 
-1. **Las reservas de canal no se cancelan desde el sistema**, ni siquiera si el huésped no llega: quedan `CONFIRMADA` (decisión de las revisiones de las historias).
+1. **Las reservas de canal no se cancelan desde el sistema**, ni siquiera si el huésped no llega: quedan `CONFIRMADA`.
 2. **No se envía disponibilidad ni tarifas** a los canales. En la demostración no hay riesgo real de sobreventa porque los canales son simulados.
 3. **No hay pantalla para administrar canales:** los dos canales y sus claves vienen en los **datos iniciales** (Flyway).
 4. **El monto lo define el canal:** el sistema registra el total que envía el canal en un solo cargo; no recalcula el precio por noche.

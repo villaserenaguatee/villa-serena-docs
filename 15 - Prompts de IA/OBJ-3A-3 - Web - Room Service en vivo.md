@@ -4,27 +4,31 @@
 |---|---|
 | Objetivo | 3A — Estadía y Room Service (documento 13) |
 | Repositorio | `villa-serena-web` |
-| Responsable | Alex |
+| Responsable inicial | Alex |
 | Horas estimadas | 5 h (cola y aviso 2 h; detalle, avance, cancelación y menú 2 h; cliente de tiempo real 1 h) |
 | Cubre | HU-RS-01 a HU-RS-05 y HU-RS-07 (lado web); cliente de tiempo real compartido |
 | Depende de | OBJ-0E (BFF) y contrato parte 2. Para conectar: OBJ-3A-1 (Hugo: Room Service y WebSocket) |
 | Calendario | Mié 7: cliente de tiempo real y cola. Jue 8: detalle, avance y menú |
 
-> **Antes de empezar:** prepara tu computadora con la `16 - Guia de Arranque del Proyecto.md`. Para crear tu rama y subir tu trabajo con un pull request, sigue la sección 3 de `00 - Como usar los prompts.md`.
+> **Referencias de trabajo:** la guía 16 describe el entorno; la guía 00, sección 3, describe el flujo con issues, ramas y PR hacia `develop`.
 
-## Documentos que debes adjuntar a la IA
+## Referencias para la tarea
+
+La lectura se limita a las secciones necesarias para la issue. AGENTS.md contiene los acuerdos de colaboración; estas referencias se amplían solo si hay una dependencia o discrepancia.
 
 - `AGENTS.md`
 - `openapi.yaml` (con la sección `x-websocket`)
 - `HU - Room Service.md`
 - `14 - Tecnologias y Arquitectura.md` (secciones 6 y 6.1)
 
-## Prompt
+El agente presenta un plan breve y continúa con el trabajo autorizado. La implementación puede adaptarse a la estructura existente; el resultado cumple los criterios siguientes.
+
+## Resultado esperado
 
 ```text
-Trabajas en el repositorio villa-serena-web del proyecto Villa Serena (lee AGENTS.md
-y los documentos adjuntos). Responde en español. Copia openapi.yaml y regenera los
-tipos.
+Contexto: repositorio villa-serena-web del proyecto Villa Serena (acuerdos en AGENTS.md
+y referencias pertinentes de la tarea). Comunicación en español. Los tipos se generan desde la copia local de
+openapi.yaml.
 
 PARTE A — Cliente de tiempo real compartido (lo usarán Kim y Alex)
 1. Route Handler del BFF que pide a Spring un ticket con POST /api/v1/auth/ws-ticket
@@ -34,7 +38,7 @@ PARTE A — Cliente de tiempo real compartido (lo usarán Kim y Alex)
    NEXT_PUBLIC_), envía el ticket en CONNECT, pide un ticket nuevo en cada
    reconexión (la librería se reconecta sola) y llama a un callback "alReconectar"
    para recargar los datos. Una sola conexión compartida por pestaña.
-3. Documenta en el README cómo suscribir una pantalla en 3 líneas.
+3. El README incluye un ejemplo breve de suscripción de una pantalla.
 
 PARTE B — Pantallas de Room Service (app/panel/room-service)
 1. Cola (HU-RS-01): solo NUEVO, EN_PREPARACION y EN_CAMINO, el más antiguo
@@ -50,8 +54,7 @@ PARTE B — Pantallas de Room Service (app/panel/room-service)
 5. Menú (HU-RS-05) por categorías con estado; botón "Marcar agotado" solo en
    DISPONIBLE (no hay botón para reactivar).
 
-No hagas: sonidos, indicador de conexión ni edición de cargos.
-Primero muéstrame el plan de archivos; después créalos por pasos.
+Fuera de alcance: sonidos, indicador de conexión y edición de cargos.
 ```
 
 ## Cómo saber que quedó terminado
@@ -63,4 +66,4 @@ Primero muéstrame el plan de archivos; después créalos por pasos.
 
 ## Al terminar
 
-Cuando tu pull request se fusione, abre `17 - Avance del Proyecto.md` (repositorio `villa-serena-docs`), cambia tu casilla de `[ ]` a `[x]` y agrega el número del PR.
+Después de integrar la PR en `develop` y verificar el resultado, la issue queda actualizada o cerrada y la casilla correspondiente de `17 - Avance del Proyecto.md` incluye el número de PR (guía 00, sección 3).

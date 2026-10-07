@@ -1,11 +1,10 @@
-# HU — Channel Manager (versión 3)
+# HU — Channel Manager
 
 > **Rol:** Canal externo (actor no humano, por API), Administrador (`ADMIN`, canal simulado) y Recepción (`RECEPCION`, ve el canal de origen)
 > **Plataforma:** API y Web privada
 > **Prefijo:** `HU-CM`
 > **Total de historias:** 3 (Nivel 1: 3 · Nivel 2: 0)
-> **Referencias:** Documentación V3 / 01 — Alcance (sección D)
-> **Numeración:** nueva en la versión 3. La correspondencia con la versión 2 está en cada historia ("Reemplaza a") y en el índice.
+> **Referencias:** 01 — Alcance (sección D)
 
 ---
 
@@ -34,8 +33,7 @@
 
 **Depende de:** HU-REC-04
 **Reglas relacionadas:** RN-CM-001, RN-CM-003, RN-CM-004, RN-NOT-005, RN-PAG-008, RN-PAG-009, RN-PAG-014, RN-RES-001, RN-RES-005, RN-RES-006, RN-RES-007, RN-RES-009, RN-RES-010, RN-RES-011, RN-RES-019, RN-TAR-008, RN-TAR-009, RN-TAR-010 (documento 10)
-**Reemplaza a:** HU-CM-02 (v2)
-**Notas técnicas:** reutiliza la lógica de disponibilidad y creación de reservas. Las reservas del canal no se cancelan desde el sistema en la versión 1.
+**Notas técnicas:** reutiliza la lógica de disponibilidad y creación de reservas. Las reservas del canal no se cancelan desde el sistema.
 
 ---
 
@@ -61,7 +59,6 @@
 
 **Depende de:** HU-CM-01, HU-REC-06, HU-REC-08
 **Reglas relacionadas:** RN-CAN-012, RN-RES-010, RN-SEG-006 (documento 10)
-**Reemplaza a:** HU-CM-04 (v2)
 
 ---
 
@@ -89,7 +86,6 @@
 
 **Depende de:** HU-CM-01
 **Reglas relacionadas:** RN-CM-004, RN-CM-007, RN-CM-009 (documento 10)
-**Reemplaza a:** HU-CM-05 (v2)
 **Notas técnicas:** el simulador lee las claves en texto plano de sus propias variables de entorno (la base de datos solo guarda el hash). No envía cancelaciones.
 
 ---

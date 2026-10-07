@@ -1,11 +1,10 @@
-# HU — Recepcionista (versión 3)
+# HU — Recepcionista
 
 > **Rol:** Recepcionista (`RECEPCION`). Estas pantallas son solo de Recepción: el Administrador usa únicamente las suyas (R-02).
 > **Plataforma:** Web privada
 > **Prefijo:** `HU-REC`
 > **Total de historias:** 17 (Nivel 1: 16 · Nivel 2: 1)
-> **Referencias:** Documentación V3 / 01 — Alcance (sección B; ALC-MYL-07 de la sección G)
-> **Numeración:** nueva en la versión 3. La correspondencia con la versión 2 está en cada historia ("Reemplaza a") y en el índice.
+> **Referencias:** 01 — Alcance (sección B; ALC-MYL-07 de la sección G)
 
 ---
 
@@ -30,7 +29,6 @@
 
 **Depende de:** Ninguna
 **Reglas relacionadas:** RN-RES-019 (documento 10)
-**Reemplaza a:** HU-REC-01 (v2)
 
 ---
 
@@ -53,7 +51,6 @@
 
 **Depende de:** HU-REC-04
 **Reglas relacionadas:** RN-APP-004, RN-RES-020 (documento 10)
-**Reemplaza a:** HU-REC-02 (v2)
 **Notas técnicas:** como las reservas no se modifican, el número de huéspedes de la reserva no cambia al registrar adicionales.
 
 ---
@@ -79,7 +76,6 @@
 
 **Depende de:** HU-ADM-03, HU-ADM-04, HU-ADM-06
 **Reglas relacionadas:** RN-RES-002, RN-RES-005, RN-RES-006, RN-RES-007, RN-RES-008 (documento 10)
-**Reemplaza a:** HU-REC-04 (v2)
 **Notas técnicas:** usa el mismo cálculo de disponibilidad y de precio que la web pública y el Channel Manager (un solo servicio en el backend).
 
 ---
@@ -106,7 +102,6 @@
 
 **Depende de:** HU-REC-01, HU-REC-03
 **Reglas relacionadas:** RN-NOT-005, RN-PAG-007, RN-PAG-009, RN-RES-001, RN-RES-005, RN-RES-006, RN-RES-007, RN-RES-009, RN-RES-010, RN-RES-011, RN-RES-013, RN-TAR-001, RN-TAR-002, RN-TAR-006, RN-TAR-007, RN-TAR-008 (documento 10)
-**Reemplaza a:** HU-REC-05 (v2)
 
 ---
 
@@ -131,7 +126,6 @@
 
 **Depende de:** HU-REC-04, HU-HUE-06
 **Reglas relacionadas:** RN-CAN-001, RN-CAN-002, RN-CAN-006, RN-CAN-008, RN-CAN-011, RN-CAN-012, RN-CAN-013, RN-RES-004, RN-SEG-006 (documento 10)
-**Reemplaza a:** HU-REC-07 (v2)
 **Notas técnicas:** para cambiar fechas, tipo o número de huéspedes, Recepción cancela la reserva y crea otra (las reservas no se modifican). **Huésped que no llega:** no existe el estado `No-show`; Recepción cancela la reserva con el motivo "No se presentó" y, como faltan menos de 48 horas, no hay reembolso (V-01). **No se envía correo de cancelación:** Recepción avisa al cliente por su cuenta (V-05). **Reserva de canal cuyo huésped no llega:** como las reservas de canal no se cancelan desde el sistema, queda `Confirmada`; es una limitación aceptada, porque no ocurre en la demostración.
 
 ---
@@ -158,7 +152,6 @@
 
 **Depende de:** HU-REC-04
 **Reglas relacionadas:** RN-RES-023 (documento 10)
-**Reemplaza a:** HU-REC-08, HU-REC-10 (v2)
 **Notas técnicas:** el canal de origen se muestra como en HU-CM-02. **Llegadas después de medianoche:** "Llegan hoy" solo muestra las reservas con entrada hoy; quien llega después de medianoche (entrada de ayer) no aparece y Recepción lo busca por nombre o código. Es una limitación aceptada; lo mismo pasa con "Llega hoy" (HU-REC-10) y "Llegada hoy" (HU-MYL-01).
 
 ---
@@ -183,7 +176,6 @@
 
 **Depende de:** HU-REC-04, HU-ADM-04
 **Reglas relacionadas:** RN-HAB-001, RN-HAB-002, RN-RES-002, RN-RES-013, RN-RES-018 (documento 10)
-**Reemplaza a:** HU-REC-09 (v2)
 **Notas técnicas:** también se usa para asignar habitación a las reservas que llegan del canal sin habitación (HU-CM-01).
 
 ---
@@ -213,7 +205,6 @@
 
 **Depende de:** HU-REC-04, HU-REC-07
 **Reglas relacionadas:** RN-RES-018, RN-RES-024 (documento 10)
-**Reemplaza a:** HU-REC-11 (v2)
 
 ---
 
@@ -236,7 +227,6 @@
 
 **Depende de:** HU-REC-08
 **Reglas relacionadas:** RN-RES-025 (documento 10)
-**Reemplaza a:** HU-REC-12 (v2)
 
 ---
 
@@ -263,7 +253,6 @@
 
 **Depende de:** HU-ADM-04
 **Reglas relacionadas:** RN-HAB-014, RN-NOT-009 (documento 10)
-**Reemplaza a:** HU-REC-13 (v2)
 
 ---
 
@@ -286,7 +275,6 @@
 
 **Depende de:** HU-REC-10
 **Reglas relacionadas:** RN-HAB-004, RN-HAB-005, RN-HAB-006, RN-HAB-013, RN-NOT-009 (documento 10)
-**Reemplaza a:** HU-REC-14 (v2)
 
 ---
 
@@ -313,7 +301,6 @@
 
 **Depende de:** HU-REC-04, HU-REC-07
 **Reglas relacionadas:** RN-HAB-004, RN-RES-014 (documento 10)
-**Reemplaza a:** HU-REC-15 (v2)
 
 ---
 
@@ -338,7 +325,6 @@
 
 **Depende de:** HU-REC-04, HU-REC-12
 **Reglas relacionadas:** RN-PAG-010, RN-PAG-011, RN-PAG-019, RN-PAG-020, RN-PAG-021, RN-SEG-006, RN-TAR-009, RN-TAR-010 (documento 10)
-**Reemplaza a:** HU-REC-17, HU-REC-19 (v2)
 **Notas técnicas:** el cargo de room service lo genera el sistema al entregar el pedido (HU-RS-06).
 
 ---
@@ -365,7 +351,6 @@
 
 **Depende de:** HU-REC-13, HU-REC-15
 **Reglas relacionadas:** RN-FAC-005, RN-HAB-002, RN-HAB-004, RN-HAB-008, RN-LIM-009, RN-PAG-007, RN-PAG-013, RN-PAG-014, RN-RES-015, RN-RES-021, RN-RES-022, RN-RS-011 (documento 10)
-**Reemplaza a:** HU-REC-16, HU-REC-18 (v2)
 **Notas técnicas:** el check-out desde la app (HU-HUE-16) produce los mismos efectos; ambos deben usar el mismo servicio del backend. **Salida tarde:** si el huésped no hace el check-out a la hora de salida, no ocurre nada automático; Recepción lo hace cuando el huésped baje, sin cargo extra (este check-out no limita la fecha). Si la habitación tenía otra llegada, ese check-in queda bloqueado porque no está `Libre` + `Limpia` (V-03).
 
 ---
@@ -394,7 +379,6 @@
 
 **Depende de:** HU-ADM-08
 **Reglas relacionadas:** RN-FAC-001, RN-FAC-002, RN-FAC-004, RN-FAC-005, RN-FAC-008, RN-FAC-009, RN-TAR-005 (documento 10)
-**Reemplaza a:** HU-REC-24 (v2)
 **Notas técnicas:** es la historia base de facturación; la usan el check-out de Recepción y el de la app. El correlativo se asigna dentro de la misma transacción del check-out para evitar saltos. Los datos fiscales, la serie y el número inicial existen siempre desde el arranque (datos iniciales), así que no hay bloqueo por "faltan datos de facturación".
 
 ---
@@ -419,7 +403,6 @@
 
 **Depende de:** HU-REC-15
 **Reglas relacionadas:** RN-FAC-007 (documento 10)
-**Reemplaza a:** HU-REC-25 (v2)
 **Notas técnicas:** CSS de impresión (`@media print` y `@page`) con tamaños para 80 mm y carta. No requiere un controlador especial de impresora.
 
 ---
@@ -446,5 +429,4 @@
 
 **Depende de:** HU-REC-10
 **Reglas relacionadas:** RN-HAB-006, RN-MAN-001 (documento 10)
-**Reemplaza a:** HU-REC-22 (v2)
 **Notas técnicas:** es la misma incidencia que crea el personal de Mantenimiento/Limpieza (HU-MYL-06).

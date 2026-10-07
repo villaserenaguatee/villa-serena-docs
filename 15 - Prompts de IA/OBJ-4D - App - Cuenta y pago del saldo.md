@@ -4,31 +4,35 @@
 |---|---|
 | Objetivo | 4 — Check-out (documento 13) |
 | Repositorio | `villa-serena-movil` |
-| Responsable | Carlos |
+| Responsable inicial | Carlos |
 | Horas estimadas | 3 h (ver mi cuenta 0,5 h; pagar el saldo y check-out 2,5 h) |
 | Cubre | HU-HUE-15, HU-HUE-16 |
 | Depende de | OBJ-0F (proyecto Expo). Para conectar: contrato parte 2 (lunes 5), acceso del huésped (OBJ-3A-2) y cuenta y pago desde la app de Pablo (OBJ-4A) |
 | Calendario | **Vie 2: pantallas con datos de prueba** (2 h, adelanto). **Jue 8: conectar al API** (1 h) |
 
-> **Antes de empezar:** prepara tu computadora con la `16 - Guia de Arranque del Proyecto.md`. Para crear tu rama y subir tu trabajo con un pull request, sigue la sección 3 de `00 - Como usar los prompts.md`.
+> **Referencias de trabajo:** la guía 16 describe el entorno; la guía 00, sección 3, describe el flujo con issues, ramas y PR hacia `develop`.
 
-## Documentos que debes adjuntar a la IA
+## Referencias para la tarea
+
+La lectura se limita a las secciones necesarias para la issue. AGENTS.md contiene los acuerdos de colaboración; estas referencias se amplían solo si hay una dependencia o discrepancia.
 
 - `AGENTS.md`
 - `HU - Cliente y Huesped.md` (HU-HUE-15 y HU-HUE-16)
 - `07 - Estados.md` (sección 5: cuenta, cargos, pagos y factura)
 - `openapi.yaml` (desde el lunes 5, con la parte 2)
 
-## Prompt — Viernes 2: pantallas con datos de prueba
+El agente presenta un plan breve y continúa con el trabajo autorizado. La implementación puede adaptarse a la estructura existente; el resultado cumple los criterios siguientes.
+
+## Resultado esperado — Viernes 2: pantallas con datos de prueba
 
 ```text
-Trabajas en el repositorio villa-serena-movil del proyecto Villa Serena (lee
-AGENTS.md y los documentos adjuntos). Responde en español. Expo SDK 54 y Expo
-Router; no cambies de SDK.
+Contexto: repositorio villa-serena-movil del proyecto Villa Serena (acuerdos en
+AGENTS.md y referencias pertinentes de la tarea). Comunicación en español. Expo SDK 54 y Expo
+Router, manteniendo SDK 54.
 
 Objetivo: las pantallas de la cuenta y del check-out del huésped CON DATOS DE
 PRUEBA. El contrato de estos endpoints se congela el lunes; por eso los datos van
-en un solo archivo (lib/mocks/cuenta.ts) con tipos propios, fáciles de reemplazar.
+en un solo archivo (lib/mocks/cuenta.ts) con tipos propios, fáciles de sustituir.
 
 1. Mi cuenta (HU-HUE-15), pantalla de solo lectura:
    - Cargo por alojamiento y cargos adicionales con fecha, concepto y monto.
@@ -57,23 +61,21 @@ en un solo archivo (lib/mocks/cuenta.ts) con tipos propios, fáciles de reemplaz
    - Si el check-out falla, muestra el motivo y permite reintentar sin volver a
      cobrar.
 
-No hagas: no conectes todavía al API, no guardes datos de tarjeta, no agregues
-pagos parciales.
-
-Primero muéstrame el plan de archivos; después créalos por pasos.
+Esta etapa usa datos de prueba; la siguiente conecta al API. La app permanece
+libre de datos de tarjeta y los pagos parciales están fuera de alcance.
 ```
 
-## Prompt — Jueves 8: conectar al API
+## Resultado esperado — Jueves 8: conectar al API
 
 ```text
-Seguimos en villa-serena-movil. Responde en español. Copia el openapi.yaml más
-reciente y regenera los tipos.
+Contexto: villa-serena-movil. Comunicación en español. Los tipos se generan desde la copia local actualizada
+de openapi.yaml.
 
-Reemplaza los datos de prueba de lib/mocks/cuenta.ts por las llamadas reales al
+La pantalla sustituye los datos de lib/mocks/cuenta.ts por llamadas reales al
 API (con el JWT del huésped) para la cuenta, iniciar el pago del saldo, el
-check-out y la factura, según openapi.yaml. Muestra los errores del API con su
-mensaje en español. Al terminar, borra el archivo de datos de prueba.
-No cambies el diseño ni agregues funciones.
+check-out y la factura, según openapi.yaml. Los errores del API se muestran con su
+mensaje en español; el archivo de datos de prueba deja de formar parte de la solución.
+El diseño y el alcance funcional se conservan al conectar el API.
 ```
 
 ## Cómo saber que quedó terminado
@@ -85,4 +87,4 @@ No cambies el diseño ni agregues funciones.
 
 ## Al terminar
 
-Cuando tu pull request se fusione, abre `17 - Avance del Proyecto.md` (repositorio `villa-serena-docs`), cambia tu casilla de `[ ]` a `[x]` y agrega el número del PR. Si no sabes cómo, avisa en el grupo y Josué la marca.
+Después de integrar la PR en `develop` y verificar el resultado, la issue queda actualizada o cerrada y la casilla correspondiente de `17 - Avance del Proyecto.md` incluye el número de PR (guía 00, sección 3). Si hay un bloqueo, Alex facilita su resolución; el avance puede actualizarlo quien completó la tarea.

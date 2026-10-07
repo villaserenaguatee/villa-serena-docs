@@ -4,15 +4,17 @@
 |---|---|
 | Objetivo | 4 — Check-out (documento 13) |
 | Repositorio | `villa-serena-api` |
-| Responsable | Hugo |
+| Responsable inicial | Hugo |
 | Horas estimadas | 2 h |
 | Cubre | HU-REC-15 (lado API) y el PDF que imprime HU-REC-16 |
 | Depende de | OBJ-0C (serie de la factura y datos fiscales en los datos iniciales), Outbox (OBJ-1C) y contrato parte 2. La llama el check-out de Pablo (OBJ-4A) |
 | Calendario | Mié 7 (para que Pablo la tenga el jueves 8) |
 
-> **Antes de empezar:** prepara tu computadora con la `16 - Guia de Arranque del Proyecto.md`. Para crear tu rama y subir tu trabajo con un pull request, sigue la sección 3 de `00 - Como usar los prompts.md`.
+> **Referencias de trabajo:** la guía 16 describe el entorno; la guía 00, sección 3, describe el flujo con issues, ramas y PR hacia `develop`.
 
-## Documentos que debes adjuntar a la IA
+## Referencias para la tarea
+
+La lectura se limita a las secciones necesarias para la issue. AGENTS.md contiene los acuerdos de colaboración; estas referencias se amplían solo si hay una dependencia o discrepancia.
 
 - `AGENTS.md`
 - `openapi.yaml`
@@ -20,11 +22,13 @@
 - `07 - Estados.md` (sección 5.4)
 - `14 - Tecnologias y Arquitectura.md` (AD-14 y sección 4.1)
 
-## Prompt
+El agente presenta un plan breve y continúa con el trabajo autorizado. La implementación puede adaptarse a la estructura existente; el resultado cumple los criterios siguientes.
+
+## Resultado esperado
 
 ```text
-Trabajas en el repositorio villa-serena-api del proyecto Villa Serena (lee AGENTS.md
-y los documentos adjuntos). Responde en español. Paquete facturacion.
+Contexto: repositorio villa-serena-api del proyecto Villa Serena (acuerdos en AGENTS.md
+y referencias pertinentes de la tarea). Comunicación en español. Paquete facturacion.
 
 1. FacturaService.emitir(cuenta, nit, nombreComprador): lo llama el check-out de
    Pablo DENTRO de su transacción. Si lanza un error, el check-out completo se
@@ -46,8 +50,7 @@ y los documentos adjuntos). Responde en español. Paquete facturacion.
    check-out se confirme (si el correo falla, el check-out sigue válido).
 6. Pruebas: correlativo consecutivo con dos emisiones seguidas, segunda factura de
    la misma cuenta (409) y cargos anulados fuera del PDF.
-No crees migraciones: pídeselas a Josué.
-Primero muéstrame el plan; después impleméntalo.
+Los cambios de esquema necesarios se coordinan mediante issues y PR, conservando las migraciones ya aplicadas.
 ```
 
 ## Cómo saber que quedó terminado
@@ -58,4 +61,4 @@ Primero muéstrame el plan; después impleméntalo.
 
 ## Al terminar
 
-Cuando tu pull request se fusione, abre `17 - Avance del Proyecto.md` (repositorio `villa-serena-docs`), cambia tu casilla de `[ ]` a `[x]` y agrega el número del PR.
+Después de integrar la PR en `develop` y verificar el resultado, la issue queda actualizada o cerrada y la casilla correspondiente de `17 - Avance del Proyecto.md` incluye el número de PR (guía 00, sección 3).

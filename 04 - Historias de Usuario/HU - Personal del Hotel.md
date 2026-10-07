@@ -1,11 +1,10 @@
-# HU — Personal del Hotel (versión 3)
+# HU — Personal del Hotel
 
 > **Rol:** Todo el personal: Administrador (`ADMIN`), Recepcionista (`RECEPCION`), Room Service (`ROOM_SERVICE`) y Mantenimiento/Limpieza (`MANTENIMIENTO_LIMPIEZA`)
 > **Plataforma:** Web privada
 > **Prefijo:** `HU-EMP`
 > **Total de historias:** 2 (Nivel 1: 2 · Nivel 2: 0)
-> **Referencias:** Documentación V3 / 01 — Alcance (secciones 5.C y 5.H)
-> **Numeración:** nueva en la versión 3. La correspondencia con la versión 2 está en cada historia ("Reemplaza a") y en el índice.
+> **Referencias:** 01 — Alcance (secciones 5.C y 5.H)
 
 Estas historias son **comunes a todos los empleados** del hotel, sin importar su rol: todos entran a la web privada con correo y contraseña, y todos deben cambiar la contraseña temporal que les entrega el Administrador. Por eso se escriben una sola vez aquí y no se repiten en el archivo de cada rol.
 
@@ -37,7 +36,6 @@ El acceso del huésped (correo + código en la app) está en "HU - Cliente y Hue
 
 **Depende de:** Ninguna
 **Reglas relacionadas:** RN-PER-011, RN-PER-013, RN-PER-014, RN-PER-015, RN-SEG-005 (documento 10)
-**Reemplaza a:** Nueva
 **Notas técnicas:** Spring Security + JWT; los permisos por rol se validan en el backend, no solo en la interfaz.
 
 ---
@@ -63,4 +61,3 @@ El acceso del huésped (correo + código en la app) está en "HU - Cliente y Hue
 
 **Depende de:** HU-EMP-01, HU-ADM-01
 **Reglas relacionadas:** RN-PER-011, RN-PER-012 (documento 10)
-**Reemplaza a:** Nueva

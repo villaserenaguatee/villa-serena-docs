@@ -1,11 +1,10 @@
-# HU — Administrador (versión 3)
+# HU — Administrador
 
 > **Rol:** Administrador (`ADMIN`)
 > **Plataforma:** Web privada
 > **Prefijo:** `HU-ADM`
 > **Total de historias:** 13 (Nivel 1: 10 · Nivel 2: 3)
-> **Referencias:** Documentación V3 / 01 — Alcance (sección 5.C)
-> **Numeración:** nueva en la versión 3. La correspondencia con la versión 2 está en cada historia ("Reemplaza a") y en el índice.
+> **Referencias:** 01 — Alcance (sección 5.C)
 
 Las historias comunes a todo el personal (iniciar sesión y cambiar la contraseña temporal) están en **"HU - Personal del Hotel"**. El Administrador usa **solo sus pantallas** y el canal simulado (HU-CM-03); no usa las pantallas de Recepción ni de piso (R-02).
 
@@ -34,7 +33,6 @@ Las historias comunes a todo el personal (iniciar sesión y cambiar la contrase�
 
 **Depende de:** Ninguna
 **Reglas relacionadas:** RN-PER-001, RN-PER-007, RN-PER-008, RN-PER-009 (documento 10)
-**Reemplaza a:** HU-ADM-01 (v2)
 **Notas técnicas:** la contraseña temporal se guarda con hash, igual que cualquier contraseña; nunca en texto plano.
 
 ---
@@ -60,7 +58,6 @@ Las historias comunes a todo el personal (iniciar sesión y cambiar la contrase�
 
 **Depende de:** HU-ADM-01
 **Reglas relacionadas:** RN-PER-001, RN-PER-002, RN-PER-005, RN-PER-007, RN-PER-010, RN-PER-014, RN-SEG-005 (documento 10)
-**Reemplaza a:** HU-ADM-02 (v2)
 
 ---
 
@@ -87,7 +84,6 @@ Las historias comunes a todo el personal (iniciar sesión y cambiar la contrase�
 
 **Depende de:** Ninguna
 **Reglas relacionadas:** RN-HAB-009, RN-HAB-010, RN-TAR-004, RN-TAR-007 (documento 10)
-**Reemplaza a:** HU-ADM-05 (v2)
 
 ---
 
@@ -112,7 +108,6 @@ Las historias comunes a todo el personal (iniciar sesión y cambiar la contrase�
 
 **Depende de:** HU-ADM-03
 **Reglas relacionadas:** RN-HAB-007, RN-HAB-011, RN-HAB-012 (documento 10)
-**Reemplaza a:** HU-ADM-06 (v2)
 
 ---
 
@@ -137,7 +132,6 @@ Las historias comunes a todo el personal (iniciar sesión y cambiar la contrase�
 
 **Depende de:** Ninguna
 **Reglas relacionadas:** RN-RS-005, RN-RS-006, RN-RS-008, RN-RS-013 (documento 10)
-**Reemplaza a:** HU-ADM-07 (v2)
 
 ---
 
@@ -177,7 +171,6 @@ Ejemplo: precio base Q500.00, temporada alta +20 %, noche de sábado +10 % → Q
 
 **Depende de:** HU-ADM-03
 **Reglas relacionadas:** RN-TAR-003, RN-TAR-004, RN-TAR-007, RN-TAR-011 (documento 10)
-**Reemplaza a:** HU-ADM-09 (v2)
 
 ---
 
@@ -201,7 +194,6 @@ Ejemplo: precio base Q500.00, temporada alta +20 %, noche de sábado +10 % → Q
 
 **Depende de:** HU-ADM-03
 **Reglas relacionadas:** RN-TAR-002, RN-TAR-004, RN-TAR-007, RN-TAR-012 (documento 10)
-**Reemplaza a:** HU-ADM-10 (v2)
 
 ---
 
@@ -227,7 +219,6 @@ Ejemplo: precio base Q500.00, temporada alta +20 %, noche de sábado +10 % → Q
 
 **Depende de:** Ninguna
 **Reglas relacionadas:** RN-FAC-004, RN-FAC-009, RN-FAC-010, RN-FAC-011 (documento 10)
-**Reemplaza a:** HU-ADM-19, HU-ADM-21 (v2)
 **Notas técnicas:** todos los datos de esta pantalla (incluidos los fiscales, la serie y el número inicial) vienen ya cargados en los datos iniciales, así que la facturación funciona desde el primer arranque. Las horas de check-in (15:00) y check-out (12:00) son **fijas** (constantes del sistema), no se configuran (R-01). El Wi-Fi para huéspedes es Nivel 2 y se configura en HU-ADM-11.
 
 ---
@@ -254,7 +245,6 @@ Ejemplo: precio base Q500.00, temporada alta +20 %, noche de sábado +10 % → Q
 
 **Depende de:** Ninguna
 **Reglas relacionadas:** RN-IND-001, RN-IND-002, RN-IND-003, RN-IND-004, RN-TAR-009 (documento 10)
-**Reemplaza a:** HU-ADM-18 (v2)
 
 ---
 
@@ -279,7 +269,6 @@ Ejemplo: precio base Q500.00, temporada alta +20 %, noche de sábado +10 % → Q
 
 **Depende de:** HU-MYL-06, HU-MYL-07, HU-MYL-08
 **Reglas relacionadas:** RN-MAN-007, RN-MAN-012, RN-MAN-013 (documento 10)
-**Reemplaza a:** HU-ADM-16, HU-ADM-17 (v2)
 
 ---
 
@@ -307,7 +296,6 @@ Ejemplo: precio base Q500.00, temporada alta +20 %, noche de sábado +10 % → Q
 
 **Depende de:** Ninguna
 **Reglas relacionadas:** RN-APP-012 (documento 10)
-**Reemplaza a:** HU-ADM-08 (v2)
 
 ---
 
@@ -333,7 +321,6 @@ Ejemplo: precio base Q500.00, temporada alta +20 %, noche de sábado +10 % → Q
 
 **Depende de:** HU-ADM-01
 **Reglas relacionadas:** RN-TUR-001, RN-TUR-002, RN-TUR-003, RN-TUR-005 (documento 10)
-**Reemplaza a:** HU-ADM-03, HU-ADM-04 (v2)
 
 ---
 
@@ -359,4 +346,3 @@ Ejemplo: precio base Q500.00, temporada alta +20 %, noche de sábado +10 % → Q
 
 **Depende de:** Ninguna
 **Reglas relacionadas:** RN-INV-001, RN-INV-002, RN-INV-003, RN-INV-005, RN-INV-010, RN-INV-011 (documento 10)
-**Reemplaza a:** HU-ADM-12, HU-ADM-13, HU-ADM-14 (v2)

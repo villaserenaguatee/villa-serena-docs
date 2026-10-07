@@ -1,18 +1,17 @@
-# 07 — Estados (versión 3)
+# 07 — Estados
 
 > **Proyecto:** Property Management System (PMS) para Hoteles Boutique — Hotel ficticio "Villa Serena"
 > **Estado:** 📝 Para revisión del equipo
 > **Fecha:** 1 de octubre de 2026
-> **Basado en:** Documentación V3 / 01 — Alcance (versión 3) y 04 — Historias de Usuario (versión 3)
-> **Reemplaza a:** 07 — Estados, versión 2 (carpeta "Documentación Definitiva")
-> **Siguiente documento:** 10 — Reglas de Negocio (versión 3)
+> **Basado en:** 01 — Alcance y 04 — Historias de Usuario
+> **Siguiente documento:** 10 — Reglas de Negocio
 
 ---
 
 ## Índice
 
 1. [Propósito y cómo leer este documento](#1-propósito-y-cómo-leer-este-documento)
-2. [Decisiones de la versión 3](#2-decisiones-de-la-versión-3)
+2. [Decisiones de diseño](#2-decisiones-de-diseño)
 3. [Reserva](#3-reserva)
 4. [Habitación](#4-habitación)
 5. [Cuenta, cargos, pagos y factura](#5-cuenta-cargos-pagos-y-factura)
@@ -23,14 +22,12 @@
 10. [Reglas generales](#10-reglas-generales)
 11. [Efectos automáticos entre módulos](#11-efectos-automáticos-entre-módulos)
 12. [Tiempo real, notificaciones push y correos](#12-tiempo-real-notificaciones-push-y-correos)
-13. [Qué cambió respecto a la versión 2](#13-qué-cambió-respecto-a-la-versión-2)
-14. [Observaciones para revisión](#14-observaciones-para-revisión)
 
 ---
 
 ## 1. Propósito y cómo leer este documento
 
-Define **los estados** de cada elemento del sistema, **qué cambios de estado están permitidos**, **quién** los hace, **con qué condición** y **qué efectos** producen. Todo sale de los criterios de las historias de usuario v3; este documento no agrega reglas.
+Define **los estados** de cada elemento del sistema, **qué cambios de estado están permitidos**, **quién** los hace, **con qué condición** y **qué efectos** producen. Todo sale de los criterios de las historias de usuario; este documento no agrega reglas.
 
 - Cada tabla de transiciones es una **lista cerrada**: todo cambio que no aparece está **prohibido**.
 - El **código** (ej. `EN_ESTADIA`) es el valor que se guarda en la base de datos y se usa igual en backend, web, app y pruebas.
@@ -62,7 +59,7 @@ Define **los estados** de cada elemento del sistema, **qué cambios de estado es
 
 ---
 
-## 2. Decisiones de la versión 3
+## 2. Decisiones de diseño
 
 | # | Decisión | Origen |
 |---|---|---|
@@ -453,31 +450,3 @@ REPORTADA ──► EN_PROCESO ──► RESUELTA
 | Factura en PDF | F1 (check-out) | HU-REC-15, HU-HUE-16 |
 
 No se envía correo al cancelar una reserva (HU-REC-05).
-
----
-
-## 13. Qué cambió respecto a la versión 2
-
-| Elemento | Versión 2 | Versión 3 |
-|---|---|---|
-| Reserva | 6 estados, con `NO_SHOW` automático; cancelaban huésped, Recepción, Administrador y canal; se modificaban fechas y habitación | **5 estados**, sin `NO_SHOW`; solo Recepción cancela, y solo `CONFIRMADA` que no sea de canal; la `PENDIENTE_PAGO` se cancela sola; no se modifica |
-| Check-in | Solo el día de llegada; check-in anticipado en la app | Desde la entrada hasta el día anterior a la salida; sin check-in anticipado |
-| Habitación | `RECEPCION` y `ADMIN` marcaban como sucia; liberación al cerrar o cancelar órdenes | Solo `RECEPCION` marca como sucia; liberación al **resolver** la incidencia |
-| Pago | Reembolsos parciales; pago en Recepción ≤ saldo; saldo a favor | **Pago único** por el saldo total; reembolso solo total |
-| Factura | `EMITIDA` y `ANULADA`; marca "COPIA" | Solo `EMITIDA`; sin "COPIA" |
-| Pedido | Lo creaban el huésped y Room Service (teléfono); el Administrador cancelaba | Solo el huésped desde la app; cancela Room Service o el sistema en el check-out |
-| Solicitud | La creaban y cancelaban también Recepción y el Administrador; en el check-out se cancelaban solo las `PENDIENTE` | Solo el huésped; en el check-out se cancelan `PENDIENTE` y `EN_PROCESO` |
-| Incidencia | 6 estados (`ASIGNADA`, `CERRADA`, `CANCELADA`); el Administrador asignaba, reasignaba, devolvía y cerraba | **3 estados**; el técnico la toma; el Administrador solo consulta |
-| Estados simples | Reporte de faltante, objeto olvidado y canal con estado | Se eliminan (descartados en el Alcance o sin pantalla) |
-| Tiempo real y push | Todos los cambios en tiempo real; push en `EN_CAMINO` y recordatorio de check-out | **4 eventos**; push solo en `ENTREGADO` y `ATENDIDA` |
-| Correos | Correo al cancelar | Sin correo al cancelar |
-
----
-
-## 14. Observaciones de la revisión (aprobadas y aplicadas el 1 de octubre)
-
-| # | Observación | Decisión aplicada |
-|---|---|---|
-| O-01 | HU-HUE-06 dice "si el pago falla (pago `Fallido`) … puede reintentar con el mismo enlace" (criterio 4) y muestra "pago fallido (con opción de reintentar)" (criterio 6). Pero en Stripe Checkout un intento rechazado no cierra la sesión: el cliente reintenta en la misma página. Si el pago pasara a `FALLIDO` (estado final), el reintento no tendría a dónde ir | **Corregir la frase:** el pago sigue `PENDIENTE` mientras la sesión esté abierta (los intentos rechazados no cambian su estado) y pasa a `FALLIDO` solo cuando la sesión vence (P3). La página de retorno muestra "pago no completado" con la opción de reintentar mientras la reserva siga `Pendiente de pago`. Además, el backend solo escucha 2 avisos de Stripe (pagado y vencido). **Aplicado** en HU-HUE-06 (criterios 4 y 6), en P3 y en el índice (sección 7) |
-| O-02 | El índice de historias (sección 3) no lista el estado del **cargo**, aunque HU-REC-13 y HU-HUE-15 hablan de cargos anulados | Agregar la fila "Cargo de la cuenta: `Vigente` · `Anulado`" en la sección 3 del índice. **Aplicado** |
-| O-03 | Los pedidos que el sistema cancela en el check-out (S6) no tienen un motivo escrito por Room Service, y la app muestra el motivo de cada cancelación (HU-HUE-11) | El sistema guarda el motivo fijo "Estadía finalizada". Solo es un texto; no agrega trabajo. **Aplicado** en S6 |

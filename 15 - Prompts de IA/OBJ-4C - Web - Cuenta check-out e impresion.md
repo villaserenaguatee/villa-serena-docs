@@ -4,31 +4,35 @@
 |---|---|
 | Objetivo | 4 — Check-out (documento 13) |
 | Repositorio | `villa-serena-web` |
-| Responsable | Kim |
+| Responsable inicial | Kim |
 | Horas estimadas | 3 h (cuenta y cargos 1 h; check-out, factura e impresión 2 h) |
 | Cubre | HU-REC-13, HU-REC-14, HU-REC-15 (vista) y HU-REC-16 |
 | Depende de | OBJ-0E (proyecto web y BFF). Para conectar: contrato parte 2 (lunes 5), cuenta y check-out de Pablo (OBJ-4A) y factura de Hugo (OBJ-4B) |
 | Calendario | **Vie 2: pantallas con datos de prueba** (2 h, adelanto). **Jue 8: conectar al API** (1 h) |
 
-> **Antes de empezar:** prepara tu computadora con la `16 - Guia de Arranque del Proyecto.md`. Para crear tu rama y subir tu trabajo con un pull request, sigue la sección 3 de `00 - Como usar los prompts.md`.
+> **Referencias de trabajo:** la guía 16 describe el entorno; la guía 00, sección 3, describe el flujo con issues, ramas y PR hacia `develop`.
 
-## Documentos que debes adjuntar a la IA
+## Referencias para la tarea
+
+La lectura se limita a las secciones necesarias para la issue. AGENTS.md contiene los acuerdos de colaboración; estas referencias se amplían solo si hay una dependencia o discrepancia.
 
 - `AGENTS.md`
 - `HU - Recepcionista.md` (HU-REC-13 a HU-REC-16)
 - `07 - Estados.md` (sección 5: cuenta, cargos, pagos y factura)
 - `openapi.yaml` (desde el lunes 5, con la parte 2)
 
-## Prompt — Viernes 2: pantallas con datos de prueba
+El ámbito de archivos es una referencia de ubicación; los ajustes necesarios de integración se coordinan sin exclusividad personal. El agente presenta un plan breve y continúa con el trabajo autorizado. La implementación puede adaptarse a la estructura existente; el resultado cumple los criterios siguientes.
+
+## Resultado esperado — Viernes 2: pantallas con datos de prueba
 
 ```text
-Trabajas en el repositorio villa-serena-web del proyecto Villa Serena (lee AGENTS.md
-y los documentos adjuntos). Responde en español.
+Contexto: repositorio villa-serena-web del proyecto Villa Serena (acuerdos en AGENTS.md
+y referencias pertinentes de la tarea). Comunicación en español.
 
 Objetivo: las pantallas de Recepción para la cuenta, el check-out y la factura,
 CON DATOS DE PRUEBA. El contrato de estos endpoints se congela el lunes; por eso
 los datos van en un solo archivo (lib/mocks/cuenta.ts) con tipos propios, fáciles
-de reemplazar después.
+de sustituir después.
 
 1. Cuenta (HU-REC-13) en app/panel/recepcion/reservas/[codigo]/cuenta:
    - Cargo por alojamiento con detalle por noche (o una línea si es de canal),
@@ -57,24 +61,22 @@ de reemplazar después.
    imprima la factura, sin menús; en 80 mm los montos quedan alineados y nada se
    corta. Al terminar el check-out se ofrece imprimir de inmediato.
 
-No hagas: no conectes todavía al API, no agregues abonos, descuentos ni
-anulación de facturas. Trabaja solo dentro de app/panel/recepcion y
-components/panel.
-
-Primero muéstrame el plan de archivos; después créalos por pasos.
+Esta etapa usa datos de prueba; la siguiente conecta al API. Abonos, descuentos
+y anulación de facturas están fuera de alcance. Ámbito principal:
+app/panel/recepcion y components/panel.
 ```
 
-## Prompt — Jueves 8: conectar al API
+## Resultado esperado — Jueves 8: conectar al API
 
 ```text
-Seguimos en villa-serena-web. Responde en español. Copia el openapi.yaml más
-reciente y regenera los tipos.
+Contexto: villa-serena-web. Comunicación en español. Los tipos se generan desde la copia local actualizada
+de openapi.yaml.
 
-Reemplaza los datos de prueba de lib/mocks/cuenta.ts por las llamadas reales al
+La pantalla sustituye los datos de lib/mocks/cuenta.ts por llamadas reales al
 API (a través del BFF) para la cuenta, agregar y anular cargos, el check-out y el
-detalle de la factura, según openapi.yaml. Muestra los errores del API con su
-mensaje en español. Al terminar, borra el archivo de datos de prueba.
-No cambies el diseño ni agregues funciones.
+detalle de la factura, según openapi.yaml. Los errores del API se muestran con su
+mensaje en español; el archivo de datos de prueba deja de formar parte de la solución.
+El diseño y el alcance funcional se conservan al conectar el API.
 ```
 
 ## Cómo saber que quedó terminado
@@ -86,4 +88,4 @@ No cambies el diseño ni agregues funciones.
 
 ## Al terminar
 
-Cuando tu pull request se fusione, abre `17 - Avance del Proyecto.md` (repositorio `villa-serena-docs`), cambia tu casilla de `[ ]` a `[x]` y agrega el número del PR. Si no sabes cómo, avisa en el grupo y Josué la marca.
+Después de integrar la PR en `develop` y verificar el resultado, la issue queda actualizada o cerrada y la casilla correspondiente de `17 - Avance del Proyecto.md` incluye el número de PR (guía 00, sección 3). Si hay un bloqueo, Alex facilita su resolución; el avance puede actualizarlo quien completó la tarea.

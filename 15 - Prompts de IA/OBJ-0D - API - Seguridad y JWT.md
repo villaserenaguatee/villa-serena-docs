@@ -4,15 +4,17 @@
 |---|---|
 | Objetivo | 0 — Base (documento 13) |
 | Repositorio | `villa-serena-api` |
-| Responsable | Pablo |
+| Responsable inicial | Pablo |
 | Horas estimadas | 4 h |
 | Cubre | HU-EMP-01, HU-EMP-02; tareas técnicas: permisos por rol (ALC-TRA-02) y primer Administrador por variables de entorno (ALC-TRA-01) |
-| Depende de | OBJ-0B (proyecto base). Las tablas `empleados` y `refresh_tokens` las crea Josué (OBJ-0C) |
+| Depende de | OBJ-0B (proyecto base). Las tablas `empleados` y `refresh_tokens` corresponden a OBJ-0C |
 | Calendario | Vie 2 (2,5 h) y Lun 5 (1,5 h) |
 
-> **Antes de empezar:** prepara tu computadora con la `16 - Guia de Arranque del Proyecto.md` (instalar, `.env` y encender Docker). Para crear tu rama y subir tu trabajo con un pull request, sigue la sección 3 de `00 - Como usar los prompts.md`.
+> **Referencias de trabajo:** la guía 16 describe el entorno; la guía 00, sección 3, describe el flujo con issues, ramas y PR hacia `develop`.
 
-## Documentos que debes adjuntar a la IA
+## Referencias para la tarea
+
+La lectura se limita a las secciones necesarias para la issue. AGENTS.md contiene los acuerdos de colaboración; estas referencias se amplían solo si hay una dependencia o discrepancia.
 
 - `AGENTS.md`
 - `14 - Tecnologias y Arquitectura.md` (secciones 6 y 6.1)
@@ -20,23 +22,25 @@
 - `08 - Inventario Turnos y Personal.md` (sección 3)
 - `04 - Historias de Usuario/HU - Personal del Hotel.md`
 
-## Prompt
+El agente presenta un plan breve y continúa con el trabajo autorizado. La implementación puede adaptarse a la estructura existente; el resultado cumple los criterios siguientes.
+
+## Resultado esperado
 
 ```text
-Trabajas en el repositorio villa-serena-api del proyecto Villa Serena (lee AGENTS.md
-y los documentos adjuntos). Responde en español.
+Contexto: repositorio villa-serena-api del proyecto Villa Serena (acuerdos en AGENTS.md
+y referencias pertinentes de la tarea). Comunicación en español.
 
 Objetivo: seguridad del personal con Spring Security + JWT (HU-EMP-01 y HU-EMP-02).
 El acceso del huésped por código OTP NO va aquí (es del objetivo 3A, de Carlos),
-pero deja el diseño listo para agregarlo sin rehacer nada.
+la base permite incorporarlo después sin rehacer la seguridad.
 
-Implementa en los paquetes config y auth:
+Seguridad implementada en los paquetes config y auth:
 1. JWT propio con OAuth2 Resource Server: firma con una clave del .env
    (JWT_SECRET o par de llaves; nunca en el código). Token de acceso de 15 min
    con: sub (id), tipo (EMPLEADO o HUESPED), rol, area (solo
    MANTENIMIENTO_LIMPIEZA) y debeCambiarContrasena. Sin datos personales.
 2. Refresh token de 7 días, rotativo (cada uso emite otro e invalida el
-   anterior), guardado solo como hash en la tabla refresh_tokens (la crea Josué).
+   anterior), guardado solo como hash en la tabla refresh_tokens (OBJ-0C).
 3. Endpoints (rutas en español, bajo /api/v1/auth):
    - POST /login: correo y contraseña (BCrypt). 5 intentos fallidos seguidos
      bloquean 15 min. Empleado INACTIVO no entra. Responde los tokens y los datos
@@ -44,20 +48,20 @@ Implementa en los paquetes config y auth:
    - POST /renovar: rota el refresh. Revisa aquí que el empleado siga ACTIVO.
    - POST /cerrar-sesion: revoca el refresh.
    - POST /cambiar-contrasena: contraseña actual y nueva (mínimo 8 caracteres,
-     al menos una letra y un número, distinta de la actual). Quita la marca de
+     al menos una letra y un número, distinta de la actual). El cambio quita la marca de
      temporal y emite tokens nuevos.
    - GET /yo: datos del empleado autenticado.
 4. Mientras debeCambiarContrasena sea verdadero, Spring rechaza cualquier
    petición excepto /cambiar-contrasena, /cerrar-sesion y /yo (documento 14,
    sección 6.1, punto 7).
 5. Permisos por rol: @EnableMethodSecurity; roles ADMIN, RECEPCION, ROOM_SERVICE,
-   MANTENIMIENTO_LIMPIEZA y HUESPED. Deja un ejemplo comentado de cómo aplicar
+   MANTENIMIENTO_LIMPIEZA y HUESPED. La referencia incluye un ejemplo comentado de cómo aplicar
    cada símbolo de la matriz (documento 09, sección 7.2). Respuestas: 401 sin
    sesión, 403 sin permiso, con el formato de error del proyecto.
 6. Rutas públicas según el documento 09 (sección 7.3): por ahora /api/v1/publico/**,
    el webhook de Stripe y la API del canal quedan permitidos (sus propias
    protecciones las agregan sus responsables), además de /actuator/health,
-   /actuator/prometheus y Swagger. Quita la configuración temporal de Hugo.
+   /actuator/prometheus y Swagger. La configuración final sustituye la temporal de OBJ-0B.
 7. Primer Administrador: al arrancar, si no existe un empleado con el correo
    ADMIN_EMAIL, se crea como ADMIN con ADMIN_EMAIL, ADMIN_NAME y ADMIN_PASSWORD
    del entorno, con contraseña temporal. Si las variables no están, no hace nada.
@@ -65,13 +69,11 @@ Implementa en los paquetes config y auth:
    bloqueo tras 5 intentos, renovación con rotación, cierre de sesión, bloqueo
    por contraseña temporal y un 403 por rol.
 
-No hagas:
-- No implementes el OTP del huésped, el ticket del WebSocket ni "olvidé mi
-  contraseña" (no existe; el Administrador la restablece, fuera del hito).
-- No crees migraciones (pídeselas a Josué si falta una columna).
-- No guardes tokens ni contraseñas en texto plano ni en los logs.
-
-Primero muéstrame el plan de clases y endpoints; después impleméntalo por pasos.
+Fuera de alcance:
+- El OTP y el ticket WebSocket corresponden a otros objetivos. "Olvidé mi
+  contraseña" queda fuera del hito; el restablecimiento corresponde al Administrador.
+- Los cambios de esquema se coordinan mediante issues y PR, conservando las migraciones ya aplicadas.
+- Los tokens y contraseñas no aparecen en texto plano en almacenamiento ni logs.
 ```
 
 ## Cómo saber que quedó terminado
@@ -85,4 +87,4 @@ Primero muéstrame el plan de clases y endpoints; después impleméntalo por pas
 
 ## Al terminar
 
-Cuando tu pull request se fusione, abre `17 - Avance del Proyecto.md` (repositorio `villa-serena-docs`), cambia tu casilla de `[ ]` a `[x]` y agrega el número del PR. Si no sabes cómo, avisa en el grupo y Josué la marca.
+Después de integrar la PR en `develop` y verificar el resultado, la issue queda actualizada o cerrada y la casilla correspondiente de `17 - Avance del Proyecto.md` incluye el número de PR (guía 00, sección 3). Si hay un bloqueo, Alex facilita su resolución; el avance puede actualizarlo quien completó la tarea.
