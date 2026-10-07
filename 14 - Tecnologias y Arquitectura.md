@@ -4,7 +4,7 @@
 > **Estado:** 📝 Para revisión del equipo (con 4 supuestos y 1 pendiente por confirmar, sección 14)
 > **Fecha:** 1 de octubre de 2026
 > **Basado en:** 01 — Alcance, 07 — Estados y 09 — Matriz de Permisos
-> **Hito del 10 de octubre: flujo principal funcionando en local con Docker, con los recortes aprobados del documento 13.** La VPS, Cloudflare, CI/CD y los backups van después (D-12, D-22).
+> **Hito del 10 de octubre: flujo principal funcionando en local con Docker, con los recortes aprobados del documento 13.** La VPS, Cloudflare para producción, CI/CD de despliegue y los backups van después (D-12, D-22). Los workflows de colaboración y un Cloudflare Tunnel temporal para pruebas entre integrantes pueden usarse durante el desarrollo.
 
 ---
 
@@ -55,7 +55,7 @@ Confirmadas por el catedrático. No se sustituyen.
 |---|---|---|
 | AD-01 | **Spring Boot 4.1 con Java 21 LTS** expone una **API REST** con toda la lógica de negocio | Obligatorio |
 | AD-02 | **Spring Security + JWT** para todos: personal con correo y contraseña (**contraseña temporal** generada por el Administrador y cambio obligatorio); huésped con **código OTP por correo** | Obligatorio; HU-ADM-01, HU-EMP-02, HU-HUE-08 |
-| AD-03 | **Next.js es el BFF de la web:** el navegador solo habla con Next.js, que guarda el JWT en una **cookie httpOnly** y llama a Spring | Patrón BFF obligatorio |
+| AD-03 | **Next.js aplica el patrón BFF:** las peticiones HTTP de la web al API pasan por Next.js, que mantiene el JWT en cookies httpOnly y llama a Spring. El WebSocket conecta directamente a Spring mediante un ticket temporal obtenido por el BFF | Patrón BFF con excepción explícita de WebSocket |
 | AD-04 | **La app llama directamente a Spring** (API y WebSocket) con su propio JWT guardado en `expo-secure-store`, **sin pasar por el BFF** | La app no usa cookies de navegador; HU-HUE-11 |
 | AD-05 | **CORS** en Spring permite solo los orígenes propios (en el hito, `http://localhost:3000`) | Obligatorio |
 | AD-06 | **PostgreSQL 17** con migraciones **Flyway** y **Spring Data JPA**. Las reglas que nunca deben romperse también son **restricciones de la base de datos** (sección 5) | Doble protección |
@@ -142,7 +142,7 @@ Grafana (Docker) ─────muestra──────────► Prometh
 
 | Tecnología | Uso |
 |---|---|
-| **Next.js 15** (App Router) + **React 19** | Web pública, panel privado y **BFF** (versión 15 o 16 pendiente; sección 14) |
+| **Next.js 15** (App Router) + **React 19** | Web pública, panel privado y **BFF**; versión principal acordada (P-01 resuelto) |
 | **Route Handlers de Next.js** | BFF: login, cierre de sesión, renovación y reenvío de peticiones a Spring |
 | **Tailwind CSS 4** + **shadcn/ui** + **lucide-react** | Estilos y componentes |
 | **TanStack Query** + **TanStack Table** | Datos y tablas |
@@ -282,7 +282,7 @@ Cómo se implementa la sesión de la web. No agrega funcionalidad: deja por escr
 
 **6. Protección de rutas**
 
-- El **middleware** de Next.js (en Next.js 16 se llama `proxy`; pendiente P-01) redirige al inicio de sesión si no hay cookie de sesión en `/panel/**`.
+- El **middleware** de Next.js 15 redirige al inicio de sesión si no hay cookie de sesión en `/panel/**`.
 - El layout del servidor confirma el rol con `GET /api/v1/auth/yo` y muestra "Acceso denegado" si la sección no es de su rol (R-ROL-08). Spring vuelve a validar el permiso en cada endpoint.
 
 **7. Contraseña temporal** (HU-EMP-02, criterio 1)
@@ -382,7 +382,9 @@ ALC-TRA-07. Se configura después del hito.
 | **Pull request** | Backend: `mvn verify` (compilación, formato, pruebas). Web y app: lint y typecheck. Tipos del OpenAPI al día |
 | **Merge a `main`** | Lo anterior → imágenes `api` y `web` a GHCR (etiqueta del commit) → despliegue en la VPS por SSH → APK con EAS Build |
 
-**Reglas de cada repositorio:** `main` protegida; pull request con 1 aprobación y verificaciones en verde.
+**Integración durante el desarrollo:** las PR de tareas se dirigen a `develop`, con revisión y las verificaciones configuradas. `main` y `develop` están protegidas; `main` recibe la entrega del sistema terminado mediante PR desde `develop`. Si falta `develop`, se propone crearla desde `main`. Los workflows del tablero y de colaboración pueden funcionar antes del despliegue.
+
+**Configuración por entorno:** los perfiles `local`, `dev` y `prod` distinguen la computadora de cada integrante, las pruebas compartidas y el despliegue posterior. Aprovechan los archivos existentes y mantienen las credenciales fuera de Git, sin imponer una extensión de archivo. Un Tunnel temporal puede facilitar las pruebas del API desde frontend, con autenticación, acceso acordado y cierre al terminar; no expone servicios administrativos de Docker.
 
 ---
 
@@ -490,4 +492,4 @@ ALC-TRA-07. Se configura después del hito.
 | S-02 | **Facturación simulada** (serie, correlativo, NIT, total con "IVA incluido" sin desglose, PDF con leyenda de demostración) sin certificador FEL. **Impresora:** desde el navegador en 80 mm y carta. Falta confirmar si basta el PDF de 80 mm cuando no haya impresora térmica | Certificador FEL real o impresión ESC/POS directa |
 | S-03 | **Sincronización en segundo plano** se refiere a las tareas del backend (`@Scheduled` + Outbox) | App con funcionamiento sin conexión (mucho más trabajo) |
 | S-04 | **Proveedor de la VPS:** cualquiera con Ubuntu 24.04 y al menos 4 GB de RAM | — |
-| P-01 | **Versión de Next.js:** 15 (documentada) o 16 (renombró `middleware` a `proxy`) | Decidir antes de crear el proyecto web |
+| P-01 (resuelto) | **Versión principal de Next.js: 15**, acordada por el equipo | Una actualización futura se propone mediante issue con su impacto |

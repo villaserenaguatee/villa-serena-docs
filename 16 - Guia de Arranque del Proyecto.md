@@ -210,22 +210,34 @@ npx expo start -c
 
 ## 5. Retomar el trabajo (continuar donde lo dejaste)
 
-**Antes de empezar una tarea nueva**, trae lo último que subió el equipo:
+Cada sesión comienza revisando el estado local y actualizando las referencias. Los cambios sin guardar en un commit se conservan antes de cambiar de rama o sincronizar. Si falta `develop`, el agente propone crearla desde `main`; la guía de prompts, sección 3, describe el flujo con issues y PR.
+
+Ejemplo para una tarea nueva, con el árbol limpio y `develop` existente:
 
 ```bat
-git switch main
-git pull
-git switch -c obj<N>-<nombre-corto>
+git status
+git fetch origin
+git switch develop
+git pull --ff-only
+git switch -c feat/<issue>-<nombre-corto>
 ```
 
-**Si vas a continuar una tarea que dejaste a medias** (tu rama ya existe):
+Ejemplo para continuar una rama existente con upstream y sin divergencias:
 
 ```bat
-git switch obj<N>-<nombre-corto>
-git pull
+git status
+git fetch origin
+git switch feat/<issue>-<nombre-corto>
+git pull --ff-only
 ```
 
-**Si alguien cambió las migraciones o el contrato** (`openapi.yaml`), después de `git pull` vuelve a arrancar el API para que Flyway aplique los cambios, y en la web y la app vuelve a generar los tipos.
+Una rama personal puede actualizarse mediante rebase sobre `origin/develop` cuando corresponda; las ramas compartidas se sincronizan según el acuerdo del equipo, sin reescribir su historial unilateralmente. Los conflictos se investigan preservando ambos cambios y Alex facilita la resolución de bloqueos.
+
+Los cambios de migraciones requieren comprobar el arranque del API con Flyway. Los cambios del contrato (`openapi.yaml`) requieren actualizar la copia local y regenerar los tipos en web y app.
+
+Los perfiles `local`, `dev` y `prod` distinguen los entornos y aprovechan la configuración existente. Cuando el perfil `local` esté configurado, el API puede arrancar con `mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local`. Los pasos de instalación y arranque siguen siendo ejemplos operativos para la persona, adaptables a su sistema.
+
+Para las pruebas desde frontend, el equipo puede acordar un Cloudflare Tunnel temporal hacia el API. Mantiene autenticación, expone solo lo necesario y se cierra al terminar. Los servicios de administración de Docker y las credenciales permanecen fuera de esa exposición.
 
 Cómo subir tu trabajo y abrir el pull request: `15 - Prompts de IA/00 - Como usar los prompts.md`, sección 3.
 
@@ -259,5 +271,5 @@ Cómo subir tu trabajo y abrir el pull request: `15 - Prompts de IA/00 - Como us
 | `'.' no se reconoce como un comando` al usar `./mvnw` | En `cmd` se escribe distinto | Usa `mvnw.cmd spring-boot:run` |
 | La app en el teléfono no llega al API | Redes distintas, se usó `localhost`, firewall o la IP cambió | Sigue la sección 4.1, pasos 1 a 5; si la IP cambió, `npx expo start -c` |
 | Las notificaciones push no llegan | Se está usando Expo Go, no hay Internet en el teléfono o la reserva no está `EN_ESTADIA` | Usa el development build (sección 4.1, paso 6) |
-| El pull request dice que tiene conflictos | Otra persona cambió lo mismo | No lo resuelvas a ciegas: avisa a Josué |
-| La IA quiere actualizar versiones o agregar funciones | Se sale del alcance | Recházalo (frases de la guía de prompts, sección 5) |
+| El pull request dice que tiene conflictos | Otra persona cambió lo mismo | Revisar ambos cambios y coordinarlos; Alex facilita la resolución si hay un bloqueo |
+| La IA propone actualizar versiones o agregar funciones | Puede cambiar el alcance | Registrar la propuesta como issue con su impacto; el equipo acuerda lo técnico y Kimberly decide sobre el producto |

@@ -31,7 +31,7 @@
 |---|---|
 | **Objetivos por etapa del flujo** | Cada objetivo es una parte del flujo que funciona de principio a fin (BD, API, web y app) y se puede demostrar al terminarlo. Dentro de cada objetivo, las tareas se separan por capa |
 | **Contrato primero** | El contrato del API (OpenAPI) se congela por partes: objetivos 0 a 2 el viernes 2; objetivos 3A a 4 el lunes 5. Las pantallas pueden adelantarse con datos de prueba; las de cuenta y check-out se ajustan al contrato del lunes dentro de sus mismas horas |
-| **Personas por capa** | Las capas son un reparto inicial. Todos tienen habilidades parecidas y trabajan con IA; se pueden mover tareas entre personas sin duplicarlas ni aumentar horas (sección 6) |
+| **Personas por capa** | Las capas son un reparto inicial. Las issues vigentes y sus prioridades orientan el trabajo; se pueden mover tareas entre personas sin duplicarlas ni aumentar horas (sección 6). Alex facilita el proceso como Scrum Master; Kimberly define prioridades y aceptación del producto como Product Owner |
 | **Un prompt por objetivo** | Cada objetivo se puede construir con uno o dos prompts de IA (documento 15) |
 | **Sin tareas nuevas** | Todo sale del Alcance, de las HU o del documento 14 |
 
@@ -142,14 +142,14 @@ Capas: **BD** (Flyway y PostgreSQL) · **API** (Spring) · **Web** (Next.js) · 
 
 | Capa | Tarea | Responsable | Horas |
 |---|---|---|---|
-| Infra | Preparar los 5 repositorios: rama `main` protegida, README y `.env.example` | Alex | 1 |
+| Infra | Preparar los 5 repositorios: `main` reservada para la entrega, `develop` para integrar PR, protección de ambas ramas, README y `.env.example` | Alex | 1 |
 | Infra | `docker-compose.dev.yml` con PostgreSQL 17, Mailpit, MinIO, Prometheus y Grafana; tablero mínimo de Grafana (AD-15) | Josué | 2 |
 | BD | Esquema completo de Nivel 1 en Flyway, con las restricciones del documento 14, sección 5 (`EXCLUDE`, únicos) | Josué | 3 |
 | BD | Datos iniciales (AD-18): canales y claves, artículos, datos del hotel y fiscales, serie de la factura y usuarios de prueba con dos Administradores. Para el hito, también tipos de habitación, habitaciones, menú, temporadas y ajuste de fin de semana | Josué | 2 |
 | API | Contrato OpenAPI (endpoints y DTO), `openapi.yaml`: 0 a 2 el viernes 2 (0,5 h por persona); 3A a 4 el lunes 5 (0,5 h por persona) | Josué, Pablo y Hugo | 3 (1 c/u) |
 | API | Proyecto base: Spring Boot 4.1, Actuator + Micrometer, springdoc, CORS, manejo de errores, zona horaria (AD-19) e historial de estados | Hugo | 2 |
 | API | Spring Security + JWT (15 min y refresh de 7 días), inicio y cierre de sesión, contraseña temporal, permisos por rol (documento 09) y primer Administrador por variables de entorno (HU-EMP-01, HU-EMP-02) | Pablo | 4 |
-| Web | Proyecto Next.js (versión según P-01), Tailwind, shadcn/ui, TanStack Query y tipos generados desde el contrato | Alex | 1 |
+| Web | Proyecto Next.js 15 (P-01 resuelto), Tailwind, shadcn/ui, TanStack Query y tipos generados desde el contrato | Alex | 1 |
 | Web | BFF: inicio y cierre de sesión con cookie httpOnly, revisión del `Origin`, proxy al API, menú por rol y cambio de contraseña (HU-EMP-01, HU-EMP-02) | Alex | 2,5 |
 | Web | Diseño base de la web pública (encabezado, pie y estilos) | Kim | 1 |
 | App | Proyecto Expo SDK 54 + Expo Router, expo-secure-store, cliente del API y tipos generados | Carlos | 1 |
@@ -399,17 +399,17 @@ Los 6 trabajan en paralelo casi todo el tiempo, gracias al contrato del API y a 
 | Vie 2 y Lun 5 | La web y la app necesitan acordar datos | Congelar 0 a 2 el viernes y 3A a 4 el lunes. Antes, solo adelantar vistas con datos de prueba; después ajustar y conectar dentro de las horas previstas |
 | Cada cierre de objetivo | Hay que unir el API con la web y la app | Josué prueba el flujo del objetivo de punta a punta |
 
-### 8.2 Reglas para no chocar
+### 8.2 Coordinación de cambios compartidos
 
-| Pieza compartida | Riesgo | Regla |
+| Pieza compartida | Riesgo | Acuerdo |
 |---|---|---|
-| Migraciones de Flyway | Dos personas crean la misma versión (por ejemplo, dos `V5__`) | **Solo Josué crea las migraciones.** Los demás le piden los cambios de tablas |
-| Contrato OpenAPI | Alguien cambia un endpoint que otro ya usa | Los cambios pasan por **Josué** y se avisan en el grupo |
-| Spring Security | Pablo y Hugo editan el mismo archivo | Lo arma **Pablo** en el objetivo 0; después solo se agregan rutas |
+| Migraciones de Flyway | Dos personas crean la misma versión (por ejemplo, dos `V5__`) | El equipo coordina las versiones mediante issues y PR; las migraciones aplicadas permanecen intactas y los cambios usan migraciones nuevas |
+| Contrato OpenAPI | Alguien cambia un endpoint que otro ya usa | Los cambios se registran como issues y se revisan en PR con API y sus consumidores web/app |
+| Spring Security | Varias tareas modifican la misma configuración | La seguridad compartida de OBJ-0D se reutiliza; los ajustes se coordinan mediante issues y PR y verifican permisos |
 | Módulos del API | Dos personas tocan las mismas clases | **Pablo:** reservas, pagos, cuentas y registro común de cargos, check-in y check-out. **Hugo:** base, canal, habitaciones, limpieza, Room Service, incidencias, WebSocket, Outbox/correos y facturación. **Carlos:** OTP, mis reservas del huésped, envío push usando el Outbox y solicitudes; personal e indicadores solo si se retoma el objetivo 5. **Josué:** catálogos, huéspedes y consultas de Recepción (búsqueda de reservas y datos del Gantt, solo lectura) |
 | Pantallas de la web | Kim y Alex editan el mismo diseño | **Kim:** web pública, Recepción (Gantt, reservas y check-in), limpieza, solicitudes, cuenta y check-out. **Alex:** BFF, resultado del pago, canal simulado, búsqueda y habitaciones, Room Service e incidencias; Administrador solo si se retoma el objetivo 5 |
 | Cliente de tiempo real | Duplicar conexión o dejar pantallas sin suscripción | Alex prepara el cliente STOMP compartido. Alex suscribe habitaciones en Recepción y pedidos en Room Service; Kim suscribe solicitudes y habitaciones en Mantenimiento/Limpieza. Cada uno integra sus pantallas dentro de sus horas actuales |
-| Git | Varias personas trabajan sobre la misma rama | **Una rama por tarea** (por ejemplo, `obj1-stripe`) y un pull request pequeño a `main`. Nadie trabaja directo en `main` |
+| Git | Varias personas trabajan sobre la misma rama | Una rama por issue (por ejemplo, `feat/42-obj1-stripe`) y PR acotada a `develop`; `main` queda reservada para la entrega. Los worktrees permiten separar tareas independientes |
 | Secretos | Claves subidas a GitHub | Solo en un `.env` fuera de Git; en el repositorio va únicamente `.env.example`. **Nunca pegar claves secretas en un chat de IA** |
 
 ---
@@ -496,7 +496,7 @@ La tabla conserva la trazabilidad de las 68 HU: **53 activas**, 10 de Nivel 1 re
 
 | # | Pendiente | Quién | Antes de |
 |---|---|---|---|
-| 1 | **Versión de Next.js (P-01):** 15 o 16 | Alex y Josué | Jue 1, antes de crear el proyecto web |
+| 1 | **Versión de Next.js (P-01 resuelto):** 15 como versión principal | Equipo | Resuelto; no requiere una nueva decisión para comenzar |
 | 2 | **Turnos e inventario:** confirmar con el ingeniero si son obligatorios. Si lo son, HU-ADM-12 y HU-ADM-13 (4 h) **no caben** en este plan sin recortar algo más | Josué | Lun 5 |
 | 3 | **Supuestos S-01 a S-04** y si basta el PDF de 80 mm sin impresora térmica: confirmar con el catedrático | Josué | Jue 8 |
 | 4 | **Documento 15:** comenzar por los prompts del objetivo 0; el arranque opcional del jueves depende de terminarlos hoy | Josué y equipo | Jue 1, antes de arrancar |

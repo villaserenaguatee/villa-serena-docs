@@ -2,7 +2,7 @@
 
 > **Proyecto:** PMS (Property Management System) para el hotel boutique ficticio **"Villa Serena"**
 > **Para qué sirve:** reúne lo necesario para que un chat nuevo (o cualquier integrante del equipo) continúe el trabajo **sin repetir decisiones ya tomadas**.
-> **Cómo usarlo:** en el chat nuevo, pide que lea este archivo primero y después los documentos del repositorio `villa-serena-docs`. Al final hay un mensaje de arranque listo para copiar (sección 11).
+> **Cómo usarlo:** `AGENTS.md` contiene los acuerdos de colaboración. Este archivo es un mapa de contexto: se consultan solo las secciones y referencias necesarias para la tarea. Al final hay un mensaje de arranque listo para copiar (sección 11).
 
 ---
 
@@ -32,14 +32,14 @@ Es el **proyecto final del curso de Desarrollo Web**. Es un sistema de administr
 | Integrante | Frente |
 |---|---|
 | **Josué (Joss)** | Arquitectura, infraestructura, migraciones, contrato e integración |
-| Kim | Frontend web |
+| Kimberly (Kim) | Product Owner; frontend web |
 | Carlos | App móvil |
-| Alex | Web: BFF, resultado del pago, canal simulado, Room Service, incidencias y cliente de tiempo real |
+| Alex | Scrum Master; web: BFF, resultado del pago, canal simulado, Room Service, incidencias y cliente de tiempo real |
 | Pablo | API: seguridad, reservas, pagos, cuentas y check-in/out |
 | Hugo | API: base, habitaciones, limpieza, operación, Outbox, WebSocket y factura |
 
 - **Hito del 10 de octubre de 2026** (sábado): el sistema debe estar **casi terminado y funcionando en local** (backend, web y app, con Docker). **No es la entrega final.** El equipo busca conseguir más tiempo.
-- VPS, Cloudflare, CI/CD y backups van **después** del 10 de octubre.
+- VPS, Cloudflare para producción, CI/CD de despliegue y backups van **después** del 10 de octubre. Los workflows de colaboración y un Tunnel temporal para pruebas compartidas pueden usarse durante el desarrollo.
 - Los frentes son un reparto inicial: todos tienen habilidades parecidas y trabajan con IA; las tareas se pueden mover.
 - **20 h por integrante:** días seguros viernes 2 y lunes 5 a viernes 9, máximo 3 h por día (18 h seguras); hasta 2 h opcionales entre jueves 1 y domingo 4. El jueves solo bases/repositorios/Docker si se terminan hoy el plan y los prompts del objetivo 0; el domingo solo recuperación, sin tareas fijas.
 - Viernes 9: 18 h del equipo para integración. Capacidad nominal de construcción: **102 h**, de las cuales 12 h son opcionales; segura: **90 h**. Estimación del plan: **108,5 h**; se acepta la diferencia nominal de **6,5 h como margen de error**, no como horas extra.
@@ -48,16 +48,15 @@ Es el **proyecto final del curso de Desarrollo Web**. Es un sistema de administr
 
 ---
 
-## 3. Cómo trabajar con Joss (importante)
+## 3. Colaboración con el equipo y la IA
 
-1. **Responder siempre en español.** Respuestas concisas.
-2. **Criterio principal: no aumentar el trabajo.** Ante cada regla o caso, la pregunta es: *"¿Es realmente necesario para que el sistema funcione o para presentar el proyecto? Es una empresa ficticia."* Si la respuesta es no, **se quita o se acepta como limitación**.
-   - Ejemplo: que el cliente modifique su reserva es **innecesario** (Recepción cancela y crea otra).
-   - Ejemplo: "¿qué pasa con el trabajo en curso de un empleado que se desactiva?" → **no es necesario**: nadie se desactivará a media presentación.
-3. **Las propuestas deben preferir, en este orden:** quitar algo → aceptar una limitación → corregir una frase. **Nunca** proponer pantallas, estados o procesos nuevos salvo que algo indispensable se rompa.
-4. **Primero el informe, después los cambios.** Cuando Joss pide revisar, se entrega un informe sin modificar nada. Él responde punto por punto y luego se aplica.
-5. **No editar archivos mientras Joss los está leyendo o revisando.**
-6. Lenguaje simple: frases cortas, tablas cuando ayudan y sin relleno. En las referencias se escribe la palabra "sección".
+La persona dirige la sesión y el equipo mantiene el control del proyecto. Alex, como Scrum Master, facilita el proceso y la resolución de preguntas y bloqueos; no asigna unilateralmente las tareas. Kimberly, como Product Owner, define prioridades y tiene la decisión final sobre el alcance, el comportamiento y la aceptación del producto. El equipo acuerda las decisiones técnicas.
+
+El agente presenta un plan breve y continúa con la tarea autorizada. Puede resolver decisiones rutinarias, ajustes de integración y validaciones técnicas necesarias, explicando los supuestos relevantes. La consulta corresponde a cambios de alcance, decisiones de impacto importante y acciones aún no autorizadas. Una solicitud de revisión produce un informe; una solicitud de implementación autoriza los cambios necesarios dentro de su alcance.
+
+La comunicación es en español y por bloques breves. Las búsquedas y lecturas se limitan a archivos y secciones pertinentes; se amplían cuando hay dependencias o discrepancias, sin cargar toda la documentación por defecto.
+
+El trabajo se selecciona mediante issues, considerando las urgentes, las dependencias y las indicaciones de la persona. Las discrepancias, propuestas y bloqueos que necesitan seguimiento se registran como issues. Las PR enlazan la issue y se integran en `develop`; `main` queda reservado para la entrega del sistema terminado. Los detalles del flujo están en `AGENTS.md` y la guía 15.
 
 ---
 
@@ -98,7 +97,7 @@ Todos los documentos están en el repositorio `villa-serena-docs` (carpeta `docs
 
 ## 6. Por qué el alcance y las historias son tan simples
 
-Es una decisión **deliberada** del equipo, no un descuido. Un chat nuevo **no debe "mejorar" las historias** agregando validaciones, estados o casos borde.
+La simplicidad del alcance es una decisión del equipo. La implementación conserva los criterios funcionales acordados y admite los ajustes técnicos necesarios para cumplirlos. Las propuestas de nuevas funcionalidades o reglas se registran como issues para su valoración por el equipo y la Product Owner.
 
 ### 6.1 Las razones
 
@@ -126,7 +125,7 @@ Es una decisión **deliberada** del equipo, no un descuido. Un chat nuevo **no d
 | Validaciones defensivas ("último Admin", cupo por noche, datos fiscales faltantes) | Reglas simples o datos cargados al arrancar | El caso no puede ocurrir en la demostración |
 | Administrador con acceso a todo | Cada rol usa **solo sus pantallas** | Menos permisos que probar |
 
-**Regla para el chat nuevo:** si algo parece "faltar", primero hay que revisar si fue **descartado a propósito** (documento 01, sección 7; índice de HU, secciones 6 y 7). Solo se propone algo si **rompe el flujo principal**, y siempre con la opción que menos trabajo agregue.
+**Referencia para el chat nuevo:** una ausencia puede ser una exclusión deliberada (documento 01, sección 7; índice de HU, secciones 6 y 7). La revisión distingue esas exclusiones de los defectos de implementación. Las alternativas consideran su utilidad, esfuerzo e impacto sin priorizar automáticamente eliminar funciones o aceptar fallos.
 
 ---
 
@@ -211,13 +210,13 @@ El detalle está en `01 - Alcance del Proyecto.md`, sección 3.
 | PDF | OpenPDF |
 | Archivos | Cloudflare R2; en local, **MinIO** |
 | Monitoreo | Actuator + Micrometer → Prometheus → Grafana (tablero mínimo) |
-| Web | Next.js 15 como BFF (cookies httpOnly; versión 15 o 16 pendiente, P-01), Tailwind, shadcn/ui, TanStack Query, react-day-picker, EventCalendar (Gantt, `resourceTimelineMonth`), @stomp/stompjs |
+| Web | Next.js 15 como BFF (cookies httpOnly; WebSocket directo a Spring mediante ticket), Tailwind, shadcn/ui, TanStack Query, react-day-picker, EventCalendar (Gantt, `resourceTimelineMonth`), @stomp/stompjs |
 | App | React Native + Expo SDK 54 + Expo Router, expo-secure-store, expo-notifications (push: Spring → Expo Push → FCM; requiere un development build), EAS Build. La app llama directo a Spring con su propio JWT |
 | Local | Docker Compose: PostgreSQL, Mailpit, MinIO, Prometheus y Grafana. El API, la web y la app corren en la computadora de cada integrante |
 | Repositorios | **5 obligatorios en `villaserenaguate`:** `villa-serena-docs`, `villa-serena-infra`, `villa-serena-api`, `villa-serena-web`, `villa-serena-movil`. Cada frontend copia `villa-serena-api/openapi.yaml` y genera sus tipos con `openapi-typescript`; sin monorepo, `packages/shared` ni workspaces |
-| Después | VPS, Cloudflare Tunnel, CI/CD (GitHub Actions) y backups |
+| Después | VPS, Cloudflare para producción, CI/CD de despliegue y backups; el Tunnel temporal de pruebas y los workflows de colaboración pueden usarse durante el desarrollo |
 
-**Notas:** Spring Boot 4 usa los starters `spring-boot-starter-flyway`, `-webmvc` y `-security-oauth2-resource-server`. Next.js 16 renombró `middleware` a `proxy`. Expo Go de la Play Store ya está en el SDK 57; el de SDK 54 se instala desde expo.dev/go.
+**Notas:** Spring Boot 4 usa los starters `spring-boot-starter-flyway`, `-webmvc` y `-security-oauth2-resource-server`. El Expo Go compatible con SDK 54 se instala desde expo.dev/go.
 
 ---
 
@@ -243,7 +242,7 @@ El detalle está en `01 - Alcance del Proyecto.md`, sección 3.
 
 - [ ] **Confirmar con el ingeniero** si turnos e inventario son obligatorios. Si lo son, ALC-ADM-03 y ALC-ADM-04 pasan a Nivel 1 en su versión mínima.
 - [ ] **Confirmar con el catedrático** los supuestos S-01 a S-04 (documento 14, sección 14) y si basta el PDF de 80 mm cuando no haya impresora térmica.
-- [ ] **Versión de Next.js (P-01):** 15 (documentado) o 16. Decidir antes de crear el proyecto web.
+- **Versión de Next.js (P-01 resuelto):** 15 es la versión principal de la web.
 - [ ] **Martes 6:** decidir los recortes de reserva según el avance; no aplicarlos antes.
 - La disponibilidad y la movilidad de tareas del plan ya están confirmadas (documento 13, secciones 2 y 7): no volver a pedirlas.
 
@@ -255,21 +254,20 @@ Copiar y pegar:
 
 ```text
 Hola. Continúo el proyecto PMS Villa Serena (proyecto final de Desarrollo Web).
-Háblame siempre en español.
+La comunicación es en español, breve y por bloques.
 
-Primero lee "00 - Contexto para Nuevo Chat.md" del repositorio villa-serena-docs.
-Después lee el Alcance (01), el índice de historias de usuario y el documento 14
-(Tecnologías y Arquitectura). Si necesitas el detalle de una historia, lee el
-archivo de ese rol.
+Tarea o issue: <enlace y resultado esperado>.
 
-Reglas importantes:
-- El criterio principal es NO aumentar el trabajo: el hotel es ficticio y el tiempo es
-  muy corto. No agregues validaciones, estados ni pantallas; si algo falta, propón
-  quitar algo o aceptar la limitación.
-- Primero me das un informe y yo apruebo; después modificas.
-- Los documentos del repositorio son la única fuente de verdad.
+AGENTS.md contiene los acuerdos de colaboración. Al comenzar, el estado de Git
+y las issues vigentes permiten ubicar el trabajo y sincronizar sin perder cambios.
+La lectura de documentación se limita al objetivo, las secciones y las referencias
+necesarias para esta tarea; este archivo sirve como mapa de contexto.
 
-Tarea: indícame en qué objetivo del plan 13 (Plan de Trabajo) estamos y qué
-prompt de la carpeta "15 - Prompts de IA" corresponde usar. No vuelvas a pedir
-confirmación de horas o frentes.
+El resultado esperado conserva el alcance acordado. El agente presenta un plan
+breve y continúa con el trabajo autorizado, resolviendo decisiones técnicas
+rutinarias y explicando sus supuestos. Los cambios de alcance y los bloqueos que
+requieren seguimiento se registran como issues; Alex facilita su resolución y
+Kimberly tiene la decisión final sobre el producto.
+
+La PR enlaza la issue y se dirige a develop. Main se reserva para la entrega final.
 ```
