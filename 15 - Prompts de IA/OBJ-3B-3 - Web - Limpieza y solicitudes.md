@@ -4,28 +4,32 @@
 |---|---|
 | Objetivo | 3B — Limpieza y mantenimiento (documento 13) |
 | Repositorio | `villa-serena-web` |
-| Responsable | Kim |
+| Responsable inicial | Kim |
 | Horas estimadas | 3,5 h (limpieza 2 h; solicitudes 1,5 h) |
 | Cubre | HU-MYL-01 a HU-MYL-05 (lado web) |
 | Depende de | Cliente de tiempo real de Alex (OBJ-3A-3), contrato parte 2. Para conectar: OBJ-3B-1 (Hugo) y OBJ-3B-2 (Carlos) |
 | Calendario | Jue 8 |
 
-> **Antes de empezar:** prepara tu computadora con la `16 - Guia de Arranque del Proyecto.md`. Para crear tu rama y subir tu trabajo con un pull request, sigue la sección 3 de `00 - Como usar los prompts.md`.
+> **Referencias de trabajo:** la guía 16 describe el entorno; la guía 00, sección 3, describe el flujo con issues, ramas y PR hacia `develop`.
 
-## Documentos que debes adjuntar a la IA
+## Referencias para la tarea
+
+La lectura se limita a las secciones necesarias para la issue. AGENTS.md contiene los acuerdos de colaboración; estas referencias se amplían solo si hay una dependencia o discrepancia.
 
 - `AGENTS.md`
 - `openapi.yaml` (con la sección `x-websocket`)
 - `HU - Mantenimiento y Limpieza.md` (HU-MYL-01 a 05)
 - `README.md` de `villa-serena-web` (cómo usar el cliente de tiempo real de Alex)
 
-## Prompt
+El ámbito de archivos es una referencia de ubicación; los ajustes necesarios de integración se coordinan sin exclusividad personal. El agente presenta un plan breve y continúa con el trabajo autorizado. La implementación puede adaptarse a la estructura existente; el resultado cumple los criterios siguientes.
+
+## Resultado esperado
 
 ```text
-Trabajas en el repositorio villa-serena-web del proyecto Villa Serena (lee AGENTS.md
-y los documentos adjuntos). Responde en español. Copia openapi.yaml y regenera los
-tipos. Trabaja en app/panel/limpieza. Usa el hook useTiempoReal de Alex; no crees
-otra conexión.
+Contexto: repositorio villa-serena-web del proyecto Villa Serena (acuerdos en AGENTS.md
+y referencias pertinentes de la tarea). Comunicación en español. Los tipos se generan desde la copia local de
+openapi.yaml. Ámbito principal: app/panel/limpieza. La pantalla reutiliza el hook useTiempoReal de OBJ-3A-3,
+con una conexión compartida por pestaña.
 
 Solo para MANTENIMIENTO_LIMPIEZA con área LIMPIEZA o AMBAS (si no, "Acceso denegado").
 
@@ -40,8 +44,7 @@ Solo para MANTENIMIENTO_LIMPIEZA con área LIMPIEZA o AMBAS (si no, "Acceso dene
    Botones "Tomar" (en PENDIENTE) y "Atendida" (solo si estás a cargo). Si el
    API responde 409 (ya tomada o cancelada), muestra el motivo y recarga.
 
-No hagas: sonidos, indicador de conexión ni descuento de inventario.
-Primero muéstrame el plan de archivos; después créalos por pasos.
+Fuera de alcance: sonidos, indicador de conexión y descuento de inventario.
 ```
 
 ## Cómo saber que quedó terminado
@@ -52,4 +55,4 @@ Primero muéstrame el plan de archivos; después créalos por pasos.
 
 ## Al terminar
 
-Cuando tu pull request se fusione, abre `17 - Avance del Proyecto.md` (repositorio `villa-serena-docs`), cambia tu casilla de `[ ]` a `[x]` y agrega el número del PR.
+Después de integrar la PR en `develop` y verificar el resultado, la issue queda actualizada o cerrada y la casilla correspondiente de `17 - Avance del Proyecto.md` incluye el número de PR (guía 00, sección 3).

@@ -4,30 +4,33 @@
 |---|---|
 | Objetivo | 0 — Base (documento 13); la parte 2 adelanta la tarea de push del objetivo 3A (T-03) |
 | Repositorio | `villa-serena-movil` |
-| Responsable | Carlos |
+| Responsable inicial | Carlos |
 | Horas estimadas | Parte 1: 1 h (objetivo 0). Parte 2: 1 h (objetivo 3A, HU-HUE-17) |
 | Depende de | Nada para la parte 1. Para la parte 2: cuenta de Expo y proyecto de Firebase |
 | Calendario | Parte 1: Jue 1 (opcional) o Vie 2. Parte 2: Vie 2 |
 
-> **Antes de empezar:** prepara tu computadora con la `16 - Guia de Arranque del Proyecto.md` (instalar, `.env` y encender Docker). Para crear tu rama y subir tu trabajo con un pull request, sigue la sección 3 de `00 - Como usar los prompts.md`.
+> **Referencias de trabajo:** la guía 16 describe el entorno; la guía 00, sección 3, describe el flujo con issues, ramas y PR hacia `develop`.
 
-## Documentos que debes adjuntar a la IA
+## Referencias para la tarea
+
+La lectura se limita a las secciones necesarias para la issue. AGENTS.md contiene los acuerdos de colaboración; estas referencias se amplían solo si hay una dependencia o discrepancia.
 
 - `AGENTS.md`
 - `14 - Tecnologias y Arquitectura.md` (secciones 4.3, 6.1 punto 8 y 8)
 
-## Prompt — Parte 1: proyecto base
+El agente presenta un plan breve y continúa con el trabajo autorizado. La implementación puede adaptarse a la estructura existente; el resultado cumple los criterios siguientes.
+
+## Resultado esperado — Parte 1: proyecto base
 
 ```text
-Trabajas en el repositorio villa-serena-movil del proyecto Villa Serena (lee
-AGENTS.md y el documento 14 adjunto). Responde en español.
+Contexto: repositorio villa-serena-movil del proyecto Villa Serena (acuerdos en
+AGENTS.md y secciones pertinentes del documento 14). Comunicación en español.
 
 Objetivo: proyecto base de la app Android del huésped.
 
-Crea:
-1. Proyecto con Expo SDK 54 (no la última versión): usa la plantilla del SDK 54 y
-   confirma en package.json que expo sea ~54. Expo Router, TypeScript y pnpm o
-   npm (el que recomiende Expo para SDK 54).
+Entregables esperados:
+1. Proyecto con Expo SDK 54, plantilla compatible y expo ~54 en package.json,
+   Expo Router, TypeScript y pnpm como gestor acordado.
 2. Dependencias: expo-secure-store, @tanstack/react-query, NativeWind (estilos con
    clases de Tailwind), react-hook-form y zod.
 3. app.json/app.config.ts: nombre "Villa Serena", esquema villaserena, paquete
@@ -46,24 +49,22 @@ Crea:
 8. .env.example, .gitignore (con .env) y README.md con cómo probar en Expo Go de
    SDK 54 (descargado desde expo.dev/go) en la misma red Wi-Fi.
 
-No hagas:
-- No implementes el acceso con código, reservas ni room service (objetivo 3A).
-- No uses AsyncStorage para los tokens.
-- No actualices a otro SDK aunque la herramienta lo sugiera.
-
-Primero muéstrame el plan de archivos; después créalos.
+Fuera de alcance:
+- El acceso con código, reservas y room service corresponden al objetivo 3A.
+- Los tokens utilizan expo-secure-store, fuera de AsyncStorage.
+- SDK 54 es la versión acordada; una actualización requiere su issue e impacto.
 ```
 
-## Prompt — Parte 2: configuración de push (viernes 2)
+## Resultado esperado — Parte 2: configuración de push (viernes 2)
 
 ```text
-Seguimos en villa-serena-movil (Expo SDK 54). Responde en español.
+Contexto: villa-serena-movil (Expo SDK 54). Comunicación en español.
 
 Objetivo: dejar listo el development build para probar notificaciones push más
 adelante (HU-HUE-17). Solo configuración; el registro del token con el API va en
 el objetivo 3A.
 
-Guíame paso a paso para:
+La configuración permite:
 1. Instalar expo-dev-client y expo-notifications compatibles con SDK 54.
 2. Crear eas.json con un perfil "development" (developmentClient, distribución
    interna, APK para Android) y uno "preview" que genere APK.
@@ -77,8 +78,8 @@ Guíame paso a paso para:
 6. Una pantalla de prueba que pida permiso de notificaciones y muestre el Expo
    push token en la consola, para comprobar que todo funciona.
 
-Mientras EAS compila (puede tardar en la cola gratuita), no esperes: sigue con
-otras tareas.
+La compilación de EAS puede tardar en la cola gratuita; otras tareas
+independientes pueden avanzar mientras termina.
 ```
 
 ## Cómo saber que quedó terminado
@@ -91,4 +92,4 @@ otras tareas.
 
 ## Al terminar
 
-Cuando tu pull request se fusione, abre `17 - Avance del Proyecto.md` (repositorio `villa-serena-docs`), cambia tu casilla de `[ ]` a `[x]` y agrega el número del PR. Si no sabes cómo, avisa en el grupo y Josué la marca.
+Después de integrar la PR en `develop` y verificar el resultado, la issue queda actualizada o cerrada y la casilla correspondiente de `17 - Avance del Proyecto.md` incluye el número de PR (guía 00, sección 3). Si hay un bloqueo, Alex facilita su resolución; el avance puede actualizarlo quien completó la tarea.

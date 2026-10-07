@@ -1,8 +1,8 @@
-# 00 — Cómo usar los prompts (versión 3)
+# 00 — Cómo usar los prompts
 
 > **Para qué sirve:** guía paso a paso para que cada integrante use su prompt con la IA, aunque no tenga experiencia con estas tecnologías.
 > **Basado en:** 13 — Plan de Trabajo y 14 — Tecnologías y Arquitectura.
-> **Comandos:** escritos para la terminal de Windows (`cmd`). En PowerShell funcionan igual, salvo donde se indica.
+> **Comandos de ejemplo:** Git usa los mismos comandos en Windows, macOS y Linux. La guía 16, sección 1.1, indica las variantes de Maven Wrapper y archivos de entorno. El agente adapta los ejemplos a la terminal de la persona.
 > **Antes de esta guía:** `16 - Guia de Arranque del Proyecto.md` (preparar la computadora y encender el proyecto).
 
 ---
@@ -11,7 +11,9 @@
 
 Prepara tu computadora con la **`16 - Guia de Arranque del Proyecto.md`** (en la raíz de la documentación): qué instalar, cómo clonar los repositorios, cómo crear tu `.env` y cómo encender el proyecto cada día.
 
-## 2. Qué prompt usa cada persona
+## 2. Objetivos y reparto inicial del trabajo
+
+Las asignaciones de esta tabla son una referencia del plan. Las issues vigentes, sus prioridades y las indicaciones de la persona determinan el trabajo actual; las tareas pueden cambiar de integrante.
 
 | Prompt | Repositorio | Responsable | Horas | Cuándo |
 |---|---|---|---|---|
@@ -54,113 +56,95 @@ Prepara tu computadora con la **`16 - Guia de Arranque del Proyecto.md`** (en la
 
 Con esto están todos los prompts del plan (objetivos 0 a 4 e integración).
 
-**Orden en el API:** OBJ-0B (proyecto base de Hugo) va primero. Josué y Pablo empiezan cuando Hugo lo haya fusionado en `main` (sección 3, paso 1). Si todavía no está, parten de la rama de Hugo: `git switch obj0-proyecto-base` y desde ahí crean la suya.
+**Orden en el API:** OBJ-0B prepara el proyecto mínimo y su configuración; OBJ-0C incorpora el esquema y los datos iniciales. La comprobación conjunta valida el arranque con las migraciones aplicadas. La seguridad (OBJ-0D) reutiliza la base y el esquema. Las dependencias se integran en `develop` o se coordinan mediante ramas de trabajo cuando todavía están en una PR.
 
-**Todos necesitan el Docker de Josué (OBJ-0A)** para probar: cuando esté en `main`, cada uno clona `villa-serena-infra` y lo levanta en su computadora (documento 16, sección 2.3).
+**Entorno compartido:** OBJ-0A proporciona Docker para las pruebas locales. El equipo puede usar un Cloudflare Tunnel temporal del backend para comprobar integraciones desde frontend, con acceso acordado y sin publicar credenciales (AGENTS.md).
 
 El **contrato del API** (`openapi.yaml`, objetivos 0 a 2) se congela el viernes 2 y tiene su propio prompt aparte.
 
-## 3. Paso a paso con Git (cada tarea)
+## 3. Flujo de trabajo con issues y Git
 
-Cada quien trabaja en **su computadora**, con su copia del repositorio y **su propia rama**. Nadie trabaja directo en `main`.
+El ciclo es **issue → rama → implementación y verificación → PR → integración → cierre de la issue**. `develop` concentra el trabajo del equipo; `main` se reserva para la entrega del sistema terminado. Si falta `develop`, el agente propone crearla desde `main`.
 
-**1. La primera vez: clonar el repositorio** en una carpeta de trabajo (no dentro de `Documentación V3`):
+### Inicio de sesión
+
+La revisión de `git status`, la rama y `git fetch origin` permite conocer el estado antes de sincronizar. Los cambios locales se conservan. Una rama sin divergencias se actualiza con `git pull --ff-only`; una rama personal puede actualizarse mediante rebase sobre `origin/develop` cuando corresponda. El historial de una rama compartida no se reescribe unilateralmente.
+
+### Selección de la tarea
+
+GitHub CLI (`gh`) o el complemento/plugin permite revisar las issues, las urgentes, sus dependencias y los criterios de aceptación. El objetivo y la documentación se contrastan con la issue vigente. Las discrepancias y propuestas que requieren seguimiento quedan registradas como issues.
+
+### Rama de trabajo
+
+Los nombres usan `feat/`, `fix/`, `chore/`, `docs/` o `refactor/`, con la issue y el objetivo cuando ayuden a identificar la tarea. Ejemplo para una tarea nueva, con el árbol de trabajo limpio y `develop` existente:
 
 ```bat
-cd /d "D:\Proyectos"
-git clone https://github.com/villaserenaguate/<repositorio>.git
-cd <repositorio>
+git switch develop
+git pull --ff-only
+git switch -c feat/42-obj3a-room-service
 ```
 
-**2. Antes de cada tarea: actualizar y crear tu rama**
+Las tareas independientes pueden usar worktrees, cada uno con su rama. Ejemplo, con las referencias actualizadas:
 
 ```bat
-git switch main
-git pull
-git switch -c obj0-<nombre-corto>
+git worktree add ../web-room-service -b feat/42-obj3a-room-service origin/develop
 ```
 
-Ejemplos de nombres: `obj0-docker-local`, `obj0-proyecto-base`, `obj0-esquema`, `obj0-seguridad-jwt`, `obj0-web-bff`, `obj0-app-base`.
+### Cambios y PR
 
-**3. Trabajar con la IA** (sección 5).
-
-**4. Revisar qué vas a subir**
+La revisión previa al commit comprende el diff, los criterios de aceptación y la ausencia de secretos. El commit incluye los archivos de la tarea; los archivos ajenos permanecen fuera. Ejemplo, donde `<archivos-de-la-tarea>` representa las rutas que se van a incluir:
 
 ```bat
 git status
+git diff
+git add <archivos-de-la-tarea>
+git commit -m "feat: agrega cola de pedidos de Room Service"
+git push -u origin feat/42-obj3a-room-service
 ```
 
-En la lista **no debe aparecer `.env`** ni ningún archivo con claves. Si aparece, detente y avisa.
+La PR usa **base: develop**, enlaza la issue y explica el resultado y la verificación. Otro integrante revisa los cambios antes de integrarlos. Las dudas y los bloqueos se llevan a Alex para facilitar su resolución; Kimberly decide sobre el alcance y la aceptación del producto.
 
-**5. Guardar y subir**
+Después de integrar y verificar, se actualiza la issue y la casilla pertinente de `17 - Avance del Proyecto.md`, con el número de PR. Si `develop` es la rama predeterminada, `Closes #42` permite el cierre automático; en otro caso, la issue se cierra explícitamente al comprobar la integración.
 
-```bat
-git add -A
-git commit -m "obj0: <qué hiciste, en pocas palabras>"
-git push -u origin obj0-<nombre-corto>
-```
-
-**6. Abrir el pull request en GitHub**
-
-1. Entra al repositorio. Si ves el aviso amarillo **Compare & pull request**, púlsalo.
-2. Si no aparece: pestaña **Pull requests** → **New pull request**. Arriba hay dos menús: `base: main ← compare: ...`. En **compare** elige tu rama.
-3. Escribe qué hiciste y cómo lo probaste. Pulsa **Create pull request** y avisa al grupo.
-4. Otro integrante lo revisa y pulsa **Squash and merge** → **Confirm**.
-
-**7. Marcar tu avance:** cuando el PR se fusione, marca tu casilla en `17 - Avance del Proyecto.md` (de `[ ]` a `[x]`, con el número del PR). Si no sabes cómo, avisa a Josué.
-
-**8. Después del merge**
-
-```bat
-git switch main
-git pull
-git branch -D obj0-<nombre-corto>
-```
+La rama puede conservarse hasta confirmar que su trabajo está integrado. La limpieza de ramas es opcional y no utiliza borrado forzado para ocultar cambios pendientes.
 
 ## 4. El `.env` y el entorno local
 
 Está en la **`16 - Guia de Arranque del Proyecto.md`**: qué es el `.env` y cómo crearlo (sección 2.2), qué servicios corren en Docker (sección 3), cómo encender el proyecto cada día (sección 4) y cómo apagarlo (sección 6).
 
-## 5. Cómo usar un prompt con la IA
+## 5. Colaboración con la IA
 
-1. Asegúrate de que `AGENTS.md` y `CLAUDE.md` están en la raíz de tu repositorio (sección 6).
-2. Abre tu prompt (archivo `OBJ-0x`) y adjunta a la IA **solo** los documentos de "Documentos que debes adjuntar". Están en el repositorio `villa-serena-docs` o en la carpeta `Documentación V3`.
-3. Abre la herramienta de IA **dentro de tu repositorio** y pega el bloque del prompt.
-4. La IA primero debe mostrar un plan. **Léelo antes de aceptar.** Si propone algo que no está en el prompt, dile que lo quite.
-5. Deja que avance en pasos pequeños. Si un comando falla, pega el error completo a la IA y pídele que lo explique antes de cambiar nada.
-6. Al final, comprueba cada punto de "Cómo saber que quedó terminado". Si uno falla, la tarea no está terminada.
-7. Sube tus cambios (sección 3, pasos 4 a 6).
+`AGENTS.md` y `CLAUDE.md` en la raíz del repositorio aportan los acuerdos de trabajo. La persona indica la issue o el resultado esperado; el prompt del objetivo y sus referencias aportan los criterios funcionales y técnicos.
 
-**Frases útiles para la IA:**
+La lectura se limita a los archivos y secciones necesarios. Las listas de documentos de cada objetivo son referencias disponibles, no una obligación de adjuntar todo. El agente amplía el contexto cuando una dependencia o discrepancia lo requiere.
 
-- *"Antes de escribir código, muéstrame el plan."*
-- *"Explícame en palabras simples qué hace este archivo."*
-- *"No cambies la versión de Spring Boot, Next.js ni Expo."*
-- *"No lo agregues: el alcance está cerrado. Implementa solo lo que pide el prompt."*
-- *"Dame el comando exacto para Windows (cmd) para probarlo."*
+El agente presenta un plan breve y continúa con el trabajo autorizado. Puede resolver decisiones técnicas rutinarias sin otra aprobación. La persona conserva el control: puede corregir el rumbo, pedir explicaciones o detener el trabajo. Las decisiones de alcance o de impacto importante se consultan y se registran en issues cuando requieren seguimiento.
 
-## 6. Preparar los 5 repositorios (Alex, 1 h)
+Las explicaciones se presentan en español, por bloques breves, adaptadas a la experiencia y al entorno de la persona. Los errores se investigan con la información pertinente y sin compartir secretos. Los criterios de aceptación permiten comprobar el resultado; el informe distingue qué se verificó y qué quedó pendiente.
 
-Organización: `villaserenaguate`. Repositorios: `villa-serena-docs`, `villa-serena-infra`, `villa-serena-api`, `villa-serena-web` y `villa-serena-movil`. (`villa-serena-docs` ya tiene la documentación V3.)
+**Ejemplos para iniciar o orientar una sesión:**
 
-En cada uno de los otros cuatro:
+- *"Trabajamos en la issue #42; el resultado esperado está en OBJ-3A-3."*
+- *"Presenta un plan breve y continúa con la implementación de la tarea."*
+- *"Necesito entender este cambio; explícalo en palabras simples."*
+- *"La solución mantiene las versiones acordadas y los criterios de la issue."*
+- *"Los comandos corresponden a mi sistema y terminal: <entorno>."*
 
-1. `README.md` con una línea de qué contiene y cómo se arranca (documento 14, sección 8).
-2. `.gitignore` adecuado (Java/Maven, Node/Next.js o Expo) que incluya `.env`.
-3. `.env.example` vacío (cada responsable lo completa).
-4. `AGENTS.md` y `CLAUDE.md`, copiados de `15 - Prompts de IA`.
-5. **Proteger `main`:** Settings → Branches → regla para `main` con "Require a pull request before merging" (1 aprobación).
-6. Dar acceso de escritura a los 6 integrantes.
+## 6. Preparación de los repositorios
 
-## 7. Cómo revisar lo que entrega la IA
+Los cinco repositorios son `villa-serena-docs`, `villa-serena-infra`, `villa-serena-api`, `villa-serena-web` y `villa-serena-movil`. La preparación se coordina en issues y PR, sin exclusividad por integrante.
 
-| Revisa | Señal de problema |
+Cada repositorio cuenta con README de arranque, archivos de entorno de ejemplo sin secretos, reglas de Git apropiadas y las instrucciones compartidas `AGENTS.md` y `CLAUDE.md`. Las ramas `main` y `develop` tienen protección mediante PR y revisión; el equipo cuenta con los accesos necesarios. Si falta `develop`, se propone crearla desde `main`. Cambiar la rama predeterminada es una decisión del equipo.
+
+## 7. Revisión del resultado
+
+| Aspecto | Resultado esperado |
 |---|---|
-| ¿Solo hizo lo que pide el prompt? | Pantallas, campos o validaciones nuevas que no están en los documentos |
-| ¿Respetó las versiones? | Cambió Spring Boot, Next.js o Expo de versión |
-| ¿Hay secretos en el código? | Claves, contraseñas o tokens escritos en archivos que se suben |
-| ¿Tocó piezas compartidas? | Creó migraciones (si no eres Josué) o cambió `openapi.yaml` sin avisar |
-| ¿Funciona en local? | Los pasos de "Cómo saber que quedó terminado" fallan |
+| Alcance | Cumple los criterios de la issue y los acuerdos del producto; distingue ajustes técnicos de nuevas funcionalidades. |
+| Versiones | Mantiene las versiones acordadas; una propuesta de actualización tiene su issue e impacto explicado. |
+| Seguridad | Los cambios versionados y los logs están libres de secretos y los permisos siguen aplicándose. |
+| Integración | Los cambios de esquema, contrato, seguridad y tiempo real consideran sus consumidores y se coordinan mediante issues y PR. |
+| Verificación | Los criterios de aceptación y comprobaciones pertinentes pasan; las limitaciones quedan informadas. |
 
 ## 8. Errores comunes
 

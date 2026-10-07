@@ -4,15 +4,17 @@
 |---|---|
 | Objetivo | 2 — Recepción (documento 13) |
 | Repositorio | `villa-serena-api` |
-| Responsable | Josué |
+| Responsable inicial | Josué |
 | Horas estimadas | 4,5 h (reservas de prueba 1 h; huéspedes 1 h; búsqueda y Gantt 1,5 h; prueba de punta a punta 1 h) |
 | Cubre | HU-REC-01, HU-REC-02, HU-REC-06, HU-REC-08 y HU-CM-02 (lado API) |
 | Depende de | OBJ-0C (tablas), OBJ-0D (seguridad), OBJ-1B (servicio de reservas de Pablo) y contrato parte 1 (OBJ-0G) |
 | Calendario | Mar 6: huéspedes y comenzar la búsqueda. Mié 7: búsqueda, datos del Gantt y reservas de prueba. Jue 8: prueba de punta a punta |
 
-> **Antes de empezar:** prepara tu computadora con la `16 - Guia de Arranque del Proyecto.md`. Para crear tu rama y subir tu trabajo con un pull request, sigue la sección 3 de `00 - Como usar los prompts.md`.
+> **Referencias de trabajo:** la guía 16 describe el entorno; la guía 00, sección 3, describe el flujo con issues, ramas y PR hacia `develop`.
 
-## Documentos que debes adjuntar a la IA
+## Referencias para la tarea
+
+La lectura se limita a las secciones necesarias para la issue. AGENTS.md contiene los acuerdos de colaboración; estas referencias se amplían solo si hay una dependencia o discrepancia.
 
 - `AGENTS.md`
 - `openapi.yaml`
@@ -20,12 +22,15 @@
 - `07 - Estados.md` (sección 3)
 - `09 - Matriz de Permisos.md` (secciones 3.1 y 6)
 
-## Prompt
+El agente presenta un plan breve y continúa con el trabajo autorizado. La implementación puede adaptarse a la estructura existente; el resultado cumple los criterios siguientes.
+
+## Resultado esperado
 
 ```text
-Trabajas en el repositorio villa-serena-api del proyecto Villa Serena (lee AGENTS.md
-y los documentos adjuntos). Responde en español. Estas consultas son de solo
-lectura sobre reservas (el módulo de reservas es de Pablo; no cambies sus clases).
+Contexto: repositorio villa-serena-api del proyecto Villa Serena (acuerdos en AGENTS.md
+y referencias pertinentes de la tarea). Comunicación en español. Estas consultas son de solo
+lectura sobre reservas; reutilizan el módulo existente y coordinan por issue
+y PR cualquier ajuste de integración.
 
 1. Huéspedes (HU-REC-01): registrar con los 6 datos obligatorios; el correo
    identifica al huésped: si ya existe, responde con el perfil existente y un aviso
@@ -45,16 +50,16 @@ lectura sobre reservas (el módulo de reservas es de Pablo; no cambies sus clase
    FINALIZADA (sin CANCELADA) con código, huésped, fechas, estado y canal.
 5. Permisos según el documento 09 (RECEPCION). Pruebas de cada regla.
 
-Datos de prueba (migración nueva de Flyway, solo tú creas migraciones):
+Datos de prueba (migración nueva de Flyway coordinada con el equipo):
 - Unas 12 reservas repartidas en el mes actual y el siguiente, de varios canales
   (Directo web, Recepción, Booking, Expedia) y estados, para llenar el Gantt.
 - Al menos una reserva EN_ESTADIA con habitación OCUPADA y su huésped con un
   correo de prueba, para que Carlos pruebe la app sin esperar el check-in.
 - Una reserva CONFIRMADA con llegada hoy no sirve en una migración (las fechas
-  cambian): crea un endpoint o script SOLO de desarrollo, desactivado fuera del
+  cambian): un endpoint o script de desarrollo genera datos de prueba y queda
+  desactivado fuera del
   perfil "dev", que genere reservas relativas a "hoy".
 
-Primero muéstrame el plan; después impleméntalo.
 ```
 
 ## Prueba de punta a punta de Recepción (jueves 8, 1 h)
@@ -77,4 +82,4 @@ Sin IA, con todo encendido (Docker, API y web):
 
 ## Al terminar
 
-Cuando tu pull request se fusione, abre `17 - Avance del Proyecto.md` (repositorio `villa-serena-docs`), cambia tu casilla de `[ ]` a `[x]` y agrega el número del PR.
+Después de integrar la PR en `develop` y verificar el resultado, la issue queda actualizada o cerrada y la casilla correspondiente de `17 - Avance del Proyecto.md` incluye el número de PR (guía 00, sección 3).

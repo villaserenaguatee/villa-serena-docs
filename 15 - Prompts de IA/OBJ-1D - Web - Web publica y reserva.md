@@ -4,30 +4,34 @@
 |---|---|
 | Objetivo | 1 — Reservar (documento 13) |
 | Repositorio | `villa-serena-web` |
-| Responsable | Kim |
+| Responsable inicial | Kim |
 | Horas estimadas | 5,5 h (hotel y catálogo 1,5 h; búsqueda y precio 2 h; formulario y paso a Stripe 2 h) |
 | Cubre | HU-HUE-01 a HU-HUE-05 y el envío a Stripe de HU-HUE-06 (lado web) |
 | Depende de | OBJ-0E (proyecto, BFF y diseño base) y contrato parte 1 (OBJ-0G). Para conectar: API de Josué (OBJ-1A) y de Pablo (OBJ-1B) |
 | Calendario | Lun 5: hotel, catálogo y búsqueda. Mar 6: terminar la reserva |
 
-> **Antes de empezar:** prepara tu computadora con la `16 - Guia de Arranque del Proyecto.md`. Para crear tu rama y subir tu trabajo con un pull request, sigue la sección 3 de `00 - Como usar los prompts.md`.
+> **Referencias de trabajo:** la guía 16 describe el entorno; la guía 00, sección 3, describe el flujo con issues, ramas y PR hacia `develop`.
 
-## Documentos que debes adjuntar a la IA
+## Referencias para la tarea
+
+La lectura se limita a las secciones necesarias para la issue. AGENTS.md contiene los acuerdos de colaboración; estas referencias se amplían solo si hay una dependencia o discrepancia.
 
 - `AGENTS.md`
 - `openapi.yaml` (contrato, parte 1)
 - `HU - Cliente y Huesped.md` (HU-HUE-01 a HU-HUE-06)
 - `14 - Tecnologias y Arquitectura.md` (secciones 4.2 y 6.1)
 
-## Prompt
+El ámbito de archivos es una referencia de ubicación; los ajustes necesarios de integración se coordinan sin exclusividad personal. El agente presenta un plan breve y continúa con el trabajo autorizado. La implementación puede adaptarse a la estructura existente; el resultado cumple los criterios siguientes.
+
+## Resultado esperado
 
 ```text
-Trabajas en el repositorio villa-serena-web del proyecto Villa Serena (lee AGENTS.md
-y los documentos adjuntos). Responde en español. Copia openapi.yaml a la raíz y
-regenera los tipos. Trabaja solo en app/(publico) y components/publico.
+Contexto: repositorio villa-serena-web del proyecto Villa Serena (acuerdos en AGENTS.md
+y referencias pertinentes de la tarea). Comunicación en español. Los tipos se generan desde la copia local de
+openapi.yaml. Ámbito principal: app/(publico) y components/publico.
 
 Objetivo: la web pública para que un cliente reserve. Todas las llamadas pasan por
-el BFF (sin sesión). Mientras el API no esté listo, usa datos de prueba que sigan
+el BFF (sin sesión). Mientras falta el API, la pantalla utiliza datos de prueba que sigan
 exactamente los tipos de openapi.yaml, en lib/mocks/publico.ts.
 
 1. Inicio (HU-HUE-01): nombre, descripción, fotos, ubicación, contacto, horas
@@ -52,9 +56,8 @@ exactamente los tipos de openapi.yaml, en lib/mocks/publico.ts.
    hay disponibilidad, muestra el mensaje y vuelve a la búsqueda.
    La página de regreso de Stripe la hace Alex (OBJ-1E).
 
-No hagas: registro de usuarios, inicio de sesión del cliente, modificar reservas
-ni cálculos de precio en el navegador.
-Primero muéstrame el plan de archivos; después créalos por pasos.
+Fuera de alcance: registro de usuarios, inicio de sesión del cliente y
+modificación de reservas. El servidor calcula los precios.
 ```
 
 ## Cómo saber que quedó terminado
@@ -65,4 +68,4 @@ Primero muéstrame el plan de archivos; después créalos por pasos.
 
 ## Al terminar
 
-Cuando tu pull request se fusione, abre `17 - Avance del Proyecto.md` (repositorio `villa-serena-docs`), cambia tu casilla de `[ ]` a `[x]` y agrega el número del PR.
+Después de integrar la PR en `develop` y verificar el resultado, la issue queda actualizada o cerrada y la casilla correspondiente de `17 - Avance del Proyecto.md` incluye el número de PR (guía 00, sección 3).

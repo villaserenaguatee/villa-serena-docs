@@ -4,15 +4,17 @@
 |---|---|
 | Objetivo | 3B — Limpieza y mantenimiento (documento 13) |
 | Repositorios | `villa-serena-api` (parte A) y `villa-serena-movil` (parte B) |
-| Responsable | Carlos |
+| Responsable inicial | Carlos |
 | Horas estimadas | 4,5 h (API 2 h; app 2,5 h) |
 | Cubre | HU-HUE-12 a HU-HUE-14 y HU-MYL-04 y HU-MYL-05 (lado API); HU-HUE-12 a HU-HUE-14 (lado app) |
 | Depende de | OBJ-3A-1 (WebSocket de Hugo: evento 3), OBJ-3A-2 (tu push) y contrato parte 2 |
 | Calendario | Mié 7: API. Jue 8: app |
 
-> **Antes de empezar:** prepara tu computadora con la `16 - Guia de Arranque del Proyecto.md`. Para crear tu rama y subir tu trabajo con un pull request, sigue la sección 3 de `00 - Como usar los prompts.md`. Son dos repositorios: una rama y un pull request en cada uno.
+> **Referencias de trabajo:** la guía 16 describe el entorno; la guía 00, sección 3, describe el flujo con issues, ramas y PR hacia `develop`. Son dos repositorios: una rama y un pull request en cada uno.
 
-## Documentos que debes adjuntar a la IA
+## Referencias para la tarea
+
+La lectura se limita a las secciones necesarias para la issue. AGENTS.md contiene los acuerdos de colaboración; estas referencias se amplían solo si hay una dependencia o discrepancia.
 
 - `AGENTS.md`
 - `openapi.yaml`
@@ -20,11 +22,13 @@
 - `07 - Estados.md` (sección 7)
 - `08 - Inventario Turnos y Personal.md` (sección 5: catálogo de artículos)
 
-## Prompt — Parte A: API (en `villa-serena-api`)
+El agente presenta un plan breve y continúa con el trabajo autorizado. La implementación puede adaptarse a la estructura existente; el resultado cumple los criterios siguientes.
+
+## Resultado esperado — Parte A: API (en `villa-serena-api`)
 
 ```text
-Trabajas en el repositorio villa-serena-api del proyecto Villa Serena (lee AGENTS.md
-y los documentos adjuntos). Responde en español. Paquete piso (solicitudes).
+Contexto: repositorio villa-serena-api del proyecto Villa Serena (acuerdos en AGENTS.md
+y referencias pertinentes de la tarea). Comunicación en español. Paquete piso (solicitudes).
 
 1. Huésped (solo su reserva EN_ESTADIA; ajenas = 404):
    - Solicitar limpieza (HU-HUE-12) con comentario opcional. Una sola solicitud de
@@ -43,14 +47,14 @@ y los documentos adjuntos). Responde en español. Paquete piso (solicitudes).
 3. Eventos: al crear, evento 3 en /topic/solicitudes (método que dejó Hugo). Al
    pasar a ATENDIDA, push "Tu solicitud fue atendida" por el Outbox.
 4. Historial de cada cambio. Pruebas de las reglas y de permisos por área.
-No crees migraciones: pídeselas a Josué.
+Los cambios de esquema necesarios se coordinan mediante issues y PR, conservando las migraciones ya aplicadas.
 ```
 
-## Prompt — Parte B: app (en `villa-serena-movil`)
+## Resultado esperado — Parte B: app (en `villa-serena-movil`)
 
 ```text
-Trabajas en el repositorio villa-serena-movil (Expo SDK 54). Responde en español.
-Copia openapi.yaml y regenera los tipos.
+Contexto: repositorio villa-serena-movil (Expo SDK 54). Comunicación en español.
+Los tipos se generan desde la copia local de openapi.yaml.
 
 Pantallas de solicitudes, solo activas con la reserva EN_ESTADIA:
 1. Solicitar limpieza (HU-HUE-12) con comentario opcional; si ya hay una en curso,
@@ -60,7 +64,7 @@ Pantallas de solicitudes, solo activas con la reserva EN_ESTADIA:
 3. Mis solicitudes (HU-HUE-14): tipo, fecha, hora y estado; se recarga al abrir y
    al deslizar; botón "Cancelar" solo en PENDIENTE (si no, muestra el motivo).
 4. Al tocar el push de solicitud atendida, abre esta lista.
-No agregues tiempo real en esta pantalla (se actualiza al abrir y al deslizar).
+La pantalla se actualiza al abrir y al deslizar, sin suscripción de tiempo real.
 ```
 
 ## Cómo saber que quedó terminado

@@ -4,15 +4,17 @@
 |---|---|
 | Objetivo | 4 — Check-out (documento 13) |
 | Repositorio | `villa-serena-api` |
-| Responsable | Pablo |
+| Responsable inicial | Pablo |
 | Horas estimadas | 3,5 h (cuenta y anulación 1 h; check-out en una sola operación 1,5 h; pago del saldo desde la app 1 h) |
 | Cubre | HU-REC-13, HU-REC-14, HU-HUE-15 y HU-HUE-16 (lado API) |
 | Depende de | OBJ-1B (cuenta, cargos y Stripe), OBJ-4B (factura de Hugo), OBJ-3B-1 (incidencias de Hugo) y contrato parte 2 |
 | Calendario | Jue 8. Si no alcanza, el pago desde la app es el primer recorte de reserva (documento 13, sección 9.2) |
 
-> **Antes de empezar:** prepara tu computadora con la `16 - Guia de Arranque del Proyecto.md`. Para crear tu rama y subir tu trabajo con un pull request, sigue la sección 3 de `00 - Como usar los prompts.md`.
+> **Referencias de trabajo:** la guía 16 describe el entorno; la guía 00, sección 3, describe el flujo con issues, ramas y PR hacia `develop`.
 
-## Documentos que debes adjuntar a la IA
+## Referencias para la tarea
+
+La lectura se limita a las secciones necesarias para la issue. AGENTS.md contiene los acuerdos de colaboración; estas referencias se amplían solo si hay una dependencia o discrepancia.
 
 - `AGENTS.md`
 - `openapi.yaml`
@@ -20,11 +22,13 @@
 - `07 - Estados.md` (secciones 3 a 7 y 11)
 - `10 - Reglas de Negocio.md` (reglas RN-PAG, RN-FAC y RN-RES)
 
-## Prompt
+El agente presenta un plan breve y continúa con el trabajo autorizado. La implementación puede adaptarse a la estructura existente; el resultado cumple los criterios siguientes.
+
+## Resultado esperado
 
 ```text
-Trabajas en el repositorio villa-serena-api del proyecto Villa Serena (lee AGENTS.md
-y los documentos adjuntos). Responde en español. Reutiliza tu CargoService y tu
+Contexto: repositorio villa-serena-api del proyecto Villa Serena (acuerdos en AGENTS.md
+y referencias pertinentes de la tarea). Comunicación en español. La solución reutiliza CargoService y la
 integración con Stripe de OBJ-1B.
 
 1. Cuenta (HU-REC-13 y HU-HUE-15): cargo por alojamiento con detalle por noche (o
@@ -43,21 +47,20 @@ integración con Stripe de OBJ-1B.
      acepta "CF".
    - En UNA transacción: factura (llama al FacturaService de Hugo), reserva
      FINALIZADA, cuenta CERRADA, habitación LIBRE + SUCIA (o FUERA_DE_SERVICIO si
-     tiene una incidencia que impide su uso; pregúntale a Hugo el método), pedidos
+     tiene una incidencia que impide su uso; integración con OBJ-3B-1), pedidos
      NUEVO o EN_PREPARACION → CANCELADO sin cargo, solicitudes PENDIENTE o
      EN_PROCESO → CANCELADA, borrar tokens de push del huésped, historial.
      Si algo falla (por ejemplo, la factura), no cambia NADA y se informa el motivo.
      Los pagos aprobados antes se conservan.
    - Publica el cambio de habitación (evento 4) después de confirmar.
 3. Pago del saldo desde la app (HU-HUE-16): solo EN_ESTADIA, desde las 00:00 del
-   día de salida hasta las 12:00 (America/Guatemala). Crea una sesión de Stripe
+   día de salida hasta las 12:00 (America/Guatemala). El pago utiliza una sesión de Stripe
    Checkout por el saldo completo; el webhook existente (sesión pagada) registra el
    pago APROBADO. Si el saldo ya es 0, no crea sesión. El check-out de la app solo
    se confirma con saldo 0 y se puede reintentar sin volver a cobrar.
 4. Pruebas: saldo con cargos anulados, check-out con pedido EN_CAMINO, fallo de la
    factura (no cambia nada), NIT inválido y ventana de horario de la app.
-No crees migraciones: pídeselas a Josué.
-Primero muéstrame el plan; después impleméntalo.
+Los cambios de esquema necesarios se coordinan mediante issues y PR, conservando las migraciones ya aplicadas.
 ```
 
 ## Cómo saber que quedó terminado
@@ -69,4 +72,4 @@ Primero muéstrame el plan; después impleméntalo.
 
 ## Al terminar
 
-Cuando tu pull request se fusione, abre `17 - Avance del Proyecto.md` (repositorio `villa-serena-docs`), cambia tu casilla de `[ ]` a `[x]` y agrega el número del PR.
+Después de integrar la PR en `develop` y verificar el resultado, la issue queda actualizada o cerrada y la casilla correspondiente de `17 - Avance del Proyecto.md` incluye el número de PR (guía 00, sección 3).

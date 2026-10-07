@@ -4,26 +4,30 @@
 |---|---|
 | Objetivo | 3B — Limpieza y mantenimiento (documento 13) |
 | Repositorio | `villa-serena-web` |
-| Responsable | Alex |
+| Responsable inicial | Alex |
 | Horas estimadas | 2,5 h |
 | Cubre | HU-MYL-06 a HU-MYL-08 y HU-REC-17 (lado web); suscripción en vivo del estado de las habitaciones de Recepción |
 | Depende de | OBJ-3A-3 (tu cliente de tiempo real), OBJ-2E (tu tablero de habitaciones) y contrato parte 2. Para conectar: OBJ-3B-1 (Hugo) |
 | Calendario | Jue 8 |
 
-> **Antes de empezar:** prepara tu computadora con la `16 - Guia de Arranque del Proyecto.md`. Para crear tu rama y subir tu trabajo con un pull request, sigue la sección 3 de `00 - Como usar los prompts.md`.
+> **Referencias de trabajo:** la guía 16 describe el entorno; la guía 00, sección 3, describe el flujo con issues, ramas y PR hacia `develop`.
 
-## Documentos que debes adjuntar a la IA
+## Referencias para la tarea
+
+La lectura se limita a las secciones necesarias para la issue. AGENTS.md contiene los acuerdos de colaboración; estas referencias se amplían solo si hay una dependencia o discrepancia.
 
 - `AGENTS.md`
 - `openapi.yaml`
 - `HU - Mantenimiento y Limpieza.md` (HU-MYL-06 a 08) y `HU - Recepcionista.md` (HU-REC-10 y HU-REC-17)
 
-## Prompt
+El agente presenta un plan breve y continúa con el trabajo autorizado. La implementación puede adaptarse a la estructura existente; el resultado cumple los criterios siguientes.
+
+## Resultado esperado
 
 ```text
-Trabajas en el repositorio villa-serena-web del proyecto Villa Serena (lee AGENTS.md
-y los documentos adjuntos). Responde en español. Copia openapi.yaml y regenera los
-tipos.
+Contexto: repositorio villa-serena-web del proyecto Villa Serena (acuerdos en AGENTS.md
+y referencias pertinentes de la tarea). Comunicación en español. Los tipos se generan desde la copia local de
+openapi.yaml.
 
 1. Reportar un daño (HU-REC-17 y HU-MYL-06): formulario reutilizable para
    Recepción (desde el tablero de habitaciones) y para Mantenimiento/Limpieza:
@@ -36,12 +40,10 @@ tipos.
    uso, si está ocupada, quién la reportó, fecha y técnico. "Tomar" y "Resolver"
    (solución obligatoria; solo el técnico a cargo). Si el API responde 409,
    muestra quién la tiene y recarga.
-3. Tablero de habitaciones de Recepción (tu OBJ-2E): suscríbelo a
-   /topic/habitaciones con useTiempoReal para que se actualice solo; quita el
-   botón "Actualizar" o déjalo como respaldo. En FUERA_DE_SERVICIO, muestra la
-   incidencia que la bloquea (solo lectura).
-
-Primero muéstrame el plan de archivos; después créalos por pasos.
+3. El tablero de habitaciones de Recepción (OBJ-2E) se actualiza con
+   /topic/habitaciones mediante useTiempoReal. El botón "Actualizar" es opcional
+   como respaldo. En FUERA_DE_SERVICIO se muestra la incidencia que bloquea
+   la habitación (solo lectura).
 ```
 
 ## Cómo saber que quedó terminado
@@ -52,4 +54,4 @@ Primero muéstrame el plan de archivos; después créalos por pasos.
 
 ## Al terminar
 
-Cuando tu pull request se fusione, abre `17 - Avance del Proyecto.md` (repositorio `villa-serena-docs`), cambia tu casilla de `[ ]` a `[x]` y agrega el número del PR.
+Después de integrar la PR en `develop` y verificar el resultado, la issue queda actualizada o cerrada y la casilla correspondiente de `17 - Avance del Proyecto.md` incluye el número de PR (guía 00, sección 3).

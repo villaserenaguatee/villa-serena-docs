@@ -35,28 +35,17 @@
 
 ---
 
-## 3. Instalar Stripe CLI en Windows (una sola vez)
+## 3. Stripe CLI en Windows, macOS y Linux
 
-**Opción A (sin instalar nada más):**
+La instalación se adapta al sistema, sin rutas locales prescritas. La [referencia oficial de Stripe CLI](https://github.com/stripe/stripe-cli#installation) ofrece gestores de paquetes y binarios para cada plataforma.
 
-1. Abre https://github.com/stripe/stripe-cli/releases/latest.
-2. Descarga el archivo que termina en `windows_x86_64.zip`.
-3. Descomprímelo en una carpeta fija, por ejemplo `C:\Herramientas\stripe`.
-4. Agrega esa carpeta al **PATH**: busca en Windows "Editar las variables de entorno del sistema" → **Variables de entorno** → en "Path" de tu usuario, **Nuevo** → `C:\Herramientas\stripe` → Aceptar.
-5. Cierra y vuelve a abrir la terminal.
+| Sistema | Integrantes | Instalación de referencia |
+|---|---|---|
+| Windows | Kimberly y Josué | `winget install Stripe.StripeCLI`, o la alternativa oficial apropiada al equipo. |
+| macOS | Pablo, Carlos y Hugo | `brew install stripe` si se utiliza Homebrew. |
+| Linux | Alex | Paquete oficial según la distribución; la referencia incluye apt y yum/dnf. |
 
-**Opción B (si usas Scoop):**
-
-```bat
-scoop bucket add stripe https://github.com/stripe/scoop-stripe-cli.git
-scoop install stripe
-```
-
-**Comprobar:**
-
-```bat
-stripe --version
-```
+Con Node.js 18 o superior, `npm install -g @stripe/cli` es otra opción oficial común a los tres sistemas. La terminal debe reconocer `stripe --version` antes de continuar.
 
 ### Iniciar sesión
 
@@ -70,7 +59,7 @@ Se abre el navegador para autorizar el acceso a tu cuenta. Acepta y vuelve a la 
 
 ## 4. Reenviar los avisos a tu API (cada vez que pruebes pagos)
 
-Con el API encendido (`mvnw.cmd spring-boot:run`), abre **otra terminal** y ejecuta:
+Con el API encendido mediante el Maven Wrapper correspondiente a tu terminal (guía 16, sección 1.1), abre **otra terminal** y ejecuta:
 
 ```bat
 stripe listen --forward-to localhost:8080/api/v1/pagos/stripe/webhook

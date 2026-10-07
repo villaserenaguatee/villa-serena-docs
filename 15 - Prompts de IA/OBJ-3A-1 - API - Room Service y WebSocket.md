@@ -4,15 +4,17 @@
 |---|---|
 | Objetivo | 3A — Estadía y Room Service (documento 13) |
 | Repositorio | `villa-serena-api` |
-| Responsable | Hugo |
+| Responsable inicial | Hugo |
 | Horas estimadas | 6 h (menú, pedidos y cargo 3 h; WebSocket 3 h) |
 | Cubre | HU-HUE-10 y HU-RS-01 a HU-RS-07 (lado API); tarea técnica: WebSocket para los 4 eventos (ALC-TRA-04) |
 | Depende de | OBJ-0D (seguridad), contrato parte 2 (OBJ-0G), registro común de cargos de Pablo (OBJ-1B) y JWT del huésped de Carlos (OBJ-3A-2) |
 | Calendario | Lun 5: comenzar Room Service. Mar 6: Room Service y WebSocket. Mié 7: WebSocket |
 
-> **Antes de empezar:** prepara tu computadora con la `16 - Guia de Arranque del Proyecto.md`. Para crear tu rama y subir tu trabajo con un pull request, sigue la sección 3 de `00 - Como usar los prompts.md`.
+> **Referencias de trabajo:** la guía 16 describe el entorno; la guía 00, sección 3, describe el flujo con issues, ramas y PR hacia `develop`.
 
-## Documentos que debes adjuntar a la IA
+## Referencias para la tarea
+
+La lectura se limita a las secciones necesarias para la issue. AGENTS.md contiene los acuerdos de colaboración; estas referencias se amplían solo si hay una dependencia o discrepancia.
 
 - `AGENTS.md`
 - `openapi.yaml` (contrato, partes 1 y 2, con la sección `x-websocket`)
@@ -21,11 +23,13 @@
 - `09 - Matriz de Permisos.md` (secciones 3.4 y 7.4)
 - `14 - Tecnologias y Arquitectura.md` (secciones 6 y 6.1)
 
-## Prompt
+El agente presenta un plan breve y continúa con el trabajo autorizado. La implementación puede adaptarse a la estructura existente; el resultado cumple los criterios siguientes.
+
+## Resultado esperado
 
 ```text
-Trabajas en el repositorio villa-serena-api del proyecto Villa Serena (lee AGENTS.md
-y los documentos adjuntos). Responde en español.
+Contexto: repositorio villa-serena-api del proyecto Villa Serena (acuerdos en AGENTS.md
+y referencias pertinentes de la tarea). Comunicación en español.
 
 PARTE A — Room Service (paquete roomservice), según openapi.yaml
 1. Menú: por categorías, con estado DISPONIBLE/AGOTADO. Room Service solo puede
@@ -58,16 +62,15 @@ PARTE B — WebSocket + STOMP (los 4 eventos del documento 07, sección 12)
    /topic/pedidos (ROOM_SERVICE), /user/queue/pedidos (HUESPED, solo los suyos),
    /topic/solicitudes y /topic/habitaciones (MANTENIMIENTO_LIMPIEZA con área
    LIMPIEZA o AMBAS; /topic/habitaciones también RECEPCION).
-3. Publica: evento 1 (pedido nuevo) y 2 (cambio de estado) en /topic/pedidos y al
-   huésped dueño; evento 4: implementa HabitacionEventos.publicarCambio (lo dejaste
-   vacío en OBJ-2C). Deja listo el método del evento 3 para Carlos (solicitudes).
-   Publica DESPUÉS de que la transacción se confirme.
+3. Eventos publicados: evento 1 (pedido nuevo) y 2 (cambio de estado) en /topic/pedidos y al
+   huésped dueño; evento 4: HabitacionEventos.publicarCambio de
+   OBJ-2C queda implementado. El método del evento 3 permite integrar solicitudes
+   (OBJ-3B-2). Los eventos se publican después de confirmar la transacción.
 4. El mensaje de cada evento sigue el formato de x-websocket en openapi.yaml.
 
 Pruebas: orden de estados, cancelación sin cargo, un solo cargo por pedido,
 suscripción rechazada para un rol sin permiso y ticket vencido o reutilizado.
-No crees migraciones: pídeselas a Josué.
-Primero muéstrame el plan; después impleméntalo por partes.
+Los cambios de esquema necesarios se coordinan mediante issues y PR, conservando las migraciones ya aplicadas.
 ```
 
 ## Cómo saber que quedó terminado
@@ -75,8 +78,8 @@ Primero muéstrame el plan; después impleméntalo por partes.
 1. Un pedido creado aparece en la cola; avanzar en orden funciona y saltar un estado da 409.
 2. Al entregar, la cuenta tiene un solo cargo aunque se repita la petición.
 3. Con un cliente STOMP de prueba: Room Service recibe el pedido nuevo; un huésped solo recibe los cambios de sus pedidos; un rol sin permiso no puede suscribirse.
-4. `mvnw.cmd test` pasa.
+4. Las pruebas del API pasan con el Maven Wrapper de la terminal (guía 16, sección 1.1).
 
 ## Al terminar
 
-Cuando tu pull request se fusione, abre `17 - Avance del Proyecto.md` (repositorio `villa-serena-docs`), cambia tu casilla de `[ ]` a `[x]` y agrega el número del PR.
+Después de integrar la PR en `develop` y verificar el resultado, la issue queda actualizada o cerrada y la casilla correspondiente de `17 - Avance del Proyecto.md` incluye el número de PR (guía 00, sección 3).

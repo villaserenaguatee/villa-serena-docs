@@ -4,30 +4,34 @@
 |---|---|
 | Objetivo | 2 — Recepción (documento 13) |
 | Repositorio | `villa-serena-web` |
-| Responsable | Alex |
+| Responsable inicial | Alex |
 | Horas estimadas | 4 h (búsqueda, cancelación, asignación y canal 2,5 h; estado de las habitaciones y marcar sucia 1,5 h) |
 | Cubre | HU-REC-05, HU-REC-06, HU-REC-07, HU-REC-10, HU-REC-11 y HU-CM-02 (lado web) |
 | Depende de | OBJ-0E (BFF y panel) y contrato parte 1 (OBJ-0G). Para conectar: búsqueda de Josué (OBJ-2A), cancelación de Pablo (OBJ-2B) y habitaciones de Hugo (OBJ-2C) |
 | Calendario | Lun 5: búsqueda. Mar 6: cancelar, asignar y habitaciones |
 
-> **Antes de empezar:** prepara tu computadora con la `16 - Guia de Arranque del Proyecto.md`. Para crear tu rama y subir tu trabajo con un pull request, sigue la sección 3 de `00 - Como usar los prompts.md`.
+> **Referencias de trabajo:** la guía 16 describe el entorno; la guía 00, sección 3, describe el flujo con issues, ramas y PR hacia `develop`.
 
-## Documentos que debes adjuntar a la IA
+## Referencias para la tarea
+
+La lectura se limita a las secciones necesarias para la issue. AGENTS.md contiene los acuerdos de colaboración; estas referencias se amplían solo si hay una dependencia o discrepancia.
 
 - `AGENTS.md`
 - `openapi.yaml` (contrato, parte 1)
 - `HU - Recepcionista.md` (HU-REC-05 a HU-REC-07, HU-REC-10 y HU-REC-11) y `HU - Channel Manager.md` (HU-CM-02)
 - `07 - Estados.md` (secciones 3 y 4)
 
-## Prompt
+El ámbito de archivos es una referencia de ubicación; los ajustes necesarios de integración se coordinan sin exclusividad personal. El agente presenta un plan breve y continúa con el trabajo autorizado. La implementación puede adaptarse a la estructura existente; el resultado cumple los criterios siguientes.
+
+## Resultado esperado
 
 ```text
-Trabajas en el repositorio villa-serena-web del proyecto Villa Serena (lee AGENTS.md
-y los documentos adjuntos). Responde en español. Copia openapi.yaml y regenera los
-tipos. Trabaja solo en app/panel/recepcion (búsqueda, detalle y habitaciones) y
-components/panel. El Gantt, la creación de reservas y el check-in son de Kim.
+Contexto: repositorio villa-serena-web del proyecto Villa Serena (acuerdos en AGENTS.md
+y referencias pertinentes de la tarea). Comunicación en español. Los tipos se generan desde la copia local de
+openapi.yaml. Ámbito principal: app/panel/recepcion (búsqueda, detalle y habitaciones) y
+components/panel. El Gantt, la creación de reservas y el check-in corresponden a OBJ-2D.
 
-Mientras el API no esté listo, usa datos de prueba con los tipos de openapi.yaml en
+Mientras falta el API, la pantalla utiliza datos de prueba con los tipos de openapi.yaml en
 lib/mocks/recepcion.ts.
 
 1. Búsqueda de reservas (HU-REC-06 y HU-CM-02): por nombre, documento, código y
@@ -53,9 +57,8 @@ lib/mocks/recepcion.ts.
    en LIBRE + LIMPIA. El tiempo real llega con el objetivo 3A: por ahora se
    actualiza al abrir la pantalla y con un botón "Actualizar".
 
-No hagas: no calcules reembolsos en el navegador ni agregues acciones que no
-estén en las historias.
-Primero muéstrame el plan de archivos; después créalos por pasos.
+El servidor calcula los reembolsos; las acciones de la interfaz corresponden
+a las historias acordadas.
 ```
 
 ## Cómo saber que quedó terminado
@@ -67,4 +70,4 @@ Primero muéstrame el plan de archivos; después créalos por pasos.
 
 ## Al terminar
 
-Cuando tu pull request se fusione, abre `17 - Avance del Proyecto.md` (repositorio `villa-serena-docs`), cambia tu casilla de `[ ]` a `[x]` y agrega el número del PR.
+Después de integrar la PR en `develop` y verificar el resultado, la issue queda actualizada o cerrada y la casilla correspondiente de `17 - Avance del Proyecto.md` incluye el número de PR (guía 00, sección 3).

@@ -1,24 +1,21 @@
-# 09 — Matriz de Permisos (versión 3)
+# 09 — Matriz de Permisos
 
 > **Proyecto:** Property Management System (PMS) para Hoteles Boutique — Hotel ficticio "Villa Serena"
 > **Estado:** 📝 Para revisión del equipo
 > **Fecha:** 1 de octubre de 2026
-> **Basado en:** Documentación V3 / 01 — Alcance (versión 3), 02 — Definición de Roles (versión 3), 04 — Historias de Usuario (versión 3) y 07 — Estados (versión 3)
-> **Reemplaza a:** 09 — Matriz de Permisos, versión 2 (carpeta "Documentación Definitiva")
+> **Basado en:** 01 — Alcance, 02 — Definición de Roles, 04 — Historias de Usuario y 07 — Estados
 
 ---
 
 ## Índice
 
 1. [Propósito y leyenda](#1-propósito-y-leyenda)
-2. [Decisiones de la versión 3](#2-decisiones-de-la-versión-3)
+2. [Decisiones de diseño](#2-decisiones-de-diseño)
 3. [Matriz por módulo](#3-matriz-por-módulo)
 4. [Notas de la matriz](#4-notas-de-la-matriz)
 5. [Actores que no son usuarios](#5-actores-que-no-son-usuarios)
 6. [Reglas de visibilidad de datos](#6-reglas-de-visibilidad-de-datos)
 7. [Guía de implementación](#7-guía-de-implementación)
-8. [Qué cambió respecto a la versión 2](#8-qué-cambió-respecto-a-la-versión-2)
-9. [Observaciones de la revisión](#9-observaciones-de-la-revisión)
 
 ---
 
@@ -45,7 +42,7 @@ Define **qué acción exacta puede hacer cada rol**. Es la referencia para:
 
 ---
 
-## 2. Decisiones de la versión 3
+## 2. Decisiones de diseño
 
 | # | Decisión | Origen |
 |---|---|---|
@@ -258,26 +255,3 @@ La web se conecta con un ticket de 60 segundos obtenido a través del BFF. La ap
 | Fotos de las incidencias | Quien la reportó (`RECEPCION` o `MYL`), `MYL` con área `MANTENIMIENTO` o `AMBAS`, y `ADMIN` en solo lectura |
 
 Los archivos privados se entregan con URL firmadas de corta duración que genera el backend después de revisar el permiso.
-
----
-
-## 8. Qué cambió respecto a la versión 2
-
-| Tema | Versión 2 | Versión 3 |
-|---|---|---|
-| Administrador | Podía hacer todo lo de Recepción; cancelaba pedidos, marcaba agotados, creaba solicitudes y asignaba órdenes | Solo sus pantallas y el canal simulado; reactiva ítems agotados y **consulta** incidencias |
-| Huésped | Cancelaba su reserva; check-in anticipado; editaba sus datos | No cancela ni modifica; sin check-in anticipado |
-| Recepción | Modificaba reservas; registraba solicitudes; comprobantes; anulaba facturas e imprimía copias; veía el historial de pedidos | Sin modificar reservas, sin solicitudes, sin comprobantes ni anulaciones; imprime la factura sin "COPIA" |
-| Room Service | Registraba pedidos por teléfono; veía el estado de las habitaciones | Los pedidos solo entran desde la app |
-| Mantenimiento/Limpieza | Insumos, objetos olvidados, observaciones, repuestos, faltantes | Solo limpieza, solicitudes e incidencias; el técnico toma la incidencia |
-| Canal | Creaba y cancelaba sus reservas; pantalla de canales y claves | Solo crea reservas; canales y claves en los datos iniciales |
-| Empleado inactivo | Se revisaba su estado en cada petición | Se revisa al iniciar sesión y al renovar el token |
-| Archivos | Fotos de documentos de identidad y de objetos olvidados | Se eliminan (no existen en la versión 3) |
-
----
-
-## 9. Observaciones de la revisión
-
-| # | Observación | Propuesta |
-|---|---|---|
-| OP-01 (**aprobada y aplicada**) | HU-REC-12 (criterio 6) decía que, desde el check-in, el huésped puede usar en la app "room service, solicitudes **y cuenta**". Pero HU-HUE-09 (criterio 5) solo limita room service y solicitudes a la estadía, y HU-HUE-15 no pone ninguna condición para ver la cuenta. La matriz deja "ver la cuenta" sin condición | **Corregir la frase** de HU-REC-12 (criterio 6) a "room service y solicitudes", y el efecto de R6 en el documento 07. Ver la cuenta no depende del estado; es una condición menos que programar. **Aplicado** en HU-REC-12, en R6 del documento 07 y en el índice de historias (sección 7) |

@@ -4,56 +4,59 @@
 |---|---|
 | Objetivo | 0 — Base (documento 13) |
 | Repositorio | `villa-serena-api` |
-| Responsable | Hugo |
+| Responsable inicial | Hugo |
 | Horas estimadas | 2 h |
 | Cubre | Proyecto base de Spring; tarea técnica: historial de cambios de estado (ALC-TRA-03) |
-| Depende de | El pull request del esquema de Josué (rama `obj0-esquema`) **fusionado en `main`** antes de empezar. **Pablo (OBJ-0D) parte de este proyecto** |
+| Depende de | Repositorio disponible. OBJ-0B prepara la base; OBJ-0C incorpora el esquema y los datos; la verificación conjunta utiliza OBJ-0A y OBJ-0C. OBJ-0D reutiliza esta base. |
 
-> **Antes de empezar:** prepara tu computadora con la `16 - Guia de Arranque del Proyecto.md` (instalar, `.env` y encender Docker). Para crear tu rama y subir tu trabajo con un pull request, sigue la sección 3 de `00 - Como usar los prompts.md`.
+> **Referencias de trabajo:** la guía 16 describe el entorno; la guía 00, sección 3, describe el flujo con issues, ramas y PR hacia `develop`.
 
-## Lo que ya existe en el repositorio (léelo antes de empezar)
+## Referencia del estado inicial del repositorio
 
-| Ya existe en `main` | Qué significa para ti |
+| Elemento disponible, según la rama actual | Resultado esperado |
 |---|---|
-| Un proyecto inicial con el paquete **`com.villaserena.api`** | **Complétalo**; no crees otro proyecto ni cambies el paquete |
-| El archivo **`src/main/resources/application.yaml`** (con **a**: `.yaml`) con una sección `spring.flyway.placeholders` | Usa **ese** archivo; **no crees** `application.yml`. **Conserva** la sección de placeholders |
-| Las migraciones **V1 a V6** en `src/main/resources/db/migration` (tablas y datos de prueba) | **No las cambies.** Al arrancar, Flyway las aplica solas |
-| `openapi.yaml` (contrato del API) | No lo cambies; los cambios pasan por Josué |
+| Proyecto inicial con el paquete **`com.villaserena.api`** | La base aprovecha el proyecto existente y conserva su paquete. |
+| Configuración de Spring y placeholders de Flyway | Los perfiles `local`, `dev` y `prod` aprovechan los archivos existentes; los placeholders leen valores del entorno sin duplicar la configuración. |
+| Migraciones disponibles en `src/main/resources/db/migration` | Flyway aplica las migraciones existentes; los cambios de esquema usan migraciones nuevas coordinadas por issue y PR. |
+| `openapi.yaml` (contrato del API) | El proyecto reutiliza el contrato; cualquier evolución se coordina mediante issue y PR con sus consumidores. |
 
 **Antes de arrancar el API**, tu `.env` necesita tres valores para los datos de prueba: `DEMO_PASSWORD_HASH`, `CANAL1_KEY_HASH` y `CANAL2_KEY_HASH`. Cómo generarlos: guía 16, sección 2.4. Sin ellos, Flyway se detiene con el error "No value provided for placeholder".
 
-## Documentos que debes adjuntar a la IA
+## Referencias para la tarea
+
+La lectura se limita a las secciones necesarias para la issue. AGENTS.md contiene los acuerdos de colaboración; estas referencias se amplían solo si hay una dependencia o discrepancia.
 
 - `AGENTS.md`
 - `14 - Tecnologias y Arquitectura.md` (secciones 2, 4.1, 5, 6 y 7)
 - `07 - Estados.md` (sección 10, reglas generales del historial)
 
-## Prompt
+El agente presenta un plan breve y continúa con el trabajo autorizado. La implementación puede adaptarse a la estructura existente; el resultado cumple los criterios siguientes.
+
+## Resultado esperado
 
 ```text
-Trabajas en el repositorio villa-serena-api del proyecto Villa Serena (lee AGENTS.md
-y los documentos adjuntos). Responde en español.
+Contexto: repositorio villa-serena-api del proyecto Villa Serena (acuerdos en AGENTS.md
+y referencias pertinentes de la tarea). Comunicación en español.
 
 Objetivo: completar el proyecto base del backend, sin lógica de negocio todavía.
 
-IMPORTANTE: el repositorio YA tiene un proyecto inicial (paquete
-com.villaserena.api), el archivo src/main/resources/application.yaml con una
-sección spring.flyway.placeholders, las migraciones V1 a V6 de Flyway y
-openapi.yaml. Revisa primero qué existe y complétalo; no crees un proyecto nuevo,
-no crees application.yml, no cambies el paquete ni las migraciones.
+La base aprovecha el proyecto y la configuración existentes, con el paquete
+com.villaserena.api y los placeholders de Flyway. El esquema y los datos de
+OBJ-0C pueden incorporarse después; la existencia de migraciones no es un
+requisito para comenzar OBJ-0B. La verificación conjunta utiliza el esquema disponible.
 
-Completa:
+Estado esperado del proyecto:
 1. Proyecto Maven con Spring Boot 4.1 y Java 21 (con ./mvnw). Paquete raíz
    com.villaserena.api y los paquetes vacíos de la sección 7 del documento 14
    (config, auth, reservas, estadia, roomservice, piso, personal, catalogos,
    facturacion, canal, notificaciones, comun; sin inventario, que es Nivel 2).
 2. Dependencias: spring-boot-starter-webmvc, -data-jpa, -validation, -flyway
    (con flyway-database-postgresql), -actuator, -security-oauth2-resource-server
-   (solo la dependencia; la configuración la hace Pablo), driver de PostgreSQL,
+   (la configuración de seguridad corresponde a OBJ-0D), driver de PostgreSQL,
    micrometer-registry-prometheus y springdoc-openapi para Spring Boot 4.
-   Si una versión no es compatible con Spring Boot 4.1, avísame antes de cambiarla.
-3. En el application.yaml EXISTENTE (conserva spring.flyway.placeholders): que
-   lea el .env con spring.config.import=optional:file:.env[.properties];
+   Una incompatibilidad de versión queda registrada como issue con su impacto.
+3. Configuración por perfiles local, dev y prod, con placeholders existentes y
+   lectura del .env mediante spring.config.import=optional:file:.env[.properties];
    conexión a PostgreSQL desde variables del .env,
    puerto 8080, zona horaria de la JVM y de Jackson en UTC, y
    hibernate.jdbc.time_zone=UTC. Zona de negocio America/Guatemala como bean
@@ -66,29 +69,26 @@ Completa:
    (400), no encontrado (404), prohibido (403), conflicto (409) y error interno
    (500, sin mostrar detalles técnicos).
 7. Historial de cambios de estado (comun): entidad JPA que mapee la tabla
-   historial_estados TAL COMO está en la migración V5 (léela) y el servicio
+   historial_estados según el esquema disponible de OBJ-0C y el servicio
    HistorialEstadoService.registrar(tipoEntidad, idEntidad, estadoAnterior,
-   estadoNuevo, tipoResponsable, idResponsable, motivo). Usa
+   estadoNuevo, tipoResponsable, idResponsable, motivo). La configuración utiliza
    spring.jpa.hibernate.ddl-auto=validate: Hibernate nunca crea ni cambia tablas.
 8. springdoc: Swagger UI en /swagger-ui.html y JSON en /v3/api-docs.
 9. .env.example (sin valores reales), .gitignore con .env y README.md con los
    pasos para arrancar.
 
-Mientras Pablo no termine la seguridad, deja una configuración temporal que
-permita /actuator/** y /swagger-ui/** y /v3/api-docs/** sin sesión, marcada con
-un comentario TODO para Pablo.
+Hasta integrar OBJ-0D, una configuración temporal permite /actuator/**,
+/swagger-ui/** y /v3/api-docs/** sin sesión, identificada con un TODO de OBJ-0D.
 
-No hagas:
-- No crees ni cambies migraciones de Flyway (solo Josué). Si una tabla no
-  coincide con lo que necesitas, avísame y se lo pido a Josué.
-- No agregues endpoints de negocio, WebSocket, Stripe ni correo todavía.
-
-Primero muéstrame el plan de archivos; después créalos.
+Fuera de alcance:
+- Los cambios de esquema se coordinan mediante issues y PR; las migraciones
+  ya aplicadas permanecen intactas.
+- Endpoints de negocio, WebSocket, Stripe y correo pertenecen a otros objetivos.
 ```
 
 ## Cómo saber que quedó terminado
 
-1. Con los servicios de OBJ-0A arriba y los tres valores de la guía 16 (sección 2.4) en tu `.env`, `mvnw.cmd spring-boot:run` arranca sin errores y Flyway aplica V1 a V6 (en la consola aparece "Successfully applied 6 migrations").
+1. Con los servicios de OBJ-0A arriba y los tres valores de la guía 16 (sección 2.4) en tu `.env`, el API arranca sin errores con el Maven Wrapper de la terminal (guía 16, sección 1.1) y Flyway aplica V1 a V6 (en la consola aparece "Successfully applied 6 migrations").
 1b. Comprobación de los datos de prueba:
    ```bat
    docker exec -it villa-serena-dev-postgres-1 psql -U villaserena -d villaserena -c "select count(*) from habitaciones;"
@@ -102,4 +102,4 @@ Primero muéstrame el plan de archivos; después créalos.
 
 ## Al terminar
 
-Cuando tu pull request se fusione, abre `17 - Avance del Proyecto.md` (repositorio `villa-serena-docs`), cambia tu casilla de `[ ]` a `[x]` y agrega el número del PR. Si no sabes cómo, avisa en el grupo y Josué la marca.
+Después de integrar la PR en `develop` y verificar el resultado, la issue queda actualizada o cerrada y la casilla correspondiente de `17 - Avance del Proyecto.md` incluye el número de PR (guía 00, sección 3). Si hay un bloqueo, Alex facilita su resolución; el avance puede actualizarlo quien completó la tarea.

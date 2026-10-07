@@ -1,10 +1,9 @@
-# 02 — Definición de Roles (versión 3)
+# 02 — Definición de Roles
 
 > **Proyecto:** Property Management System (PMS) para Hoteles Boutique — Hotel ficticio "Villa Serena"
 > **Estado:** 📝 Para revisión del equipo
 > **Fecha:** 1 de octubre de 2026
-> **Basado en:** Documentación V3 / 01 — Alcance (versión 3), 04 — Historias de Usuario (versión 3) y 07 — Estados (versión 3)
-> **Reemplaza a:** 02 — Definición de Roles, versión 2 (carpeta "Documentación Definitiva")
+> **Basado en:** 01 — Alcance, 04 — Historias de Usuario y 07 — Estados
 > **Documentos relacionados:** 08 — Inventario, Turnos y Personal · 09 — Matriz de Permisos
 
 ---
@@ -16,7 +15,6 @@
 3. [Detalle por rol](#3-detalle-por-rol)
 4. [Actores que no son usuarios](#4-actores-que-no-son-usuarios)
 5. [Reglas generales de roles](#5-reglas-generales-de-roles)
-6. [Qué cambió respecto a la versión 2](#6-qué-cambió-respecto-a-la-versión-2)
 
 ---
 
@@ -24,7 +22,7 @@
 
 Define **quién usa el sistema**, **desde dónde**, **cómo entra** y **de qué es responsable**. La acción exacta que puede hacer cada rol está en el documento **09 — Matriz de Permisos**.
 
-**Regla principal de la versión 3:** cada rol usa **solo sus pantallas**. El Administrador tiene las suyas y el canal simulado; no usa las pantallas de Recepción ni las de piso. En la demostración se entra con el usuario de cada rol (R-02 del Reporte de Vacíos).
+**Regla principal:** cada rol usa **solo sus pantallas**. El Administrador tiene las suyas y el canal simulado; no usa las pantallas de Recepción ni las de piso. En la demostración se entra con el usuario de cada rol.
 
 ---
 
@@ -153,22 +151,7 @@ No tienen cuenta, pero participan en los procesos (documento 07).
 | R-ROL-01 | **Un empleado tiene un solo rol.** | HU-ADM-01 |
 | R-ROL-02 | **Los empleados no se eliminan, se desactivan.** Un empleado `INACTIVO` no puede iniciar sesión; su nombre se conserva en los registros históricos. | HU-ADM-02, HU-EMP-01 |
 | R-ROL-03 | **Solo el Administrador crea cuentas de personal.** El personal no se registra solo. El primer Administrador se crea al arrancar el sistema. | HU-ADM-01 |
-| R-ROL-04 | *Eliminada en la versión 3.* (En la v2: "todo el personal trabaja en turnos". Los turnos son Nivel 2 e informativos; ver documento 08.) | — |
 | R-ROL-05 | **El rol Mantenimiento/Limpieza requiere un área** (`LIMPIEZA`, `MANTENIMIENTO` o `AMBAS`). Los demás roles no tienen área. | HU-ADM-01 |
 | R-ROL-06 | **El huésped solo accede a su propia información.** Si intenta abrir un registro ajeno, el servidor lo rechaza. | HU-HUE-09, HU-HUE-15 |
 | R-ROL-07 | **Los permisos se aplican en el backend** (Spring Security), no solo en la interfaz. | HU-EMP-01 |
 | R-ROL-08 | **Cada rol usa solo sus pantallas.** Un empleado no entra a las secciones de otro rol (acceso denegado). El Administrador no usa las pantallas de Recepción ni de piso. | HU-EMP-01, índice de HU (sección 7) |
-
----
-
-## 6. Qué cambió respecto a la versión 2
-
-| Tema | Versión 2 | Versión 3 |
-|---|---|---|
-| Administrador | Acceso a todo; podía operar como Recepcionista; asignaba, cerraba y cancelaba órdenes de mantenimiento; gestionaba canales y la serie de facturación | **Solo sus pantallas** y el canal simulado; solo **consulta** incidencias; sin pantalla de canales; la serie de factura viene en los datos iniciales |
-| Recepcionista | Modificaba reservas; registraba solicitudes; vista del día; comprobantes; anulaba y reimprimía "COPIA" de facturas | No modifica reservas; no registra solicitudes; filtros "Llegan hoy" y "Salen hoy"; factura sin anulación ni "COPIA" |
-| Room Service | Registraba pedidos por teléfono; historial de pedidos | Los pedidos solo entran desde la app; sin historial |
-| Mantenimiento/Limpieza | Insumos, objetos olvidados, observaciones, repuestos, historial; órdenes asignadas por el Administrador | Solo limpieza, solicitudes e incidencias de 3 pasos; el técnico toma la incidencia |
-| Huésped | Cancelaba su reserva en la web; check-in anticipado; historial de estadías | No cancela (lo hace Recepción); sin check-in anticipado; pantalla final con la factura |
-| Turnos | "Todo el personal trabaja en turnos" (R-ROL-04) | Nivel 2 e informativos; R-ROL-04 se elimina |
-| Nueva | — | R-ROL-08: cada rol usa solo sus pantallas |

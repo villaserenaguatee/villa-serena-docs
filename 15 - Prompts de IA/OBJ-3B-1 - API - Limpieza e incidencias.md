@@ -4,15 +4,17 @@
 |---|---|
 | Objetivo | 3B — Limpieza y mantenimiento (documento 13) |
 | Repositorio | `villa-serena-api` |
-| Responsable | Hugo |
+| Responsable inicial | Hugo |
 | Horas estimadas | 3,5 h (limpieza 1,5 h; incidencias con foto 2 h) |
 | Cubre | HU-MYL-01 a HU-MYL-03, HU-MYL-06 a HU-MYL-08 y HU-REC-17 (lado API) |
 | Depende de | OBJ-2C (tus habitaciones), OBJ-3A-1 (tu WebSocket) y contrato parte 2 |
 | Calendario | Mié 7: limpieza. Jue 8: terminar limpieza e incidencias |
 
-> **Antes de empezar:** prepara tu computadora con la `16 - Guia de Arranque del Proyecto.md`. Para crear tu rama y subir tu trabajo con un pull request, sigue la sección 3 de `00 - Como usar los prompts.md`.
+> **Referencias de trabajo:** la guía 16 describe el entorno; la guía 00, sección 3, describe el flujo con issues, ramas y PR hacia `develop`.
 
-## Documentos que debes adjuntar a la IA
+## Referencias para la tarea
+
+La lectura se limita a las secciones necesarias para la issue. AGENTS.md contiene los acuerdos de colaboración; estas referencias se amplían solo si hay una dependencia o discrepancia.
 
 - `AGENTS.md`
 - `openapi.yaml`
@@ -21,12 +23,14 @@
 - `09 - Matriz de Permisos.md` (secciones 3.3, 3.6 y 7.5)
 - `14 - Tecnologias y Arquitectura.md` (sección 6: archivos subidos)
 
-## Prompt
+El agente presenta un plan breve y continúa con el trabajo autorizado. La implementación puede adaptarse a la estructura existente; el resultado cumple los criterios siguientes.
+
+## Resultado esperado
 
 ```text
-Trabajas en el repositorio villa-serena-api del proyecto Villa Serena (lee AGENTS.md
-y los documentos adjuntos). Responde en español. Paquete piso; reutiliza tu módulo
-de habitaciones y HabitacionEventos.
+Contexto: repositorio villa-serena-api del proyecto Villa Serena (acuerdos en AGENTS.md
+y referencias pertinentes de la tarea). Comunicación en español. Paquete piso; integración con el módulo
+de habitaciones y HabitacionEventos existentes.
 
 PARTE A — Limpieza (solo MANTENIMIENTO_LIMPIEZA con área LIMPIEZA o AMBAS)
 1. Pendientes (HU-MYL-01): SUCIA y EN_LIMPIEZA (no FUERA_DE_SERVICIO ni ocupadas),
@@ -43,8 +47,8 @@ PARTE B — Incidencias
    hasta 5 MB (valida tipo y tamaño) guardada en el bucket privado de MinIO (AWS
    SDK S3). Queda REPORTADA. Si impide el uso y la habitación está LIBRE →
    FUERA_DE_SERVICIO; si está OCUPADA → no cambia (indicador "Incidencia
-   pendiente"; al hacer check-out pasará a FUERA_DE_SERVICIO: deja un método
-   que el check-out de Pablo pueda consultar).
+   pendiente"; al hacer check-out pasará a FUERA_DE_SERVICIO: un método
+   compartido permite la consulta desde el check-out de OBJ-4A).
 2. Ver y tomar (HU-MYL-07): solo área MANTENIMIENTO o AMBAS. REPORTADA y
    EN_PROCESO por antigüedad; tomar → EN_PROCESO a nombre del técnico; si otro ya
    la tomó, 409 con su nombre. La foto se entrega con URL firmada de corta
@@ -56,8 +60,7 @@ PARTE B — Incidencias
 
 Pruebas: concurrencia (dos empleados a la vez), permisos por área (403), foto de
 6 MB o PDF rechazada, y resolver con otra incidencia pendiente.
-No crees migraciones: pídeselas a Josué.
-Primero muéstrame el plan; después impleméntalo por partes.
+Los cambios de esquema necesarios se coordinan mediante issues y PR, conservando las migraciones ya aplicadas.
 ```
 
 ## Cómo saber que quedó terminado
@@ -69,4 +72,4 @@ Primero muéstrame el plan; después impleméntalo por partes.
 
 ## Al terminar
 
-Cuando tu pull request se fusione, abre `17 - Avance del Proyecto.md` (repositorio `villa-serena-docs`), cambia tu casilla de `[ ]` a `[x]` y agrega el número del PR.
+Después de integrar la PR en `develop` y verificar el resultado, la issue queda actualizada o cerrada y la casilla correspondiente de `17 - Avance del Proyecto.md` incluye el número de PR (guía 00, sección 3).

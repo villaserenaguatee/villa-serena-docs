@@ -4,27 +4,31 @@
 |---|---|
 | Objetivo | 0 — Base (documento 13) |
 | Repositorio | `villa-serena-infra` |
-| Responsable | Josué |
+| Responsable inicial | Josué |
 | Horas estimadas | 2 h |
 | Cubre | Tareas técnicas: entorno local con Docker (ALC-TRA-10) y Grafana en local (ALC-TRA-09, AD-15) |
 | Depende de | Nada. Puede hacerse el jueves 1 por la noche (opcional) |
 
-> **Antes de empezar:** prepara tu computadora con la `16 - Guia de Arranque del Proyecto.md` (instalar, `.env` y encender Docker). Para crear tu rama y subir tu trabajo con un pull request, sigue la sección 3 de `00 - Como usar los prompts.md`.
+> **Referencias de trabajo:** la guía 16 describe el entorno; la guía 00, sección 3, describe el flujo con issues, ramas y PR hacia `develop`.
 
-## Documentos que debes adjuntar a la IA
+## Referencias para la tarea
+
+La lectura se limita a las secciones necesarias para la issue. AGENTS.md contiene los acuerdos de colaboración; estas referencias se amplían solo si hay una dependencia o discrepancia.
 
 - `AGENTS.md`
 - `14 - Tecnologias y Arquitectura.md` (secciones 3.1, 4.4, 4.5 y 8)
 
-## Prompt
+El agente presenta un plan breve y continúa con el trabajo autorizado. La implementación puede adaptarse a la estructura existente; el resultado cumple los criterios siguientes.
+
+## Resultado esperado
 
 ```text
-Trabajas en el repositorio villa-serena-infra del proyecto Villa Serena (lee AGENTS.md
-y el documento 14 adjunto). Responde en español.
+Contexto: repositorio villa-serena-infra del proyecto Villa Serena (acuerdos en AGENTS.md
+y secciones pertinentes del documento 14). Comunicación en español.
 
 Objetivo: dejar listo el entorno local del hito con Docker Compose.
 
-Crea:
+Entregables esperados:
 1. docker-compose.dev.yml con estos servicios y volúmenes persistentes:
    - postgres: PostgreSQL 17. Base, usuario y contraseña desde variables del .env.
      Puerto 5432. La extensión btree_gist la crea Flyway desde el API, no aquí.
@@ -34,7 +38,7 @@ Crea:
      menú) y uno privado (PDF de facturas y fotos de incidencias). Nombres desde .env.
    - prometheus: puerto 9090; lee las métricas del API en
      host.docker.internal:8080/actuator/prometheus cada 15 s (el API corre fuera
-     de Docker, en la computadora). Agrega extra_hosts host-gateway para Linux.
+     de Docker, en la computadora). En Linux incluye extra_hosts host-gateway.
    - grafana: puerto 3001 (el 3000 es de la web). Datasource de Prometheus y un
      tablero aprovisionados desde archivos.
 2. prometheus/prometheus.yml.
@@ -44,12 +48,11 @@ Crea:
 4. .env.example con todas las variables (sin valores reales) y .gitignore con .env.
 5. README.md: cómo arrancar, URLs de cada servicio y cómo apagar y borrar datos.
 
-No hagas:
-- No agregues el API, la web ni la app como servicios (corren fuera de Docker).
-- No agregues Loki, alertas, Cloudflare, VPS ni CI/CD (son para después).
-- No escribas secretos reales en ningún archivo que se suba.
-
-Primero muéstrame el plan de archivos; después créalos.
+Fuera de alcance:
+- API, web y app corren fuera de Docker durante el hito.
+- Loki, alertas y despliegue en VPS o Cloudflare quedan para después; los workflows
+  de colaboración y Tunnel temporal se rigen por AGENTS.md.
+- Los archivos versionados están libres de secretos reales.
 ```
 
 ## Cómo saber que quedó terminado
@@ -62,4 +65,4 @@ Primero muéstrame el plan de archivos; después créalos.
 
 ## Al terminar
 
-Cuando tu pull request se fusione, abre `17 - Avance del Proyecto.md` (repositorio `villa-serena-docs`), cambia tu casilla de `[ ]` a `[x]` y agrega el número del PR. Si no sabes cómo, avisa en el grupo y Josué la marca.
+Después de integrar la PR en `develop` y verificar el resultado, la issue queda actualizada o cerrada y la casilla correspondiente de `17 - Avance del Proyecto.md` incluye el número de PR (guía 00, sección 3). Si hay un bloqueo, Alex facilita su resolución; el avance puede actualizarlo quien completó la tarea.

@@ -4,15 +4,17 @@
 |---|---|
 | Objetivo | 3A — Estadía y Room Service (documento 13) |
 | Repositorio | `villa-serena-api` |
-| Responsable | Carlos |
+| Responsable inicial | Carlos |
 | Horas estimadas | 2,5 h (OTP y JWT del huésped 1 h; envío de push 1 h; mis reservas 0,5 h) |
 | Cubre | HU-HUE-08, HU-HUE-09 y HU-HUE-17 (lado API) |
 | Depende de | OBJ-0D (seguridad de Pablo), Outbox de Hugo (OBJ-1C) y contrato parte 2 (OBJ-0G) |
 | Calendario | Lun 5: OTP. Mar 6: mis reservas y envío de push |
 
-> **Antes de empezar:** prepara tu computadora con la `16 - Guia de Arranque del Proyecto.md`. Para crear tu rama y subir tu trabajo con un pull request, sigue la sección 3 de `00 - Como usar los prompts.md`. Aunque tu capa principal es la app, esta parte se hace en el repositorio del API: clónalo y crea tu rama ahí.
+> **Referencias de trabajo:** la guía 16 describe el entorno; la guía 00, sección 3, describe el flujo con issues, ramas y PR hacia `develop`. Aunque tu capa principal es la app, esta parte se hace en el repositorio del API: clónalo y crea tu rama ahí.
 
-## Documentos que debes adjuntar a la IA
+## Referencias para la tarea
+
+La lectura se limita a las secciones necesarias para la issue. AGENTS.md contiene los acuerdos de colaboración; estas referencias se amplían solo si hay una dependencia o discrepancia.
 
 - `AGENTS.md`
 - `openapi.yaml` (contrato, partes 1 y 2)
@@ -20,12 +22,14 @@
 - `14 - Tecnologias y Arquitectura.md` (secciones 6 y 6.1, punto 8)
 - `09 - Matriz de Permisos.md` (secciones 3.8 y 7)
 
-## Prompt
+El agente presenta un plan breve y continúa con el trabajo autorizado. La implementación puede adaptarse a la estructura existente; el resultado cumple los criterios siguientes.
+
+## Resultado esperado
 
 ```text
-Trabajas en el repositorio villa-serena-api del proyecto Villa Serena (lee AGENTS.md
-y los documentos adjuntos). Responde en español. La seguridad la armó Pablo
-(paquete config y auth): reutiliza su emisión de JWT y refresh; no la reescribas.
+Contexto: repositorio villa-serena-api del proyecto Villa Serena (acuerdos en AGENTS.md
+y referencias pertinentes de la tarea). Comunicación en español. La seguridad de OBJ-0D
+(paquetes config y auth) aporta la emisión compartida de JWT y refresh.
 
 PARTE A — Acceso del huésped con código (HU-HUE-08)
 1. Solicitar código: correo → código de 6 dígitos, guardado con hash, vence en 10
@@ -44,9 +48,9 @@ PARTE B — Mis reservas (HU-HUE-09)
 
 PARTE C — Push (HU-HUE-17)
 1. Registrar y borrar el Expo push token del teléfono (tabla dispositivos_push).
-2. En el Outbox de Hugo, agrega el tipo PUSH y su envío a la API de Expo Push
-   (https://exp.host/--/api/v2/push/send) con RestClient. No crees otro mecanismo
-   de reintentos.
+2. El Outbox compartido incluye el tipo PUSH y su envío a la API de Expo Push
+   (https://exp.host/--/api/v2/push/send) con RestClient. Los reintentos utilizan el mecanismo
+   compartido existente.
 3. Solo se envía si la reserva está EN_ESTADIA. Textos sin datos personales ni
    montos: "Tu pedido fue entregado" y "Tu solicitud fue atendida", con los datos
    para abrir la pantalla correspondiente.
@@ -55,8 +59,7 @@ PARTE C — Push (HU-HUE-17)
 
 Pruebas: código vencido, reutilizado y bloqueo tras 5 intentos; reserva ajena (404);
 push no se envía fuera de EN_ESTADIA.
-No crees migraciones: pídeselas a Josué.
-Primero muéstrame el plan; después impleméntalo por partes.
+Los cambios de esquema necesarios se coordinan mediante issues y PR, conservando las migraciones ya aplicadas.
 ```
 
 ## Cómo saber que quedó terminado
@@ -68,4 +71,4 @@ Primero muéstrame el plan; después impleméntalo por partes.
 
 ## Al terminar
 
-Cuando tu pull request se fusione, abre `17 - Avance del Proyecto.md` (repositorio `villa-serena-docs`), cambia tu casilla de `[ ]` a `[x]` y agrega el número del PR.
+Después de integrar la PR en `develop` y verificar el resultado, la issue queda actualizada o cerrada y la casilla correspondiente de `17 - Avance del Proyecto.md` incluye el número de PR (guía 00, sección 3).
