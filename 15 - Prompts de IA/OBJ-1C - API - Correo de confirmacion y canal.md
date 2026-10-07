@@ -72,7 +72,7 @@ correo quede en outbox. Una columna faltante se coordina mediante issue y PR, co
 
 ## Cómo saber que quedó terminado
 
-1. `mvnw.cmd test` pasa.
+1. Las pruebas del API pasan con el Maven Wrapper de la terminal (guía 16, sección 1.1).
 2. Con `curl` o Swagger: una reserva del canal con clave correcta responde 201; repetida, responde 200 con la misma reserva; con clave incorrecta, 401.
 3. Cuando el servicio de Pablo esté listo, el correo de confirmación aparece en Mailpit (http://localhost:8025) con todos los datos del criterio 2.
 4. Si apagas Mailpit y confirmas una reserva, la reserva queda `CONFIRMADA` y el correo queda pendiente en `outbox`; al encender Mailpit, sale solo.

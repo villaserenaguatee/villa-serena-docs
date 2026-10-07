@@ -40,7 +40,7 @@ Es el **proyecto final del curso de Desarrollo Web**. Es un sistema de administr
 
 - **Hito del 10 de octubre de 2026** (sábado): el sistema debe estar **casi terminado y funcionando en local** (backend, web y app, con Docker). **No es la entrega final.** El equipo busca conseguir más tiempo.
 - VPS, Cloudflare para producción, CI/CD de despliegue y backups van **después** del 10 de octubre. Los workflows de colaboración y un Tunnel temporal para pruebas compartidas pueden usarse durante el desarrollo.
-- Los frentes son un reparto inicial: todos tienen habilidades parecidas y trabajan con IA; las tareas se pueden mover.
+- Los frentes son un reparto inicial: todos tienen habilidades parecidas y trabajan con IA; las tareas se pueden mover. Los entornos son Windows (Kimberly y Josué), macOS (Pablo, Carlos y Hugo) y Linux (Alex); los comandos se adaptan a cada terminal (guía 16, sección 1.1).
 - **20 h por integrante:** días seguros viernes 2 y lunes 5 a viernes 9, máximo 3 h por día (18 h seguras); hasta 2 h opcionales entre jueves 1 y domingo 4. El jueves solo bases/repositorios/Docker si se terminan hoy el plan y los prompts del objetivo 0; el domingo solo recuperación, sin tareas fijas.
 - Viernes 9: 18 h del equipo para integración. Capacidad nominal de construcción: **102 h**, de las cuales 12 h son opcionales; segura: **90 h**. Estimación del plan: **108,5 h**; se acepta la diferencia nominal de **6,5 h como margen de error**, no como horas extra.
 - Objetivo 5 fuera del hito. Hay tres recortes de reserva para decidir el martes 6: check-out solo en Recepción, Gantt básico y sin huéspedes adicionales, en ese orden.
@@ -69,7 +69,7 @@ Todos los documentos están en el repositorio `villa-serena-docs` (carpeta `docs
 | `00 - Contexto para Nuevo Chat.md` | Este documento |
 | `01 - Alcance del Proyecto.md` | Funcionalidades (IDs `ALC-`), niveles de prioridad, decisiones D-01 a D-22 y lo que queda fuera de alcance |
 | `02 - Definicion de Roles.md` | 5 roles y 3 actores que no son usuarios (SISTEMA, STRIPE, CANAL) |
-| `04 - Historias de Usuario\` | Índice y 7 archivos, 68 HU (IDs `HU-`) |
+| `04 - Historias de Usuario/` | Índice y 7 archivos, 68 HU (IDs `HU-`) |
 | `07 - Estados.md` | Estados, transiciones y efectos de cada entidad |
 | `08 - Inventario Turnos y Personal.md` | Personal, perfil del huésped y catálogo de artículos; turnos e inventario aislado en Nivel 2 |
 | `09 - Matriz de Permisos.md` | Permisos por rol |
@@ -78,7 +78,7 @@ Todos los documentos están en el repositorio `villa-serena-docs` (carpeta `docs
 | `12 - Casos de Uso.md` | 19 casos de uso |
 | `13 - Plan de Trabajo.md` | Objetivos, tareas, calendario y recortes de reserva |
 | `14 - Tecnologias y Arquitectura.md` | Decisiones AD-01 a AD-19, BFF, seguridad y entorno local |
-| `15 - Prompts de IA\` | `AGENTS.md`, `CLAUDE.md`, guía `00 - Como usar los prompts.md` y un prompt por objetivo (OBJ-0A a OBJ-4D e OBJ-INT) |
+| `15 - Prompts de IA/` | `AGENTS.md`, `CLAUDE.md`, guía `00 - Como usar los prompts.md` y un prompt por objetivo (OBJ-0A a OBJ-4D e OBJ-INT) |
 | `16 - Guia de Arranque del Proyecto.md` | Instalar, `.env`, encender y apagar el entorno, retomar el trabajo y errores comunes |
 | `17 - Avance del Proyecto.md` | Seguimiento del avance |
 | `18 - Guia de Stripe CLI.md` | Stripe CLI en local |

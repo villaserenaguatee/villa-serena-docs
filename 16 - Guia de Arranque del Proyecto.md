@@ -2,7 +2,7 @@
 
 > **Para qué sirve:** cómo preparar tu computadora la primera vez, cómo encender el proyecto cada día, cómo retomar el trabajo y qué hacer cuando algo falla.
 > **Para quién:** los 6 integrantes. No hace falta experiencia previa con estas tecnologías.
-> **Comandos:** escritos para la terminal de Windows (`cmd`). En PowerShell funcionan igual, salvo donde se indica.
+> **Entornos:** Windows (Kimberly y Josué), macOS (Pablo, Carlos y Hugo) y Linux (Alex). Los comandos se ejecutan desde el repositorio correspondiente; las diferencias de terminal se indican en la sección 1.1.
 > **Relacionado:** `15 - Prompts de IA/00 - Como usar los prompts.md` (cómo trabajar con la IA) y documento 14, sección 8.
 
 ---
@@ -12,7 +12,7 @@
 | Programa | Quién lo necesita | Cómo comprobar que funciona |
 |---|---|---|
 | **Git** | Todos | `git --version` |
-| **Docker Desktop** (con WSL 2 en Windows) | Todos | `docker --version` y `docker ps` sin error |
+| **Docker Desktop** en Windows/macOS; Docker Engine con Compose o Docker Desktop en Linux | Todos | `docker --version` y `docker ps` sin error |
 | **Visual Studio Code** u otro editor | Todos | — |
 | Tu **herramienta de IA** (Claude Code, Codex, Copilot o Cursor) | Todos | — |
 | **JDK 21** (por ejemplo, Eclipse Temurin 21) | Josué, Hugo y Pablo (API) | `java -version` muestra 21 |
@@ -27,17 +27,31 @@ No hace falta instalar Maven: el API trae su propio Maven (`mvnw`).
 
 ---
 
+### 1.1 Referencia por sistema y terminal
+
+| Sistema | Integrantes | Terminal habitual |
+|---|---|---|
+| Windows | Kimberly y Josué | PowerShell o cmd |
+| macOS | Pablo, Carlos y Hugo | Terminal con zsh/bash |
+| Linux | Alex | Terminal con bash/zsh |
+
+Los comandos de Git, pnpm, Expo y Docker Compose son comunes. Las variantes de Maven Wrapper y copia de archivos son:
+
+| Operación, desde el repositorio | Windows — cmd | Windows — PowerShell | macOS y Linux |
+|---|---|---|---|
+| Arrancar el API | `mvnw.cmd spring-boot:run` | `./mvnw.cmd spring-boot:run` | `./mvnw spring-boot:run` |
+| Probar el API | `mvnw.cmd test` | `./mvnw.cmd test` | `./mvnw test` |
+| Copiar el entorno de ejemplo | `copy .env.example .env` | `Copy-Item .env.example .env` | `cp .env.example .env` |
+
+El perfil `local`, cuando esté configurado, se selecciona añadiendo `-Dspring-boot.run.profiles=local`. En macOS/Linux, si el wrapper no tiene permiso de ejecución, `chmod +x mvnw` lo habilita. Los ejemplos con `<...>` son marcadores que se sustituyen antes de ejecutarlos; no son comandos para copiar literalmente.
+
+---
+
 ## 2. Primera vez: preparar el proyecto
 
 ### 2.1 Clonar los repositorios
 
-Crea una carpeta de trabajo (por ejemplo, `D:\Proyectos`), **fuera** de la carpeta de documentación, y clona lo que necesites:
-
-```bat
-cd /d "D:\Proyectos"
-git clone https://github.com/villaserenaguate/villa-serena-infra.git
-git clone https://github.com/villaserenaguate/<tu-repositorio>.git
-```
+Cada integrante obtiene los repositorios necesarios desde GitHub en su ubicación habitual de trabajo. La documentación no fija rutas locales ni prescribe cómo crear carpetas. Git utiliza los mismos comandos en Windows, macOS y Linux.
 
 | Quién | Repositorios |
 |---|---|
@@ -53,12 +67,8 @@ git clone https://github.com/villaserenaguate/<tu-repositorio>.git
 
 **Cómo crearlo** (en cada repositorio que tenga `.env.example`):
 
-1. Dentro de la carpeta del repositorio:
-   ```bat
-   copy .env.example .env
-   ```
-   (En PowerShell o Git Bash: `cp .env.example .env`).
-2. Abre `.env` con VS Code o el Bloc de notas y sustituye cada `<TU_...>` por tu valor. **Los símbolos `<` y `>` no van:** se sustituye todo.
+1. La plantilla `.env.example` se copia a `.env` desde el repositorio; la sección 1.1 muestra el comando de cada terminal.
+2. Abre `.env` con tu editor y sustituye cada `<TU_...>` por tu valor. **Los símbolos `<` y `>` no van:** se sustituye todo.
    ```env
    # Antes
    MINIO_ROOT_PASSWORD=<TU_CONTRASENA_MINIO>
@@ -111,7 +121,7 @@ Las claves **en texto** (`ClaveBookingDemo2026`, etc.) van en el `.env` de `vill
 
 ### 2.3 Encender los servicios por primera vez
 
-Con Docker Desktop abierto, dentro de `villa-serena-infra`:
+Con Docker disponible (Desktop en Windows/macOS o daemon en Linux), desde `villa-serena-infra`:
 
 ```bat
 docker compose -f docker-compose.dev.yml up -d
@@ -137,7 +147,7 @@ La primera vez **descarga las imágenes** (puede tardar varios minutos y necesit
 
 ## 4. Cada día: encender el proyecto
 
-1. Abre **Docker Desktop** y espera a que diga "Running".
+1. Comprueba que Docker está disponible con `docker info`: Docker Desktop en Windows/macOS o Docker Engine/Desktop en Linux.
 2. Enciende los servicios, dentro de `villa-serena-infra`:
    ```bat
    docker compose -f docker-compose.dev.yml up -d
@@ -148,7 +158,7 @@ La primera vez **descarga las imágenes** (puede tardar varios minutos y necesit
 
 | Parte | Carpeta | Comando | Dirección |
 |---|---|---|---|
-| API (Spring) | `villa-serena-api` | `mvnw.cmd spring-boot:run` (en PowerShell: `./mvnw spring-boot:run`) | http://localhost:8080/swagger-ui.html |
+| API (Spring) | `villa-serena-api` | Maven Wrapper según la terminal (sección 1.1), con `spring-boot:run` | http://localhost:8080/swagger-ui.html |
 | Web (Next.js) | `villa-serena-web` | `pnpm dev` | http://localhost:3000 |
 | App (Expo) | `villa-serena-movil` | `npx expo start` y escanear el código QR con Expo Go | En el teléfono |
 | Stripe (más adelante) | Cualquiera | `stripe listen --forward-to localhost:8080/<ruta-del-webhook>` | — |
@@ -163,13 +173,15 @@ La app del teléfono habla **directo con el API** de la computadora (no pasa por
 
 **1. Misma red Wi-Fi.** Conecta la computadora y el teléfono a la misma red. Si estás en una red de la universidad o pública y no se ven entre sí (muchas bloquean la conexión entre dispositivos), activa el **punto de acceso** del teléfono y conecta la computadora a él.
 
-**2. Averiguar la IP de la computadora.** En `cmd`:
+**2. Averiguar la IP local de la computadora.**
 
-```bat
-ipconfig
-```
+| Sistema | Referencia |
+|---|---|
+| Windows | `ipconfig`: IPv4 del adaptador conectado. |
+| macOS | Configuración del Sistema → Red → conexión activa → detalles de TCP/IP. |
+| Linux | `ip -4 address`: IPv4 de la interfaz conectada, distinta de loopback. |
 
-Busca el adaptador **Wi-Fi** (o el del punto de acceso) y copia la **Dirección IPv4**, por ejemplo `192.168.1.50`.
+Un ejemplo de IP local es `192.168.1.50`; cada integrante utiliza la de su conexión actual.
 
 **3. Ponerla en el `.env` de `villa-serena-movil`:**
 
@@ -179,13 +191,7 @@ EXPO_PUBLIC_API_URL=http://192.168.1.50:8080
 
 (Si el `.env.example` tiene otra variable para el WebSocket, usa la misma IP: `ws://192.168.1.50:8080/...`).
 
-**4. Permitir el puerto 8080 en el firewall de Windows** (una sola vez). Cuando Windows pregunte si Java puede comunicarse, marca **Redes privadas** y acepta. Si no preguntó, en `cmd` **como administrador**:
-
-```bat
-netsh advfirewall firewall add rule name="Villa Serena API" dir=in action=allow protocol=TCP localport=8080
-```
-
-Revisa también que tu red Wi-Fi esté como **Privada** (Configuración → Red e Internet → tu red → Tipo de perfil de red).
+**4. Acceso del teléfono al API.** El backend escucha en una interfaz accesible desde la red local. El firewall permite la conexión al puerto 8080 desde esa red de prueba: en Windows, con el perfil de red privada; en macOS, mediante los permisos del firewall para Java; en Linux, según el firewall activo. La configuración se adapta al equipo y no desactiva globalmente el firewall.
 
 **5. Comprobar desde el teléfono:** abre en el navegador del teléfono `http://192.168.1.50:8080/actuator/health`. Debe decir `UP`. Si no carga, el problema es la red o el firewall, no la app.
 
@@ -235,7 +241,7 @@ Una rama personal puede actualizarse mediante rebase sobre `origin/develop` cuan
 
 Los cambios de migraciones requieren comprobar el arranque del API con Flyway. Los cambios del contrato (`openapi.yaml`) requieren actualizar la copia local y regenerar los tipos en web y app.
 
-Los perfiles `local`, `dev` y `prod` distinguen los entornos y aprovechan la configuración existente. Cuando el perfil `local` esté configurado, el API puede arrancar con `mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local`. Los pasos de instalación y arranque siguen siendo ejemplos operativos para la persona, adaptables a su sistema.
+Los perfiles `local`, `dev` y `prod` distinguen los entornos y aprovechan la configuración existente. Cuando el perfil `local` esté configurado, el API puede arrancar con el Maven Wrapper de la terminal (sección 1.1) y `spring-boot:run -Dspring-boot.run.profiles=local`. Los pasos de instalación y arranque siguen siendo ejemplos operativos para la persona, adaptables a su sistema.
 
 Para las pruebas desde frontend, el equipo puede acordar un Cloudflare Tunnel temporal hacia el API. Mantiene autenticación, expone solo lo necesario y se cierra al terminar. Los servicios de administración de Docker y las credenciales permanecen fuera de esa exposición.
 
@@ -250,7 +256,7 @@ Cómo subir tu trabajo y abrir el pull request: `15 - Prompts de IA/00 - Como us
    ```bat
    docker compose -f docker-compose.dev.yml down
    ```
-   Esto **no borra** los datos. Cerrar Docker Desktop también los apaga.
+   Esto **no borra** los datos. En equipos con Docker Desktop, cerrarlo también detiene sus servicios.
 3. **Solo si quieres empezar de cero** (borra la base de datos y los archivos de MinIO):
    ```bat
    docker compose -f docker-compose.dev.yml down -v
@@ -262,13 +268,13 @@ Cómo subir tu trabajo y abrir el pull request: `15 - Prompts de IA/00 - Como us
 
 | Mensaje o situación | Qué significa | Qué hacer |
 |---|---|---|
-| `fatal: not a git repository` | Estás en otra carpeta | Entra a la carpeta del repositorio con `cd /d "<ruta>"` |
+| `fatal: not a git repository` | Estás en otra carpeta | Verifica que la terminal está en el repositorio; la ruta depende de tu equipo y terminal |
 | `Deletion of directory '.git/...' failed. Should I try again? (y/n)` | Windows no deja borrar una carpeta interna vacía porque un programa la tiene abierta | Escribe `n`. No afecta al repositorio |
 | `cannot lock ref ...` al hacer `git fetch` | Una referencia local quedó a medio actualizar | Repite `git fetch`. Si sigue: `git update-ref -d refs/remotes/origin/main` y `git fetch` |
-| `Cannot connect to the Docker daemon` o `docker` no responde | Docker Desktop está cerrado | Ábrelo y espera a que diga "Running" |
+| `Cannot connect to the Docker daemon` o `docker` no responde | Docker no está disponible | Comprueba Docker Desktop o el daemon de Docker Engine, según tu sistema |
 | `short read ... unexpected EOF` o `no such host` al descargar imágenes | Se cortó Internet o falla el DNS mientras Docker descargaba | Revisa tu Wi-Fi; si usas VPN o proxy, apágalo (o configúralo en Docker Desktop → Settings → Resources → Proxies). Luego repite `docker compose ... up -d`; Docker continúa donde se quedó |
 | `port is already allocated` | Otro programa usa ese puerto | Cierra ese programa o cambia el puerto en tu `.env` |
-| `'.' no se reconoce como un comando` al usar `./mvnw` | En `cmd` se escribe distinto | Usa `mvnw.cmd spring-boot:run` |
+| `'.' no se reconoce como un comando` al usar `./mvnw` | En `cmd` se escribe distinto | Usa el Maven Wrapper indicado para tu terminal en la sección 1.1 |
 | La app en el teléfono no llega al API | Redes distintas, se usó `localhost`, firewall o la IP cambió | Sigue la sección 4.1, pasos 1 a 5; si la IP cambió, `npx expo start -c` |
 | Las notificaciones push no llegan | Se está usando Expo Go, no hay Internet en el teléfono o la reserva no está `EN_ESTADIA` | Usa el development build (sección 4.1, paso 6) |
 | El pull request dice que tiene conflictos | Otra persona cambió lo mismo | Revisar ambos cambios y coordinarlos; Alex facilita la resolución si hay un bloqueo |

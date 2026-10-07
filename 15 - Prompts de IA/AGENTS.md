@@ -23,6 +23,8 @@ El equipo dirige el proyecto y la persona que trabaja con el agente dirige la se
 
 La comunicación es en español, clara y por bloques breves. Cada actualización aporta lo necesario para entender el avance, la decisión actual o un bloqueo. Los nombres técnicos siguen las convenciones del repositorio y del documento 14.
 
+Los entornos del equipo son Windows (Kimberly y Josué), macOS (Pablo, Carlos y Hugo) y Linux (Alex). El agente adapta los comandos a la terminal y al sistema de la persona; las guías no imponen rutas locales ni instrucciones para crear carpetas. La guía 16, sección 1.1, contiene las variantes necesarias.
+
 Las instrucciones y los prompts describen el **estado deseado**, sus restricciones y los criterios de aceptación. Los pasos detallados se reservan para procedimientos que los necesitan o cuando la persona los solicita.
 
 ## 3. Inicio de sesión y selección del trabajo

@@ -85,7 +85,7 @@ Los cambios de esquema necesarios se coordinan mediante issues y PR, conservando
 2. Con Stripe CLI encendido: crear una reserva, pagar con la tarjeta de prueba aprobada → la reserva queda `CONFIRMADA` y el correo llega a Mailpit.
 3. Reenviar el mismo webhook no crea un segundo pago.
 4. Una reserva sin pagar se cancela sola a los 30 minutos (para probar, puedes bajar el tiempo en tu `.env` local).
-5. `mvnw.cmd test` pasa.
+5. Las pruebas del API pasan con el Maven Wrapper de la terminal (guía 16, sección 1.1).
 
 ## Al terminar
 

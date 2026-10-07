@@ -32,12 +32,12 @@ El agente presenta un plan breve y continúa con el trabajo autorizado. La imple
 Contexto: repositorio villa-serena-docs del proyecto Villa Serena. Responde en
 español.
 
-Entregable: guía 18 de Stripe CLI, corta y para principiantes en Windows, de
+Entregable: guía 18 de Stripe CLI, corta y para principiantes en Windows, macOS y Linux, de
 cómo probar los pagos de Stripe en local (modo prueba):
 1. Crear una cuenta de Stripe y quedarse en modo prueba (sin datos bancarios).
 2. Dónde copiar la clave secreta de prueba (sk_test_...) y en qué variable del .env
    del API ponerla. Recordar: nunca subirla a Git ni pegarla en un chat de IA.
-3. Instalar Stripe CLI en Windows e iniciar sesión (stripe login).
+3. Stripe CLI disponible en Windows, macOS o Linux, con inicio de sesión (stripe login).
 4. Reenviar los avisos al API local con stripe listen --forward-to
    localhost:8080/api/v1/pagos/stripe/webhook (usa la ruta de openapi.yaml) y
    copiar la clave de firma del webhook (whsec_...) al .env. Cada integrante tiene

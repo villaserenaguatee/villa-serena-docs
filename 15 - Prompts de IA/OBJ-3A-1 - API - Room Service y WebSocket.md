@@ -78,7 +78,7 @@ Los cambios de esquema necesarios se coordinan mediante issues y PR, conservando
 1. Un pedido creado aparece en la cola; avanzar en orden funciona y saltar un estado da 409.
 2. Al entregar, la cuenta tiene un solo cargo aunque se repita la petición.
 3. Con un cliente STOMP de prueba: Room Service recibe el pedido nuevo; un huésped solo recibe los cambios de sus pedidos; un rol sin permiso no puede suscribirse.
-4. `mvnw.cmd test` pasa.
+4. Las pruebas del API pasan con el Maven Wrapper de la terminal (guía 16, sección 1.1).
 
 ## Al terminar
 

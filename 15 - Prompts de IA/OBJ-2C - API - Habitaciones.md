@@ -58,7 +58,7 @@ Los cambios de esquema necesarios se coordinan mediante issues y PR, conservando
 1. La lista de habitaciones devuelve ocupación, condición e indicadores, y los filtros funcionan.
 2. Marcar sucia una habitación ocupada da 409; una libre y limpia pasa a `SUCIA`.
 3. Asignar una habitación que ya está ocupada en esas fechas da 409.
-4. `mvnw.cmd test` pasa.
+4. Las pruebas del API pasan con el Maven Wrapper de la terminal (guía 16, sección 1.1).
 
 ## Al terminar
 

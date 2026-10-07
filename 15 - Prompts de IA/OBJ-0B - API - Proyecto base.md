@@ -88,7 +88,7 @@ Fuera de alcance:
 
 ## Cómo saber que quedó terminado
 
-1. Con los servicios de OBJ-0A arriba y los tres valores de la guía 16 (sección 2.4) en tu `.env`, `mvnw.cmd spring-boot:run` arranca sin errores y Flyway aplica V1 a V6 (en la consola aparece "Successfully applied 6 migrations").
+1. Con los servicios de OBJ-0A arriba y los tres valores de la guía 16 (sección 2.4) en tu `.env`, el API arranca sin errores con el Maven Wrapper de la terminal (guía 16, sección 1.1) y Flyway aplica V1 a V6 (en la consola aparece "Successfully applied 6 migrations").
 1b. Comprobación de los datos de prueba:
    ```bat
    docker exec -it villa-serena-dev-postgres-1 psql -U villaserena -d villaserena -c "select count(*) from habitaciones;"

@@ -60,7 +60,7 @@ Los cambios de esquema necesarios se coordinan mediante issues y PR, conservando
 1. Una reserva de Recepción nace `CONFIRMADA`, sin pago, y llega el correo a Mailpit.
 2. La vista previa de cancelación dice lo correcto en los tres casos; cancelar una reserva web con 48 h o más reembolsa en Stripe.
 3. El check-in solo funciona dentro de las fechas y con la habitación libre y limpia.
-4. `mvnw.cmd test` pasa.
+4. Las pruebas del API pasan con el Maven Wrapper de la terminal (guía 16, sección 1.1).
 
 ## Al terminar
 

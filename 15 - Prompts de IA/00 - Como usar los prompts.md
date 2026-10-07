@@ -2,7 +2,7 @@
 
 > **Para qué sirve:** guía paso a paso para que cada integrante use su prompt con la IA, aunque no tenga experiencia con estas tecnologías.
 > **Basado en:** 13 — Plan de Trabajo y 14 — Tecnologías y Arquitectura.
-> **Comandos de ejemplo:** escritos para Windows (`cmd`). El agente los adapta al sistema y la terminal que usa la persona.
+> **Comandos de ejemplo:** Git usa los mismos comandos en Windows, macOS y Linux. La guía 16, sección 1.1, indica las variantes de Maven Wrapper y archivos de entorno. El agente adapta los ejemplos a la terminal de la persona.
 > **Antes de esta guía:** `16 - Guia de Arranque del Proyecto.md` (preparar la computadora y encender el proyecto).
 
 ---
