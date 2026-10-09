@@ -83,6 +83,7 @@ Todos los documentos están en el repositorio `villa-serena-docs` (carpeta `docs
 | `17 - Avance del Proyecto.md` | Seguimiento del avance |
 | `18 - Guia de Stripe CLI.md` | Stripe CLI en local |
 | `19 - Diseno de Integracion con Canales.md` | Diseño breve de la integración con canales (ALC-CM-01) |
+| [`20 - Diagramas del Sistema/`](20%20-%20Diagramas%20del%20Sistema/README.md) | Componentes, participantes, actividades, secuencias, estados y cobertura de las 68 HU |
 
 **Orden de derivación:** historias de usuario → análisis (estados, reglas, permisos, requisitos, casos de uso) → diseño (arquitectura, plan) → prompts de IA.
 
