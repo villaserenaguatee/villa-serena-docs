@@ -46,7 +46,7 @@ villa-serena-docs/
 ### [03 · Arquitectura y Diseño Técnico](03-arquitectura/)
 * **[Arquitectura General del Sistema](03-arquitectura/arquitectura-sistema.md):** Topología de servicios, patrón BFF, seguridad JWT y comunicación en tiempo real.
 * **[Máquinas de Estados](03-arquitectura/maquinas-de-estados.md):** Ciclos de vida y transiciones válidas para Reservas, Habitaciones, Pedidos, Solicitudes y Cuentas.
-* **[Modelo de Datos y Esquema ER](03-arquitectura/modelo-datos-er.md):** Diagrama relacional, tablas, llaves y restricciones de exclusión temporal (`btree_gist`).
+* **[Diagramas del Sistema (Mermaid)](03-arquitectura/diagramas-sistema/):** Atlas visual con 26 diagramas de actividad, secuencia, componentes y cobertura de historias.
 * **[Registro de Decisiones Arquitectónicas (ADR)](03-arquitectura/adr/):** Histórico justificado de decisiones técnicas tomadas a lo largo del proyecto.
 
 ### [04 · Guías y Referencia Operativa](04-guias-y-referencia/)
