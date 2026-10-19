@@ -4,7 +4,7 @@ Bienvenido a la documentación oficial y base de conocimiento de **Villa Serena*
 
 > **Nota sobre el estado del proyecto:**  
 > **GitHub es la única fuente de la verdad sobre el avance real del código** (tableros de proyecto, issues abiertas y pull requests en los repositorios de `api`, `web`, `infra` y `movil`).  
-> Este repositorio funciona como la **Wiki de Referencia Técnica y de Negocio**: aquí se documentan las decisiones arquitectónicas, el modelo de datos, los requisitos, las reglas de negocio y la evolución del producto.
+> Este repositorio contiene la **fuente de verdad del contrato API** en [`openapi.yaml`](openapi.yaml) y funciona como la **Wiki de Referencia Técnica y de Negocio**: aquí se documentan las decisiones arquitectónicas, el modelo de datos, los requisitos, las reglas de negocio y la evolución del producto.
 
 ---
 
@@ -44,6 +44,7 @@ villa-serena-docs/
 * **[Casos de Uso](02-producto/casos-de-uso.md):** Flujos de interacción detallados del sistema.
 
 ### [03 · Arquitectura y Diseño Técnico](03-arquitectura/)
+* **[Contrato API canónico](openapi.yaml):** Fuente de verdad compartida por API, web y app. Consulta la [guía de actualización, generación de tipos y conformidad](03-arquitectura/contrato-api.md); las actualizaciones se registran mediante issues de este repositorio.
 * **[Arquitectura General del Sistema](03-arquitectura/arquitectura-sistema.md):** Topología de servicios, patrón BFF, seguridad JWT y comunicación en tiempo real.
 * **[Máquinas de Estados](03-arquitectura/maquinas-de-estados.md):** Ciclos de vida y transiciones válidas para Reservas, Habitaciones, Pedidos, Solicitudes y Cuentas.
 * **[Diagramas del Sistema (Mermaid)](03-arquitectura/diagramas-sistema/):** Atlas visual con 26 diagramas de actividad, secuencia, componentes y cobertura de historias.
@@ -66,4 +67,8 @@ El código del proyecto se encuentra distribuido en los siguientes repositorios 
 | [`villa-serena-web`](https://github.com/villaserenaguate/villa-serena-web) | Portal público y panel del personal (BFF) | Next.js 15, React 19, TypeScript, Tailwind CSS |
 | [`villa-serena-movil`](https://github.com/villaserenaguate/villa-serena-movil) | App de conserjería para huéspedes | React Native, Expo SDK 54, Expo Router |
 | [`villa-serena-infra`](https://github.com/villaserenaguate/villa-serena-infra) | Infraestructura y despliegue local/remoto | Docker Compose, Terraform, Ansible, AWS |
-| [`villa-serena-docs`](https://github.com/villaserenaguate/villa-serena-docs) | Esta Wiki de documentación técnica | Markdown, Diagramas Mermaid |
+| [`villa-serena-docs`](https://github.com/villaserenaguate/villa-serena-docs) | Wiki y contrato API canónico | Markdown, Mermaid, OpenAPI y herramientas Node.js |
+
+## Comprobar el contrato
+
+Con Node.js 24 y pnpm 12, ejecuta `pnpm install --frozen-lockfile` y `pnpm check`. Las instrucciones para agentes están en [AGENTS.md](AGENTS.md). API, web y móvil consumen una revisión fija de docs; no mantienen copias locales de `openapi.yaml`. Consulta la [guía del contrato](03-arquitectura/contrato-api.md) para generar tipos y comprobar consumidores.
