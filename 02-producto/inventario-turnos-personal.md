@@ -1,6 +1,6 @@
 # Inventario, Turnos y Personal
 
-Define el modelo para el personal del hotel, la gestión de turnos laborales y el catálogo de artículos e inventario aislado.
+Define el modelo para el personal del hotel, la gestión de turnos laborales y el catálogo de artículos e inventario compartido.
 
 ---
 
@@ -12,7 +12,7 @@ Define el modelo para el personal del hotel, la gestión de turnos laborales y e
 4. [Perfil del huésped (Nivel 1)](#4-perfil-del-huésped-nivel-1)
 5. [Catálogo de artículos para el huésped (Nivel 1)](#5-catálogo-de-artículos-para-el-huésped-nivel-1)
 6. [Turnos (Nivel 2)](#6-turnos-nivel-2)
-7. [Inventario aislado (Nivel 2)](#7-inventario-aislado-nivel-2)
+7. [Inventario compartido (Nivel 2)](#7-inventario-compartido-nivel-2)
 
 ---
 
@@ -20,7 +20,7 @@ Define el modelo para el personal del hotel, la gestión de turnos laborales y e
 
 Define los datos y el funcionamiento de **personal**, **perfil del huésped**, **catálogo de artículos**, **turnos** e **inventario**.
 
-Estos módulos **no se conectan entre sí ni con la operación**: no hay consumo de insumos, ni repuestos, ni reportes de faltantes, y los turnos no afectan el acceso. Las reglas con ID están en el documento **10 — Reglas de Negocio**; aquí se describe el modelo.
+El inventario comparte existencias con compras y repuestos de mantenimiento. Room Service, limpieza y solicitudes no descuentan automáticamente; los turnos no afectan el acceso. Las reglas con ID están en el documento **10 — Reglas de Negocio**; aquí se describe el modelo.
 
 | Módulo | Nivel | Historias |
 |---|---|---|
@@ -36,7 +36,7 @@ Estos módulos **no se conectan entre sí ni con la operación**: no hay consumo
 
 | # | Decisión | Origen |
 |---|---|---|
-| D8-01 | **Sin integración de inventario:** Room Service, limpieza, solicitudes y mantenimiento no descuentan stock. | D-20 |
+| D8-01 | **Inventario compartido:** compras y repuestos usan las mismas existencias; Room Service, limpieza y solicitudes no descuentan automáticamente. | D-20 |
 | D8-02 | **Turnos e inventario son Nivel 2:** se construyen solo si da tiempo, en su versión mínima. Falta confirmar con el ingeniero si son obligatorios (Alcance, sección 9). | Alcance, sección 2 |
 | D8-03 | **Los turnos son informativos:** no bloquean el acceso ni sugieren a quién asignar trabajo. | HU-ADM-12 |
 | D8-04 | **No se valida el trabajo en curso al desactivar a un empleado.** No es necesario para funcionar ni para presentar. | Índice de HU, sección 7 |
@@ -152,30 +152,33 @@ Solo se construye si da tiempo (HU-ADM-12).
 
 ---
 
-## 7. Inventario aislado (Nivel 2)
+## 7. Inventario compartido (Nivel 2)
 
-Solo se construye si da tiempo (HU-ADM-13). **No se conecta con ningún otro módulo.**
+Inventario, compras y repuestos de mantenimiento usan los mismos insumos. Se conserva el funcionamiento de API y web mediante docs #21; no cambia su clasificación de Nivel 2.
 
-### 7.1 Producto
+### 7.1 Insumos
 
-| Campo | Descripción |
-|---|---|
-| Nombre | Único |
-| Categoría | Ej. Insumos de limpieza, Amenidades, Repuestos |
-| Unidad de medida | Ej. unidad, litro, rollo |
-| Stock mínimo | Umbral para la marca "Stock bajo" |
-| Stock actual | Empieza en 0; solo cambia con movimientos; nunca queda negativo |
-| Estado | `ACTIVO` o `INACTIVO` |
+Cada insumo tiene UUID, versión, nombre, categoría, unidad, stock, stock mínimo y costo unitario. La creación admite stock inicial no negativo; al actualizar no se puede modificar directamente. No se exige nombre único ni existe desactivación. Campos adicionales como vencimiento se conservan; la API no los valida específicamente.
 
-### 7.2 Movimientos
+### 7.2 Cambios de existencias
 
-| Tipo | Efecto | Quién | Datos |
-|---|---|---|---|
-| Entrada | + stock | Administrador | Cantidad mayor que cero y motivo obligatorio |
-| Salida | − stock | Administrador | Cantidad mayor que cero y motivo obligatorio. Si supera el stock actual, se rechaza |
+| Operación | Efecto | Quién |
+|---|---|---|
+| Entrada manual | Suma cantidad positiva, con motivo | Administrador |
+| Salida o merma manual | Resta cantidad positiva, con motivo; rechaza stock insuficiente | Administrador |
+| Compra registrada, pagada o pendiente | Suma la cantidad al insumo; no modifica su costo unitario | Administrador |
+| Repuestos de una orden en proceso | Descuenta el incremento del consumo o devuelve su reducción; rechaza stock insuficiente | Técnico a cargo de la orden o Administrador |
 
-Cada movimiento guarda fecha, hora, tipo, cantidad, motivo y responsable, y se puede ver el historial de cada producto.
+Los repuestos manuales identificados con `manual-` no afectan existencias. Room Service, limpieza y solicitudes no descuentan automáticamente.
 
-### 7.3 Lista de productos
+Ejemplo: un insumo empieza con 0 focos; registrar una compra de 10 deja 10; usar 2 en una orden deja 8; registrar una merma de 1 deja 7.
 
-Muestra stock actual, stock mínimo y categoría. Los productos con stock **igual o menor** al mínimo llevan la marca **"Stock bajo"**. Se puede filtrar por categoría y por "solo stock bajo". No hay alertas ni reportes de faltantes.
+### 7.3 Consulta e historial
+
+La web calcula stock bajo cuando `stock <= stockMinimo` y filtra por categoría o esa marca. Mantenimiento puede consultar insumos; solo Administración registra insumos, compras y movimientos manuales.
+
+La lista de movimientos contiene únicamente los manuales, con fecha UTC, tipo, cantidad, motivo e insumo. Compras y repuestos modifican stock y auditoría, pero no crean entradas en esa lista. El responsable queda en auditoría; la respuesta no genera `responsable` ni `stockResultante`. No se promete un historial único de todas las variaciones.
+
+Los movimientos son inmutables. Un reenvío idéntico con el mismo UUID y versión 0 devuelve el original sin aplicar el stock de nuevo.
+
+Las rutas, DTO, validaciones, errores y adopción se detallan en el [contrato de inventario](../03-arquitectura/inventario-contrato.md).

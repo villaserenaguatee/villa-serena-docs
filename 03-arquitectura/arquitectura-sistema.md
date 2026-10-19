@@ -196,8 +196,9 @@ Grafana (Docker) ─────muestra──────────► Prometh
 
 | Mecanismo | Qué protege | Reglas (documento 10) |
 |---|---|---|
-| **Restricciones de PostgreSQL** (Flyway) | Sin reservas traslapadas en la misma habitación (`EXCLUDE`); número de habitación único; correo único de empleado y de huésped; una reserva por canal e identificador externo; un solo cargo por pedido; una sola factura por cuenta; una sola solicitud de limpieza activa por habitación (índice único parcial); correlativo de factura único por serie; stock ≥ 0 (Nivel 2) | RN-RES-002, RN-HAB-007, RN-PER-008, RN-RES-019, RN-CM-004, RN-RS-007, RN-FAC-001, RN-LIM-005, RN-FAC-004, RN-INV-002 |
+| **Restricciones de PostgreSQL** (Flyway) | Sin reservas traslapadas en la misma habitación (`EXCLUDE`); número de habitación único; correo único de empleado y de huésped; una reserva por canal e identificador externo; un solo cargo por pedido; una sola factura por cuenta; una sola solicitud de limpieza activa por habitación (índice único parcial); correlativo de factura único por serie | RN-RES-002, RN-HAB-007, RN-PER-008, RN-RES-019, RN-CM-004, RN-RS-007, RN-FAC-001, RN-LIM-005, RN-FAC-004 |
 | **Servicios de dominio de Spring** (`@Transactional`, bloqueo donde hay concurrencia) | Disponibilidad, tarifas, reservas, cuenta y pagos, check-in y check-out (una sola operación), facturación, indicadores y los efectos del documento 07 (sección 11) | RN-RES, RN-HAB, RN-TAR, RN-PAG, RN-CAN, RN-RS, RN-LIM, RN-MAN, RN-FAC, RN-IND (en especial RN-RES-022) |
+| **Inventario y gestión operativa** (transacción y bloqueo del insumo compartido) | Movimientos manuales, compras y repuestos actualizan existencias y auditoría; salidas, mermas y repuestos rechazan stock insuficiente. El stock actual vive en los registros JSON de gestión, no en una restricción SQL específica de stock | RN-INV-001, RN-INV-002, RN-INV-003, RN-INV-011 |
 | **Máquinas de estado en Spring** (transiciones por enum) + **historial** | Las transiciones del documento 07; cada cambio se registra en `historial_estados` | RG-EST-01 a 08 (documento 07); RN-RS-001, RN-RS-002, RN-MAN-002 |
 | **Spring Security** | La matriz del documento 09 (rol, área y propiedad), acceso del personal y del huésped | RN-SEG-001, 002, 005, 006; RN-PER-011 a 015; RN-APP-001 a 004, RN-APP-010; RN-LIM-011, RN-MAN-009 |
 | **`@Scheduled`** | Cancelación de reservas web sin pago a los 30 minutos (UC-15); procesamiento del Outbox | RN-RES-012, RN-CAN-013 |
@@ -321,7 +322,7 @@ villa-serena-api/
 │   ├── roomservice/     Menú y pedidos
 │   ├── piso/            Limpieza, solicitudes e incidencias
 │   ├── personal/        Fuera del hito; empleados de prueba en Flyway
-│   ├── inventario/      Nivel 2, aislado
+│   ├── inventario/      Nivel 2, movimientos; existencias compartidas con compras y repuestos
 │   ├── catalogos/       Lectura de datos cargados por Flyway para el hito
 │   ├── facturacion/     Facturas PDF
 │   ├── canal/           API del canal REST/JSON

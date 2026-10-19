@@ -10,6 +10,8 @@ La base procede de `villa-serena-api`, commit `9396c82`, con nacionalidad opcion
 
 El contrato acordado, el código implementado y las pruebas de integración son evidencias distintas. Las próximas issues deben reconciliar las omisiones contrastando reglas de producto, DTO, validaciones, permisos y pruebas.
 
+La [reconciliación de inventario (docs #21)](inventario-contrato.md) sustituye las rutas propuestas por producto por GET/POST de `gestion/insumos`, `gestion/compras` y `gestion/movimientos`, según el uso actual de API y web. Compras y repuestos comparten existencias; el documento detalla compatibilidad y adopción pendiente en consumidores.
+
 `MANUAL_CONTRATO_API.pdf` sirvió como referencia histórica. Describe esa base de 130 operaciones y menciona Spring Boot 3 y PostgreSQL 16; el acuerdo actual utiliza Spring Boot 4.1 y PostgreSQL 17. El PDF no sustituye al YAML. Una futura exportación debe identificar el commit del contrato que representa.
 
 ## Qué conecta cada pieza

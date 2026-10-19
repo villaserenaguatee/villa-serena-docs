@@ -14,27 +14,30 @@ flowchart LR
   SEL -->|ADMIN| TU[Definir turno; puede cruzar medianoche]
   TU --> TV[Asignar a empleado ACTIVO no ADMIN y sin traslapes]
   TV --> TI[Vista semanal informativa]
-  SEL -->|ADMIN| IV[Crear producto con stock cero y mínimo]
+  SEL -->|ADMIN| IV[Crear insumo con stock inicial no negativo y mínimo]
   IV --> MV{Movimiento manual}
   MV -->|Entrada| EN[Sumar cantidad positiva + motivo]
-  MV -->|Salida| Q{Stock suficiente?}
+  MV -->|Salida o merma| Q{Stock suficiente?}
   Q -->|No| ER[Rechazar salida]
   Q -->|Sí| SA[Restar cantidad + motivo]
-  EN & SA --> HIS[Historial con fecha y responsable]
+  EN & SA --> HIS[Lista de movimientos manuales con fecha]
   HIS --> LOW[Stock menor o igual al mínimo → marca Stock bajo]
+  CO[Compra registrada por ADMIN] --> SUM[Sumar existencias del insumo]
+  OT[Repuestos en orden en proceso] --> DIF[Ajustar existencias por diferencia consumida]
+  SUM & DIF --> AU[Auditoría del cambio de existencias]
 ```
 
 ## Reglas y límites
 
-- Inventario aislado: solo movimientos manuales de ADMIN; no hay flechas desde pedidos, limpieza ni mantenimiento.
+- Inventario compartido con compras y repuestos. Pedidos, limpieza y solicitudes no descuentan automáticamente. Compras y repuestos no crean movimientos en la lista manual; el responsable queda en auditoría. Véase [contrato de inventario](../inventario-contrato.md).
 - Turnos informativos: no condicionan autenticación ni acceso al sistema.
 - Amenidades y Wi-Fi son visibles a cualquier huésped con sesión, sin depender de EN_ESTADIA.
 
 ## Referencias
 
-- [10 RN-INV,RN-TUR,RN-APP-012,RN-RES-025](../10%20-%20Reglas%20de%20Negocio.md)
-- [13 objetivo 6](../13%20-%20Plan%20de%20Trabajo.md)
-- [01 §5](../01%20-%20Alcance%20del%20Proyecto.md)
+- [Reglas de negocio: RN-INV, RN-TUR, RN-APP-012 y RN-RES-025](../../02-producto/reglas-de-negocio.md)
+- [Roadmap por versiones](../../01-metodologia/roadmap-versiones.md)
+- [Alcance y decisiones](../../02-producto/alcance-y-decisiones.md)
 
 **Historias vinculadas:** `HU-HUE-18`, `HU-REC-09`, `HU-ADM-11`, `HU-ADM-12`, `HU-ADM-13`.
 

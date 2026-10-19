@@ -53,7 +53,7 @@ Define **quién usa el sistema**, **desde dónde**, **cómo entra** y **de qué 
 | Indicadores | Ocupación de hoy, ingresos y reservas por canal | HU-ADM-09 |
 | Mantenimiento | **Consultar** las incidencias (solo lectura) | HU-ADM-10 |
 | Channel Manager | Enviar reservas de prueba con el canal simulado | HU-CM-03 |
-| Nivel 2 (si da tiempo) | Amenidades y Wi-Fi, turnos e inventario aislado | HU-ADM-11, HU-ADM-12, HU-ADM-13 |
+| Nivel 2 (si da tiempo) | Amenidades y Wi-Fi, turnos e inventario compartido | HU-ADM-11, HU-ADM-12, HU-ADM-13 |
 
 **No hace:** operaciones de Recepción (reservas, check-in, check-out, cargos, facturas), tareas de piso (limpieza, solicitudes, incidencias) ni tareas de Room Service. **No asigna** incidencias: el técnico las toma.
 

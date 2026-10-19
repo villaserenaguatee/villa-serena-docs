@@ -58,7 +58,7 @@ Vista a grandes rasgos del sistema definido por la documentación: componentes, 
 
 - El cierre de la estadía agrupa los cambios de negocio en BD. Correo y almacenamiento de PDF requieren coordinación; no se supone una transacción distribuida entre BD, archivos y correo.
 - Los cuatro eventos WebSocket se publican después del commit; al reconectar, las pantallas vuelven a consultar el estado. Cuenta, Gantt, incidencias y estados de solicitudes en la app se recargan según sus historias.
-- Inventario es aislado y turnos son informativos. El canal simulado demuestra la API de entrada; no representa una integración bidireccional real con Booking o Expedia.
+- Inventario comparte existencias con compras y repuestos; turnos son informativos. El canal simulado demuestra la API de entrada; no representa una integración bidireccional real con Booking o Expedia.
 - La arquitectura de producción conserva los supuestos por confirmar del documento 14 §14.
 
 ## Fuentes de referencia

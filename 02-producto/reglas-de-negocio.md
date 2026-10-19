@@ -323,12 +323,12 @@ Inventario y turnos se construyen solo si da tiempo, según el alcance. Su posib
 
 | ID | Regla | Historias |
 |---|---|--- |
-| RN-INV-001 | **Nivel 2.** El inventario es aislado: el stock solo cambia con movimientos manuales del Administrador; Room Service, limpieza, solicitudes y mantenimiento no lo modifican. | HU-ADM-13 (C7) |
-| RN-INV-002 | **Nivel 2.** El stock no queda negativo; se rechaza una salida que supere el stock actual. | HU-ADM-13 (C3) |
-| RN-INV-003 | **Nivel 2.** Cada movimiento registra fecha, hora, tipo, cantidad, motivo y responsable; se consulta el historial de cada producto. | HU-ADM-13 (C4) |
+| RN-INV-001 | **Nivel 2.** Inventario, compras y repuestos de mantenimiento comparten las existencias de insumos. Las compras aumentan stock; las órdenes ajustan el consumo de repuestos por diferencia. Room Service, limpieza y solicitudes no descuentan automáticamente. | HU-ADM-13 (C7) |
+| RN-INV-002 | **Nivel 2.** El stock no queda negativo; se rechaza una salida, merma o consumo de repuestos que supere el stock actual. | HU-ADM-13 (C3) |
+| RN-INV-003 | **Nivel 2.** Cada movimiento manual registra fecha UTC, tipo, cantidad, motivo e insumo. La API lista los movimientos manuales; responsable y cambios de existencias quedan en auditoría. La respuesta no genera responsable ni stock resultante; compras y repuestos no crean movimientos manuales. | HU-ADM-13 (C4) |
 | RN-INV-005 | **Nivel 2.** Un producto con stock igual o menor al mínimo muestra “Stock bajo”; se puede filtrar por esa marca y por categoría. | HU-ADM-13 (C5) |
-| RN-INV-010 | **Nivel 2.** El producto tiene nombre único, categoría, unidad y stock mínimo; comienza con stock cero y se puede desactivar. | HU-ADM-13 (C1, C6) |
-| RN-INV-011 | **Nivel 2.** Las entradas aumentan el stock y las salidas lo disminuyen; ambas requieren cantidad mayor que cero y motivo obligatorio. | HU-ADM-13 (C2) |
+| RN-INV-010 | **Nivel 2.** El insumo tiene nombre, categoría, unidad, stock inicial no negativo, mínimo y costo unitario. No se exige nombre único ni se implementa desactivación. Al editar el catálogo no se modifica directamente el stock. | HU-ADM-13 (C1, C6) |
+| RN-INV-011 | **Nivel 2.** Las entradas aumentan el stock; salidas y mermas lo disminuyen. Requieren cantidad mayor que cero, máximo 99999999, y motivo no vacío de hasta 500 caracteres. Los movimientos son inmutables; el reenvío idéntico del mismo UUID no vuelve a aplicarlos. | HU-ADM-13 (C2) |
 
 ---
 
