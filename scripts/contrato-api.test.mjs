@@ -52,7 +52,10 @@ const contract = load(readFileSync(new URL('../openapi.yaml', import.meta.url), 
 const definitions = contract.components.schemas;
 test('Recurrente replaces only the Stripe webhook operation; other routes remain available', () => {
   const root = fileURLToPath(new URL('../', import.meta.url));
-  const previous = load(execFileSync('git', ['-C', root, 'show', 'HEAD:openapi.yaml'], { encoding: 'utf8' }));
+  // Fixed pre-migration baseline: HEAD already contains Recurrente after committing.
+  // CI fetches history so this object exists in both branch and PR merge checkouts.
+  const previousRevision = 'f30ff74fe939d467728c51c31d7aca157b3be34e';
+  const previous = load(execFileSync('git', ['-C', root, 'show', `${previousRevision}:openapi.yaml`], { encoding: 'utf8' }));
   assert.deepEqual(operationDifferences(previous, contract), {
     missing: ['POST /api/v1/pagos/stripe/webhook'],
     extra: ['POST /api/v1/pagos/recurrente/webhook'],
