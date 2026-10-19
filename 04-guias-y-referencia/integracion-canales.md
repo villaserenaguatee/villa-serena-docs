@@ -1,8 +1,6 @@
-# 19 — Diseño de la integración con canales (Channel Manager)
+# Diseño de Integración con Canales Externos (Channel Manager)
 
-> **Entregable:** ALC-CM-01 (documento técnico; no es una historia de usuario).
-> **Para qué sirve:** explicar qué hace hoy el sistema con los canales externos (Booking y Expedia), qué faltaría para conectarse de verdad y qué limitaciones se aceptan.
-> **Relacionado:** documento 14 (AD-13), historias HU-CM-01 a HU-CM-03 y prompts OBJ-1C y OBJ-1E.
+Especificación técnica de la recepción simulada de reservas provenientes de plataformas externas (OTAs como Booking y Expedia), autenticación por API Key y limitaciones aceptadas.
 
 ---
 

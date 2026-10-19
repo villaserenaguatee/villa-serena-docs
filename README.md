@@ -1,0 +1,69 @@
+# Villa Serena PMS — Wiki del Sistema
+
+Bienvenido a la documentación oficial y base de conocimiento de **Villa Serena**, un sistema de gestión hotelera (*Property Management System* - PMS) diseñado para un hotel boutique ficticio.
+
+> **Nota sobre el estado del proyecto:**  
+> **GitHub es la única fuente de la verdad sobre el avance real del código** (tableros de proyecto, issues abiertas y pull requests en los repositorios de `api`, `web`, `infra` y `movil`).  
+> Este repositorio funciona como la **Wiki de Referencia Técnica y de Negocio**: aquí se documentan las decisiones arquitectónicas, el modelo de datos, los requisitos, las reglas de negocio y la evolución del producto.
+
+---
+
+## 1. Visión del Producto
+
+Villa Serena busca resolver la administración integral de un hotel boutique mediante cuatro componentes desacoplados:
+
+1. **Web Pública (Huéspedes):** Portal de reservas con verificación de disponibilidad en tiempo real y pasarela de pago (Stripe en modo prueba).
+2. **Web Privada (Personal del Hotel):** Panel operativo para Recepción, Room Service, Limpieza/Mantenimiento y Administración, implementado con arquitectura BFF (*Backend for Frontend*).
+3. **App Móvil (Huéspedes en Estadía):** Aplicación Android (React Native + Expo) para conserjería digital: pedidos a la habitación, solicitudes de toallas/artículos, seguimiento en vivo y notificaciones push.
+4. **Backend / API REST Central:** Núcleo de lógica empresarial en Spring Boot 4.1 con base de datos relacional PostgreSQL 17, comunicación en tiempo real vía WebSockets (STOMP) y colas transaccionales de eventos.
+
+---
+
+## 2. Índice de la Documentación (Mapa de la Wiki)
+
+La documentación se organiza en cuatro áreas temáticas para facilitar su consulta y mantenimiento:
+
+```
+villa-serena-docs/
+├── 01-metodologia/          # Marco ágil (Scrumban) y hoja de ruta incremental
+├── 02-producto/             # Requisitos, historias de usuario, reglas de negocio y permisos
+├── 03-arquitectura/         # Diseño técnico, base de datos, estados y decisiones (ADR)
+└── 04-guias-y-referencia/   # Manuales de entorno local, herramientas y notas operativas
+```
+
+### [01 · Metodología y Planificación](01-metodologia/)
+* **[Marco de Trabajo Scrumban](01-metodologia/scrumban.md):** Ciclo de vida de tareas en GitHub (`Issue → Rama → PR → develop`), Definition of Done (DoD) y acuerdos de colaboración del equipo.
+* **[Roadmap por Versiones Incrementales](01-metodologia/roadmap-versiones.md):** Desglose del desarrollo por fases de menor a mayor complejidad (`v0.1.0 MVP`, `v0.2.0 Operativa`, `v0.3.0 Integral`).
+
+### [02 · Especificación de Producto](02-producto/)
+* **[Historias de Usuario](02-producto/historias-de-usuario/):** Catálogo de historias organizadas por rol y épica, priorizadas según la versión a la que pertenecen.
+* **[Requisitos Funcionales](02-producto/requisitos-funcionales.md):** Requisitos detallados del sistema agrupados por módulo.
+* **[Requisitos No Funcionales](02-producto/requisitos-no-funcionales.md):** Criterios de seguridad, rendimiento, concurrencia y observabilidad.
+* **[Reglas de Negocio](02-producto/reglas-de-negocio.md):** Políticas del hotel (cancelaciones 48h, pago único, tarifas, horarios fijos de check-in/out).
+* **[Roles y Matriz de Permisos](02-producto/roles-y-permisos.md):** Definición de roles (Recepción, Room Service, Limpieza, Mantenimiento, Administrador) y accesos permitidos.
+* **[Casos de Uso](02-producto/casos-de-uso.md):** Flujos de interacción detallados del sistema.
+
+### [03 · Arquitectura y Diseño Técnico](03-arquitectura/)
+* **[Arquitectura General del Sistema](03-arquitectura/arquitectura-sistema.md):** Topología de servicios, patrón BFF, seguridad JWT y comunicación en tiempo real.
+* **[Máquinas de Estados](03-arquitectura/maquinas-de-estados.md):** Ciclos de vida y transiciones válidas para Reservas, Habitaciones, Pedidos, Solicitudes y Cuentas.
+* **[Diagramas del Sistema (Mermaid)](03-arquitectura/diagramas-sistema/):** Atlas visual con 26 diagramas de actividad, secuencia, componentes y cobertura de historias.
+* **[Registro de Decisiones Arquitectónicas (ADR)](03-arquitectura/adr/):** Histórico justificado de decisiones técnicas tomadas a lo largo del proyecto.
+
+### [04 · Guías y Referencia Operativa](04-guias-y-referencia/)
+* **[Guía de Arranque Local](04-guias-y-referencia/arranque-local.md):** Pasos para levantar el ecosistema completo con Docker Compose.
+* **[Guía de Stripe CLI](04-guias-y-referencia/stripe-cli.md):** Configuración de webhooks locales para pruebas de pago.
+* **[Diseño de Integración con Canales](04-guias-y-referencia/integracion-canales.md):** Simulación de ingesta de reservas externas.
+
+---
+
+## 3. Repositorios del Ecosistema
+
+El código del proyecto se encuentra distribuido en los siguientes repositorios de la organización:
+
+| Repositorio | Descripción | Stack Tecnológico |
+|---|---|---|
+| [`villa-serena-api`](https://github.com/villaserenaguate/villa-serena-api) | Backend central y API REST | Java 21, Spring Boot 4.1, PostgreSQL 17, Flyway |
+| [`villa-serena-web`](https://github.com/villaserenaguate/villa-serena-web) | Portal público y panel del personal (BFF) | Next.js 15, React 19, TypeScript, Tailwind CSS |
+| [`villa-serena-movil`](https://github.com/villaserenaguate/villa-serena-movil) | App de conserjería para huéspedes | React Native, Expo SDK 54, Expo Router |
+| [`villa-serena-infra`](https://github.com/villaserenaguate/villa-serena-infra) | Infraestructura y despliegue local/remoto | Docker Compose, Terraform, Ansible, AWS |
+| [`villa-serena-docs`](https://github.com/villaserenaguate/villa-serena-docs) | Esta Wiki de documentación técnica | Markdown, Diagramas Mermaid |

@@ -1,9 +1,6 @@
-# 11 — Requisitos Funcionales
+# Requisitos Funcionales (RF)
 
-> **Proyecto:** Property Management System (PMS) para Hoteles Boutique — Hotel ficticio "Villa Serena"
-> **Estado:** 📝 Para revisión del equipo
-> **Fecha:** 1 de octubre de 2026
-> **Basado en:** 01 — Alcance, 04 — Historias de Usuario, 07 — Estados, 09 — Matriz de Permisos y 10 — Reglas de Negocio
+Define el comportamiento verificable del sistema por módulo. Los requisitos se derivan del catálogo de historias de usuario y están vinculados con sus respectivas reglas de negocio (`RN`).
 
 ## 1. Propósito y cómo leer este documento
 

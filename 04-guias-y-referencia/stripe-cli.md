@@ -1,8 +1,6 @@
-# 18 — Guía de Stripe CLI (pagos de prueba en local)
+# Guía de Stripe CLI (Pagos de Prueba Locales)
 
-> **Para qué sirve:** probar los pagos con Stripe en tu computadora, en **modo prueba** (sin dinero real).
-> **Para quién:** quien programe o pruebe pagos (Pablo, y en la integración, todos). No hace falta experiencia previa.
-> **Relacionado:** prompt OBJ-1B (pagos), documento 14 (AD-17) y guía 16 (`.env`).
+Instrucciones para escuchar y reenviar webhooks de Stripe hacia el backend local (`villa-serena-api`) para pruebas de reservas y pagos sin dinero real.
 
 ---
 

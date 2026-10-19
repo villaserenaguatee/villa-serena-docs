@@ -1,9 +1,6 @@
-# 12 — Casos de Uso
+# Casos de Uso del Sistema
 
-> **Proyecto:** Property Management System (PMS) para Hoteles Boutique — Hotel ficticio "Villa Serena"
-> **Estado:** 📝 Para revisión del equipo
-> **Fecha:** 1 de octubre de 2026
-> **Basado en:** 01 — Alcance, 02 — Roles, 04 — Historias de Usuario, 07 — Estados y 09 — Matriz de Permisos
+Describe los 19 casos de uso fundamentales que modelan las interacciones entre los usuarios (cliente, recepcionista, personal de servicio) y el sistema Villa Serena.
 
 ---
 
