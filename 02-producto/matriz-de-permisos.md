@@ -139,7 +139,9 @@ Define **qué acción exacta puede hacer cada rol**. Es la referencia para:
 | *Nivel 2:* gestionar amenidades y Wi-Fi | — | ✅ | — | — | — | — | HU-ADM-11 |
 | *Nivel 2:* ver amenidades y Wi-Fi | — | — | — | — | — | 👁 ¹³ | HU-HUE-18 |
 | *Nivel 2:* definir y asignar turnos | — | ✅ | — | — | — | — | HU-ADM-12 |
-| *Nivel 2:* gestionar el inventario | — | ✅ | — | — | — | — | HU-ADM-13 |
+| *Nivel 2:* registrar insumos, compras y movimientos manuales | — | ✅ | — | — | — | — | HU-ADM-13 |
+| *Nivel 2:* consultar insumos | — | ✅ | — | — | Solo área Mantenimiento o Ambas | — | HU-ADM-13 |
+| Registrar repuestos en órdenes en proceso | — | ✅ | — | — | Solo Mantenimiento o Ambas, técnico a cargo | — | ALC-MYL-10; integración HU-ADM-13 |
 
 ### 3.8 Acceso, tiempo real y notificaciones
 

@@ -336,13 +336,15 @@ Ejemplo: precio base Q500.00, temporada alta +20 %, noche de sábado +10 % → Q
 - **Para** controlar su existencia y saber cuándo reponerlos
 
 **Criterios de aceptación**
-1. Cada producto tiene nombre (único), categoría (ej. Insumos de limpieza, Amenidades, Repuestos), unidad de medida y stock mínimo. El stock inicial es cero.
-2. Una **entrada** aumenta el stock y una **salida** lo disminuye; ambas piden cantidad mayor a cero y un motivo obligatorio.
-3. El stock nunca queda negativo: si una salida supera el stock actual, se muestra un error y no se registra.
-4. Cada movimiento registra fecha, hora, tipo, cantidad, motivo y responsable; se puede ver el historial de cada producto.
+1. Cada insumo tiene nombre, categoría, unidad, stock mínimo y costo unitario. Al crearlo se indica stock inicial no negativo. No se exige nombre único.
+2. Una **entrada** aumenta el stock; una **salida** o **merma** lo disminuye. Piden cantidad mayor a cero y motivo obligatorio. Reenviar la misma creación no repite el movimiento.
+3. El stock nunca queda negativo: si una salida, merma o consumo de repuestos supera el stock actual, se rechaza.
+4. La web consulta movimientos manuales con fecha, tipo, cantidad, motivo e insumo. El responsable queda en auditoría; no se muestra en la respuesta junto con un stock resultante. Compras y repuestos modifican existencias sin crear movimientos en esa lista.
 5. Se listan los productos con stock actual, stock mínimo y categoría. Los que tienen stock igual o menor al mínimo muestran la marca **"Stock bajo"**; se puede filtrar por categoría y por "solo stock bajo".
-6. Un producto se puede desactivar.
-7. El inventario es **aislado**: Room Service, limpieza, solicitudes y mantenimiento no modifican el stock; solo cambia con los movimientos manuales del Administrador.
+6. El catálogo permite registrar y actualizar insumos con control de versión. No hay desactivación; para cambiar existencias se usa movimiento, compra o consumo de repuestos.
+7. Inventario, compras y repuestos de mantenimiento usan **las mismas existencias**. Administrador registra insumos, compras y movimientos manuales. Mantenimiento consulta insumos y registra repuestos en sus órdenes; Room Service, limpieza y solicitudes no descuentan automáticamente.
+
+Reconciliado con API y web en [docs #21](https://github.com/villaserenaguatee/villa-serena-docs/issues/21). El [contrato de inventario](../../03-arquitectura/inventario-contrato.md) describe las rutas y los límites actuales.
 
 **Depende de:** Ninguna
 **Reglas relacionadas:** RN-INV-001, RN-INV-002, RN-INV-003, RN-INV-005, RN-INV-010, RN-INV-011 (documento 10)

@@ -50,19 +50,69 @@ test('genera tipos desde docs y detecta cambios sin escribir YAML en el consumid
 // Regression checks for the payment block reconciled with API #54.
 const contract = load(readFileSync(new URL('../openapi.yaml', import.meta.url), 'utf8'));
 const definitions = contract.components.schemas;
-test('Recurrente replaces only the Stripe webhook operation; other routes remain available', () => {
+test('Recurrente replaces only the Stripe webhook operation outside the inventory reconciliation', () => {
   const root = fileURLToPath(new URL('../', import.meta.url));
   // Fixed pre-migration baseline: HEAD already contains Recurrente after committing.
   // CI fetches history so this object exists in both branch and PR merge checkouts.
   const previousRevision = 'f30ff74fe939d467728c51c31d7aca157b3be34e';
   const previous = load(execFileSync('git', ['-C', root, 'show', `${previousRevision}:openapi.yaml`], { encoding: 'utf8' }));
-  assert.deepEqual(operationDifferences(previous, contract), {
+  const withoutInventory = document => ({ paths: Object.fromEntries(Object.entries(document.paths)
+    .filter(([path]) => !path.startsWith('/api/v1/admin/inventario/') && !['insumos', 'compras', 'movimientos'].some(name => path === `/api/v1/gestion/${name}`))) });
+  assert.deepEqual(operationDifferences(withoutInventory(previous), withoutInventory(contract)), {
     missing: ['POST /api/v1/pagos/stripe/webhook'],
     extra: ['POST /api/v1/pagos/recurrente/webhook'],
   });
   for (const route of ['/api/v1/publico/reservas/{codigo}/pago', '/api/v1/publico/reservas/{codigo}/estado', '/api/v1/app/reservas/{codigo}/pago-saldo']) assert.ok(contract.paths[route]);
   assert.deepEqual(definitions.HuespedDatos, previous.components.schemas.HuespedDatos);
   assert.deepEqual(definitions.HuespedAdicionalDatos, previous.components.schemas.HuespedAdicionalDatos);
+});
+
+test('inventario sustituye las operaciones propuestas y conserva las demás operaciones de la base', () => {
+  const root = fileURLToPath(new URL('../', import.meta.url));
+  const previous = load(execFileSync('git', ['-C', root, 'show', 'b7d957385a78a932c433e4cd11bd9575c51665ab:openapi.yaml'], { encoding: 'utf8' }));
+  assert.deepEqual(operationDifferences(previous, contract), {
+    missing: [
+      'GET /api/v1/admin/inventario/productos',
+      'GET /api/v1/admin/inventario/productos/{id}/movimientos',
+      'PATCH /api/v1/admin/inventario/productos/{id}',
+      'POST /api/v1/admin/inventario/productos',
+      'POST /api/v1/admin/inventario/productos/{id}/desactivar',
+      'POST /api/v1/admin/inventario/productos/{id}/movimientos',
+    ],
+    extra: ['GET', 'POST'].flatMap(method => ['compras', 'insumos', 'movimientos'].map(name => `${method} /api/v1/gestion/${name}`)),
+  });
+  for (const [path, item] of Object.entries(contract.paths)) {
+    if (path.startsWith('/api/v1/gestion/')) continue;
+    assert.deepEqual(item, previous.paths[path], path);
+  }
+});
+
+test('movimientos conserva el intercambio de la web y los errores del API', () => {
+  const op = contract.paths['/api/v1/gestion/movimientos'].post;
+  const request = definitions.MovimientoInventarioPeticion;
+  const data = definitions.MovimientoInventarioDatos;
+  const response = definitions.MovimientoInventario;
+  assert.deepEqual(request.required, ['id', 'datos']);
+  assert.equal(request.properties.id.format, 'uuid');
+  assert.equal(request.properties.version.default, 0);
+  assert.equal(data.properties.insumoId.format, 'uuid');
+  assert.deepEqual(data.properties.tipo.enum, ['entrada', 'salida', 'merma']);
+  assert.equal(data.additionalProperties, true);
+  assert.deepEqual(data.properties.cantidad.oneOf.map(branch => branch.type), ['number', 'string']);
+  assert.equal(data.properties.motivo.maxLength, 500);
+  assert.ok(op.responses['200']);
+  assert.equal(op.responses['201'], undefined);
+  assert.deepEqual(response.required, ['insumoId', 'tipo', 'cantidad', 'motivo', 'id', 'version', 'fecha']);
+  assert.equal(response.properties.responsable, undefined);
+  assert.equal(response.properties.stockResultante, undefined);
+  assert.match(op.description, /VERSION_CAMBIADA/);
+  assert.match(op.description, /STOCK_INSUFICIENTE/);
+  assert.match(op.description, /inmutables/);
+  assert.match(op.description, /sin repetir sus efectos/);
+  assert.deepEqual(op['x-autorizacion'].roles, ['ADMIN']);
+  assert.deepEqual(contract.paths['/api/v1/gestion/insumos'].get['x-autorizacion'].roles, ['ADMIN', 'MANTENIMIENTO_LIMPIEZA']);
+  assert.deepEqual(contract.paths['/api/v1/gestion/insumos'].post['x-autorizacion'].roles, ['ADMIN']);
+  assert.deepEqual(definitions.CompraInventarioDatos.properties.estado.enum, ['pagada', 'pendiente']);
 });
 test('payment DTO keeps urlPago and expiraEn, with historical STRIPE and new RECURRENTE', () => {
   const dto = definitions.PagoIniciado;

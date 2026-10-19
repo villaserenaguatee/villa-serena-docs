@@ -374,7 +374,7 @@ REPORTADA ──► EN_PROCESO ──► RESUELTA
 | Ítem del menú (catálogo) | `ACTIVO`, `INACTIVO` | `ACTIVO ↔ INACTIVO` | `ADMIN`. El inactivo deja de aparecer en el menú | HU-ADM-05 |
 | Amenidad (Nivel 2) | `ACTIVO`, `INACTIVO` | `ACTIVO ↔ INACTIVO` | `ADMIN` | HU-ADM-11 |
 | Turno (Nivel 2) | `ACTIVO`, `INACTIVO` | `ACTIVO → INACTIVO` | `ADMIN` | HU-ADM-12 |
-| Producto de inventario (Nivel 2) | `ACTIVO`, `INACTIVO` | `ACTIVO → INACTIVO` | `ADMIN` | HU-ADM-13 |
+| Insumo de inventario (Nivel 2) | Sin estado de activación | Catálogo con control de versión; stock mediante movimientos, compras y repuestos | Catálogo: `ADMIN`; consulta también Mantenimiento | HU-ADM-13 |
 
 **Nota:** el ítem del menú tiene dos campos distintos: `DISPONIBLE`/`AGOTADO` (lo cambia Room Service) y `ACTIVO`/`INACTIVO` (lo cambia el Administrador). Los canales externos **no** tienen estado: se cargan en los datos iniciales y no hay pantalla de canales.
 

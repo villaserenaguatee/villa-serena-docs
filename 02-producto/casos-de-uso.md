@@ -81,7 +81,7 @@ Los IDs UC-09 y UC-12 no se utilizan.
 | UC-17 | Configurar tarifas dinámicas | 1 | | | | | ● | |
 | UC-19 | Gestionar personal (y turnos, Nivel 2) | 1 / 2 | | | | | ● | |
 | UC-21 | Acceso del personal | 1 | | ● | ● | ● | ● | |
-| UC-18 | Gestionar inventario aislado | 2 | | | | | ● | |
+| UC-18 | Gestionar inventario compartido | 2 | | | | | ● | |
 
 ● Actor principal · ○ Participa (consulta, recibe el resultado o ejecuta una parte)
 
@@ -683,7 +683,7 @@ Los IDs UC-09 y UC-12 no se utilizan.
 
 ---
 
-### UC-18 — Gestionar inventario aislado (Nivel 2)
+### UC-18 — Gestionar inventario compartido (Nivel 2)
 
 | Campo | Contenido |
 |---|---|
@@ -691,23 +691,25 @@ Los IDs UC-09 y UC-12 no se utilizan.
 | Historias | HU-ADM-13 |
 | Nivel | 2 |
 | Precondiciones | Todo el Nivel 1 está terminado. |
-| Estados (07) | Producto `ACTIVO` / `INACTIVO` |
+| Estados (07) | Insumo sin estado de activación; movimientos manuales inmutables |
 | Reglas (10) | RN-INV-001, RN-INV-002, RN-INV-003, RN-INV-005, RN-INV-010, RN-INV-011 |
 
 **Flujo principal**
 
-1. El Administrador registra un producto: nombre único, categoría, unidad de medida y stock mínimo. El stock empieza en 0.
+1. El Administrador registra un insumo con nombre, categoría, unidad, stock inicial no negativo, mínimo y costo unitario.
 2. Registra una **entrada** (cantidad y motivo): el stock sube.
-3. Registra una **salida** (cantidad y motivo): el stock baja.
+3. Registra una **salida** o **merma** (cantidad y motivo): el stock baja.
 4. En la lista ve el stock actual, el mínimo y la marca "Stock bajo" cuando el stock es igual o menor al mínimo.
 
 **Flujos alternativos**
 
-- **A1 (paso 3) — La salida supera el stock:** se rechaza; el stock nunca queda negativo.
-- **A2 — Historial:** ve los movimientos de cada producto con fecha, tipo, cantidad, motivo y responsable.
-- **A3 — Desactivar un producto.**
+- **A1 (paso 3) — La salida o merma supera el stock:** se rechaza.
+- **A2 — Historial:** consulta movimientos manuales con fecha, tipo, cantidad, motivo e insumo. El responsable queda en auditoría.
+- **A3 — Compra:** Administrador registra una compra; suma existencias sin crear otro movimiento manual.
+- **A4 — Repuestos:** Mantenimiento o Administrador registra repuestos en una orden en proceso; ajusta las mismas existencias por la diferencia consumida.
+- **A5 — Reenvío:** repetir la misma creación con el mismo UUID no vuelve a modificar stock.
 
-**Postcondiciones:** el stock refleja los movimientos manuales. **No** se conecta con Room Service, limpieza, solicitudes ni mantenimiento.
+**Postcondiciones:** el stock refleja movimientos manuales, compras y repuestos. Room Service, limpieza y solicitudes no descuentan automáticamente. No hay desactivación de insumos ni historial único de todas las variaciones; véase el [contrato de inventario](../03-arquitectura/inventario-contrato.md).
 
 ---
 
