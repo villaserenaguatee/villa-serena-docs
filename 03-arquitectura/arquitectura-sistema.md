@@ -1,10 +1,6 @@
-# 14 — Tecnologías y Arquitectura
+# Tecnologías y Arquitectura del Sistema
 
-> **Proyecto:** Property Management System (PMS) para Hoteles Boutique — Hotel ficticio "Villa Serena"
-> **Estado:** 📝 Para revisión del equipo (con 4 supuestos y 1 pendiente por confirmar, sección 14)
-> **Fecha:** 1 de octubre de 2026
-> **Basado en:** 01 — Alcance, 07 — Estados y 09 — Matriz de Permisos
-> **Hito del 10 de octubre: flujo principal funcionando en local con Docker, con los recortes aprobados del documento 13.** La VPS, Cloudflare para producción, CI/CD de despliegue y los backups van después (D-12, D-22). Los workflows de colaboración y un Cloudflare Tunnel temporal para pruebas entre integrantes pueden usarse durante el desarrollo.
+Este documento describe la arquitectura global, topología de servicios, patrón BFF, seguridad (JWT y CORS) y stack tecnológico oficial para el ecosistema de **Villa Serena**.
 
 ---
 

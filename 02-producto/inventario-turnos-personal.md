@@ -1,10 +1,6 @@
-# 08 — Inventario, Turnos y Personal
+# Inventario, Turnos y Personal
 
-> **Proyecto:** Property Management System (PMS) para Hoteles Boutique — Hotel ficticio "Villa Serena"
-> **Estado:** 📝 Para revisión del equipo
-> **Fecha:** 1 de octubre de 2026
-> **Basado en:** 01 — Alcance, 04 — Historias de Usuario y 07 — Estados
-> **Documentos relacionados:** 02 — Definición de Roles · 09 — Matriz de Permisos
+Define el modelo para el personal del hotel, la gestión de turnos laborales y el catálogo de artículos e inventario aislado.
 
 ---
 

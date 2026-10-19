@@ -1,10 +1,6 @@
-# 01 — Alcance del Proyecto
+# Alcance del Proyecto y Decisiones Generales
 
-> **Proyecto:** Property Management System (PMS) para Hoteles Boutique — Hotel ficticio "Villa Serena"
-> **Estado:** 📝 Para revisión del equipo
-> **Fecha:** 30 de septiembre de 2026
-> **Hito del 10 de octubre de 2026:** el sistema debe estar casi terminado y funcionando **en local** (backend, web y app). No es la entrega final.
-> **Siguiente documento:** 04 — Historias de Usuario
+Este documento define el perímetro funcional del PMS Villa Serena: qué componentes y capacidades se construyen y qué queda explícitamente fuera de alcance para mantener el sistema enfocado y viable.
 
 ---
 

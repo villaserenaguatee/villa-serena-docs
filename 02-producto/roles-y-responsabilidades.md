@@ -1,10 +1,6 @@
-# 02 — Definición de Roles
+# Definición de Roles y Responsabilidades
 
-> **Proyecto:** Property Management System (PMS) para Hoteles Boutique — Hotel ficticio "Villa Serena"
-> **Estado:** 📝 Para revisión del equipo
-> **Fecha:** 1 de octubre de 2026
-> **Basado en:** 01 — Alcance, 04 — Historias de Usuario y 07 — Estados
-> **Documentos relacionados:** 08 — Inventario, Turnos y Personal · 09 — Matriz de Permisos
+Define los roles de usuario que interactúan con el sistema (Administrador, Recepcionista, Room Service, Mantenimiento/Limpieza y Huésped), su canal de acceso y responsabilidades.
 
 ---
 

@@ -1,9 +1,6 @@
-# 16 — Guía de arranque del proyecto
+# Guía de Arranque del Entorno Local
 
-> **Para qué sirve:** cómo preparar tu computadora la primera vez, cómo encender el proyecto cada día, cómo retomar el trabajo y qué hacer cuando algo falla.
-> **Para quién:** los 6 integrantes. No hace falta experiencia previa con estas tecnologías.
-> **Entornos:** Windows (Kimberly y Josué), macOS (Pablo, Carlos y Hugo) y Linux (Alex). Los comandos se ejecutan desde el repositorio correspondiente; las diferencias de terminal se indican en la sección 1.1.
-> **Relacionado:** `15 - Prompts de IA/00 - Como usar los prompts.md` (cómo trabajar con la IA) y documento 14, sección 8.
+Instrucciones para configurar y encender el ecosistema local de desarrollo (Docker Compose con PostgreSQL, Mailpit, MinIO, Prometheus y Grafana; API Spring Boot, Web Next.js y App Expo).
 
 ---
 

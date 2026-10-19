@@ -1,9 +1,6 @@
-# 09 — Matriz de Permisos
+# Matriz de Permisos y Control de Acceso
 
-> **Proyecto:** Property Management System (PMS) para Hoteles Boutique — Hotel ficticio "Villa Serena"
-> **Estado:** 📝 Para revisión del equipo
-> **Fecha:** 1 de octubre de 2026
-> **Basado en:** 01 — Alcance, 02 — Definición de Roles, 04 — Historias de Usuario y 07 — Estados
+Especifica los permisos detallados de lectura, creación, modificación y anulación por rol para cada uno de los módulos del sistema.
 
 ---
 

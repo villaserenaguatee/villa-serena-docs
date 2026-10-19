@@ -1,9 +1,6 @@
-# 10 — Reglas de Negocio
+# Reglas de Negocio (RN)
 
-> **Proyecto:** Property Management System (PMS) para Hoteles Boutique — Hotel ficticio "Villa Serena"
-> **Estado:** 📝 Para revisión del equipo
-> **Fecha:** 1 de octubre de 2026
-> **Basado en:** 01 — Alcance y 04 — Historias de Usuario
+Este documento reúne las políticas, restricciones y reglas de negocio del hotel que rigen la lógica de reservas, habitaciones, cargos, pagos y cancelaciones.
 
 ## 1. Propósito y cómo leer este documento
 

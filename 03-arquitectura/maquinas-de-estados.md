@@ -1,10 +1,6 @@
-# 07 — Estados
+# Máquinas de Estados y Transiciones
 
-> **Proyecto:** Property Management System (PMS) para Hoteles Boutique — Hotel ficticio "Villa Serena"
-> **Estado:** 📝 Para revisión del equipo
-> **Fecha:** 1 de octubre de 2026
-> **Basado en:** 01 — Alcance y 04 — Historias de Usuario
-> **Siguiente documento:** 10 — Reglas de Negocio
+Este documento define el ciclo de vida, códigos de estado válidos y transiciones permitidas para cada una de las entidades del sistema (Reservas, Habitaciones, Cuentas, Pedidos, Solicitudes e Incidencias).
 
 ---
 
