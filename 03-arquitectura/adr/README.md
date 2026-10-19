@@ -15,6 +15,6 @@ Este directorio almacenará los Registros de Decisiones de Arquitectura (*Archit
 | **AD-02** | Motor Relacional: PostgreSQL 17 con extensión `btree_gist` y restricción `EXCLUDE` temporal | Base de datos |
 | **AD-03** | Frontend Web: Next.js 15 con patrón BFF (*Backend for Frontend*) | `villa-serena-web` |
 | **AD-04** | Aplicación Móvil: React Native con Expo SDK 54 | `villa-serena-movil` |
-| **AD-05** | Pasarela de Pagos: Stripe Checkout y confirmación por webhooks criptográficos | Pagos |
+| [**ADR-017**](ADR-017-pasarela-recurrente.md) | **Pasarela de Pagos Recurrente (reemplaza a Stripe):** cobro en Quetzales (GTQ) y webhooks | Pagos |
 | **AD-06** | Comunicación Bidireccional: WebSockets sobre STOMP con tickets efímeros | Tiempo Real |
 | **AD-07** | Almacenamiento de Objetos: Compatible con S3 (MinIO en local / Cloudflare R2 en producción) | Archivos |

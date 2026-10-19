@@ -33,7 +33,7 @@ Confirmadas por el catedrático. No se sustituyen.
 | **Spring Security + JWT** | Autenticación y autorización | Hito |
 | **Next.js + React** | Web pública y panel privado; también actúa como BFF | Hito |
 | **PostgreSQL** | Base de datos | Hito |
-| **Stripe** | Pagos en modo prueba | Hito |
+| **Recurrente** | Pasarela de pagos local en Quetzales (reemplaza a Stripe; ver [ADR-017](adr/ADR-017-pasarela-recurrente.md)) | Hito |
 | **Facturación + impresora** | Factura de demostración impresa desde Recepción | Hito |
 | **API REST, BFF y CORS** | Patrones de arquitectura | Hito |
 | **React Native** | App del huésped (Expo) | Hito |
@@ -65,7 +65,7 @@ Confirmadas por el catedrático. No se sustituyen.
 | AD-14 | **Facturación como módulo de Spring:** factura de demostración con serie fija (datos iniciales), correlativo sin saltos, total con "IVA incluido" **sin desglose**, sin anulación ni "COPIA". **Impresión desde el navegador** (CSS para 80 mm y carta) | D-13, D-18; supuesto S-02 |
 | AD-15 | **Grafana en local:** Spring Actuator + Micrometer → **Prometheus** → **Grafana**, con un tablero de estado del API, peticiones, errores HTTP, CPU y RAM. Logs centralizados (Loki) y alertas son **Nivel 2** | ALC-TRA-09 y ALC-TRA-09b |
 | AD-16 | **5 repositorios en `villaserenaguate`:** `villa-serena-docs`, `villa-serena-infra`, `villa-serena-api`, `villa-serena-web` y `villa-serena-movil`. El contrato vive en `villa-serena-api/openapi.yaml`; cada frontend copia el archivo y genera sus tipos | Separación obligatoria; un contrato de referencia |
-| AD-17 | **Stripe en modo prueba** (SDK para Java) con **Stripe Checkout**. Spring escucha **solo 2 avisos** (webhook): sesión pagada y sesión vencida. En local se reciben con **Stripe CLI** | HU-HUE-06; documento 07, P2 y P3 |
+| AD-17 | **Pasarela Recurrente (reemplaza a Stripe):** cobro en Quetzales (GTQ) mediante Checkout alojado de Recurrente y webhooks con firma criptográfica (ver [ADR-017](adr/ADR-017-pasarela-recurrente.md)) | Moneda local (GTQ), pasarela guatemalteca; HU-HUE-06 |
 | AD-18 | **Datos iniciales con Flyway:** canales y sus claves (con hash), catálogo de artículos con su máximo, datos del hotel y fiscales, serie y número inicial de la factura, y usuarios de prueba de cada rol con **dos Administradores**. El **primer Administrador** también se puede crear al arrancar con variables de entorno | Índice de HU, sección 5; V-04, V-06 |
 | AD-19 | **Zona horaria America/Guatemala:** las fechas se guardan en UTC y se convierten a esta zona para mostrar y para calcular "hoy", la regla de 48 horas, la ventana del check-out y el check-in | Necesario para las reglas de fecha de las historias |
 
