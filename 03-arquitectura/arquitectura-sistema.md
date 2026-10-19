@@ -64,7 +64,7 @@ Confirmadas por el catedrático. No se sustituyen.
 | AD-13 | **Channel Manager: REST/JSON simple.** Clave por canal (guardada con hash), sin duplicados por identificador externo. **Sin formato OTA, sin firma HMAC, sin cancelación y sin pantalla de canales.** El canal simulado (pantalla del Administrador) llama a la API real con las claves de sus variables de entorno | ALC-CM-03; HU-CM-01, HU-CM-03 |
 | AD-14 | **Facturación como módulo de Spring:** factura de demostración con serie fija (datos iniciales), correlativo sin saltos, total con "IVA incluido" **sin desglose**, sin anulación ni "COPIA". **Impresión desde el navegador** (CSS para 80 mm y carta) | D-13, D-18; supuesto S-02 |
 | AD-15 | **Grafana en local:** Spring Actuator + Micrometer → **Prometheus** → **Grafana**, con un tablero de estado del API, peticiones, errores HTTP, CPU y RAM. Logs centralizados (Loki) y alertas son **Nivel 2** | ALC-TRA-09 y ALC-TRA-09b |
-| AD-16 | **5 repositorios en `villaserenaguate`:** `villa-serena-docs`, `villa-serena-infra`, `villa-serena-api`, `villa-serena-web` y `villa-serena-movil`. El contrato vive en `villa-serena-api/openapi.yaml`; cada frontend copia el archivo y genera sus tipos | Separación obligatoria; un contrato de referencia |
+| AD-16 | **5 repositorios en `villaserenaguate`:** `villa-serena-docs`, `villa-serena-infra`, `villa-serena-api`, `villa-serena-web` y `villa-serena-movil`. El contrato canónico vive en `villa-serena-docs/openapi.yaml`; API lo implementa y los frontends generan tipos directamente desde docs, sin copias YAML locales | Separación obligatoria; un contrato de referencia |
 | AD-17 | **Pasarela Recurrente (reemplaza a Stripe):** cobro en Quetzales (GTQ) mediante Checkout alojado de Recurrente y webhooks con firma criptográfica (ver [ADR-017](adr/ADR-017-pasarela-recurrente.md)) | Moneda local (GTQ), pasarela guatemalteca; HU-HUE-06 |
 | AD-18 | **Datos iniciales con Flyway:** canales y sus claves (con hash), catálogo de artículos con su máximo, datos del hotel y fiscales, serie y número inicial de la factura, y usuarios de prueba de cada rol con **dos Administradores**. El **primer Administrador** también se puede crear al arrancar con variables de entorno | Índice de HU, sección 5; V-04, V-06 |
 | AD-19 | **Zona horaria America/Guatemala:** las fechas se guardan en UTC y se convierten a esta zona para mostrar y para calcular "hoy", la regla de 48 horas, la ventana del check-out y el check-in | Necesario para las reglas de fecha de las historias |
@@ -130,7 +130,7 @@ Grafana (Docker) ─────muestra──────────► Prometh
 | **OpenPDF** | PDF de la factura |
 | **AWS SDK S3** | Archivos en **MinIO** (local) o **Cloudflare R2** (después), con URL firmadas para los privados |
 | **RestClient** de Spring | Envío de push a Expo Push API |
-| **springdoc-openapi** | OpenAPI y Swagger UI; de aquí se generan los tipos TypeScript |
+| **springdoc-openapi** | OpenAPI generado y Swagger UI para contrastar la implementación; los tipos TypeScript se generan desde el contrato canónico de docs |
 | **Actuator** + **Micrometer (Prometheus)** | Salud y métricas para Grafana |
 | **JUnit 5** + **Mockito** + **Testcontainers** + **Spring Security Test** | Pruebas |
 
@@ -147,7 +147,7 @@ Grafana (Docker) ─────muestra──────────► Prometh
 | **EventCalendar** (`@event-calendar/core`, MIT), vista `resourceTimelineMonth` | Calendario Gantt de Recepción |
 | **@stomp/stompjs** | Tiempo real (Room Service, Limpieza y estado de habitaciones) |
 | **date-fns** + **@date-fns/tz** | Fechas en America/Guatemala |
-| **openapi-typescript** + **openapi-fetch** (generación local desde la copia de `openapi.yaml`) | Tipos y cliente del API |
+| **openapi-typescript** + **openapi-fetch** (generación desde `villa-serena-docs/openapi.yaml`) | Tipos y cliente del API |
 | **CSS de impresión** (`@media print`, `@page`) | Factura en 80 mm y carta |
 
 ### 4.3 App (`villa-serena-movil`, TypeScript)
@@ -160,7 +160,7 @@ Grafana (Docker) ─────muestra──────────► Prometh
 | **EAS Build** | APK para entregar |
 | **NativeWind** | Estilos con clases de Tailwind |
 | **expo-secure-store** | Guardar el JWT y el refresh token |
-| **openapi-typescript** + **openapi-fetch** | Tipos y cliente del API generados dentro de `villa-serena-movil`, desde su copia de `openapi.yaml` |
+| **openapi-typescript** + **openapi-fetch** | Tipos y cliente del API generados dentro de `villa-serena-movil`, desde `villa-serena-docs/openapi.yaml` |
 | **TanStack Query** | Datos de la app (sin modo sin conexión) |
 | **React Hook Form** + **Zod** | Formularios (correo, código, NIT) |
 | **@stomp/stompjs** | Seguimiento en vivo del pedido (evento 2) |
@@ -299,21 +299,20 @@ Organización: **`villaserenaguate`**. Los cinco repositorios son obligatorios y
 
 | Repositorio | Contenido |
 |---|---|
-| `villa-serena-docs` | Documentación y diseño breve del Channel Manager (ALC-CM-01) |
+| `villa-serena-docs` | Contrato canónico `openapi.yaml`, documentación y diseño breve del Channel Manager (ALC-CM-01) |
 | `villa-serena-infra` | `docker-compose.dev.yml`, `.env.example`, configuración de Prometheus y Grafana. Después: Compose de despliegue, Cloudflare y backups |
-| `villa-serena-api` | Spring Boot/Maven, `openapi.yaml`, migraciones Flyway y datos iniciales |
-| `villa-serena-web` | Next.js: web pública, panel privado, BFF y canal simulado; copia de `openapi.yaml` y tipos generados localmente |
-| `villa-serena-movil` | Expo: app Android; copia de `openapi.yaml` y tipos generados localmente |
+| `villa-serena-api` | Spring Boot/Maven, implementación del contrato de docs, migraciones Flyway y datos iniciales |
+| `villa-serena-web` | Next.js: web pública, panel privado, BFF y canal simulado; tipos generados directamente desde el contrato de docs |
+| `villa-serena-movil` | Expo: app Android; tipos generados directamente desde el contrato de docs |
 
-**Contrato y tipos:** el archivo de referencia es `villa-serena-api/openapi.yaml`. Cuando se aprueba un cambio, web y app copian esa versión y ejecutan `openapi-typescript` en su propio repositorio. Las etiquetas de estados se mantienen en un archivo pequeño de cada frontend. No hay `packages/shared`, monorepo ni `pnpm workspaces`; tampoco se crea otro repositorio o paquete para compartir código.
+**Contrato y tipos:** la fuente de verdad es `villa-serena-docs/openapi.yaml`. Las actualizaciones se registran mediante issues de docs y se revisan con los consumidores afectados. No se mantienen copias YAML en API, web ni app. Cada consumidor fija un commit de docs; web y app generan sus tipos con la herramienta de docs y el API implementa y verifica ese acuerdo. La [guía del contrato](contrato-api.md) describe el proceso, las herramientas de generación y comprobación y las diferencias conocidas. Las etiquetas de estados se mantienen en un archivo pequeño de cada frontend. No hay `packages/shared`, monorepo ni `pnpm workspaces`; tampoco se crea otro repositorio o paquete para compartir código.
 
-El contrato se congela por partes según el documento 13: objetivos 0 a 2 el viernes 2; objetivos 3A a 4 el lunes 5. Los cambios posteriores se coordinan con Josué.
+El calendario original de congelación se conserva como antecedente. La evolución actual del contrato se coordina mediante issues y PR en docs, con API, web y app; las referencias históricas al archivo canónico en API quedan sustituidas por este acuerdo.
 
 Estructura interna del API:
 
 ```text
 villa-serena-api/
-├── openapi.yaml
 ├── src/main/java/com/villaserena/api/
 │   ├── config/          Seguridad, CORS, WebSocket, OpenAPI
 │   ├── auth/            Login, contraseña temporal, OTP, JWT y renovación

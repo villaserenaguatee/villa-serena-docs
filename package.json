@@ -1,0 +1,20 @@
+{
+  "name": "villa-serena-docs",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.0.0",
+  "engines": { "node": "24.x" },
+  "scripts": {
+    "contract:info": "node scripts/contrato-api.mjs info",
+    "contract:validate": "node scripts/contrato-api.mjs validate",
+    "contract:types": "node scripts/contrato-api.mjs types",
+    "contract:api": "node scripts/contrato-api.mjs check-api",
+    "test": "node --test scripts/contrato-api.test.mjs",
+    "check": "pnpm contract:validate && pnpm test"
+  },
+  "devDependencies": {
+    "js-yaml": "4.3.2",
+    "openapi-typescript": "7.13.0",
+    "typescript": "5.9.3"
+  }
+}

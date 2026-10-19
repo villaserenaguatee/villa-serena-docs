@@ -213,7 +213,7 @@ npx expo start -c
 
 ## 5. Retomar el trabajo (continuar donde lo dejaste)
 
-Cada sesión comienza revisando el estado local y actualizando las referencias. Los cambios sin guardar en un commit se conservan antes de cambiar de rama o sincronizar. Si falta `develop`, el agente propone crearla desde `main`; la guía de prompts, sección 3, describe el flujo con issues y PR.
+Cada sesión comienza revisando el estado local y actualizando las referencias. Los cambios sin guardar en un commit se conservan antes de cambiar de rama o sincronizar. En los repositorios de código se usa la rama de integración acordada (`dev` o `develop`); docs utiliza ramas de trabajo y PR hacia `main`, según su `AGENTS.md`.
 
 Ejemplo para una tarea nueva, con el árbol limpio y `develop` existente:
 
@@ -236,7 +236,7 @@ git pull --ff-only
 
 Una rama personal puede actualizarse mediante rebase sobre `origin/develop` cuando corresponda; las ramas compartidas se sincronizan según el acuerdo del equipo, sin reescribir su historial unilateralmente. Los conflictos se investigan preservando ambos cambios y Alex facilita la resolución de bloqueos.
 
-Los cambios de migraciones requieren comprobar el arranque del API con Flyway. Los cambios del contrato (`openapi.yaml`) requieren actualizar la copia local y regenerar los tipos en web y app.
+Los cambios de migraciones requieren comprobar el arranque del API con Flyway. Los cambios del contrato se registran en issues de docs y modifican `villa-serena-docs/openapi.yaml`, la fuente de verdad. API, web y app consumen un commit fijo de docs sin mantener copias YAML locales; web y app regeneran sus tipos con la herramienta de docs. Consulta la [guía del contrato](../03-arquitectura/contrato-api.md).
 
 Los perfiles `local`, `dev` y `prod` distinguen los entornos y aprovechan la configuración existente. Cuando el perfil `local` esté configurado, el API puede arrancar con el Maven Wrapper de la terminal (sección 1.1) y `spring-boot:run -Dspring-boot.run.profiles=local`. Los pasos de instalación y arranque siguen siendo ejemplos operativos para la persona, adaptables a su sistema.
 

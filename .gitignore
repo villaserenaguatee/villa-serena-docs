@@ -1,2 +1,4 @@
 .obsidian/*
 .kilo/
+
+node_modules/

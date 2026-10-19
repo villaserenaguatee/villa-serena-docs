@@ -20,18 +20,16 @@ Si el cambio afecta varios repositorios, utiliza una issue y un PR por repositor
 
 ## 2. Crear una rama
 
-El flujo obligatorio para todos los cambios es **rama de trabajo → PR a `develop` → validación de integración → PR de `develop` a `main`**. Esto incluye funcionalidades, correcciones, documentación y mantenimiento.
+En este repositorio de documentación, el flujo de integración es **rama de trabajo → PR a `main` → revisión e integración**. Actualmente no existe `dev` ni `develop` en docs. Esta excepción corresponde a docs; cada repositorio de código conserva su rama de integración acordada.
 
-`develop` reúne el trabajo del equipo; `main` recibe únicamente entregas integradas y verificadas. Crea una rama por issue desde `develop`. No trabajes directamente en `develop` o `main` ni abras PR desde una rama de issue hacia `main`. Si `develop` todavía no existe en el repositorio, coordina su creación con el responsable antes de comenzar.
-
-Con el árbol de trabajo limpio, este ejemplo parte de `develop` y atiende la issue #12:
+Crea una rama por tarea desde `main` actualizado. No edites directamente `main`. Ejemplo:
 
 ```bash
 git status
 git fetch origin
-git switch develop
-git pull --ff-only origin develop
-git switch -c feat/12-descripcion-corta
+git switch main
+git pull --ff-only origin main
+git switch -c docs/12-descripcion-corta
 ```
 
 Conserva cualquier trabajo pendiente antes de cambiar de rama; no lo descartes ni lo mezcles con otra issue.
@@ -42,7 +40,7 @@ Usa `feat/<numero>-<descripcion>` para funcionalidades, `fix/...` para errores, 
 
 - Limita el cambio a los criterios de aceptación. Registra otros hallazgos en una issue aparte.
 - Sigue las convenciones y versiones del repositorio. Evita refactors o actualizaciones de dependencias ajenos a la tarea.
-- Coordina cambios a piezas compartidas, especialmente migraciones y contrato OpenAPI, con sus responsables.
+- Coordina cambios a piezas compartidas, especialmente migraciones y contrato OpenAPI, con sus responsables. La fuente del contrato es [`openapi.yaml`](openapi.yaml) en docs; sus actualizaciones se tramitan mediante issues de docs siguiendo la [guía del contrato](03-arquitectura/contrato-api.md).
 - Agrega o ajusta pruebas cuando el comportamiento lo requiera. Recorre los criterios de aceptación y registra evidencia del resultado.
 - Actualiza la documentación que cambie con el comportamiento.
 - Mantén fuera de Git las claves, contraseñas, archivos `.env`, datos personales reales y archivos generados locales.
@@ -56,7 +54,7 @@ Si utilizas IA, dale la issue y las referencias necesarias, revisa su propuesta 
 - Comprueba enlaces relativos, rutas, nombres de archivos, tablas y listas en la vista previa de Markdown. Para nombres con espacios, usa destinos de enlace codificados o entre `< >`.
 - Distingue alcance acordado, propuesta, implementación y pendiente. Vincula los PR como evidencia de avance; una propuesta escrita no demuestra que la función esté implementada.
 - Si cambias una decisión, explica el motivo y los documentos o repositorios afectados. Si una discrepancia requiere decisión del equipo, descríbela en la issue antes de darla por resuelta.
-- No hay una suite de pruebas de documentación configurada en este repositorio. Usa `git diff --check` y revisión de contenido y enlaces; registra la verificación realizada en el PR.
+- Para el contrato, ejecuta `pnpm install --frozen-lockfile` y `pnpm check`: valida el YAML, sus referencias y la generación de tipos, y ejecuta las pruebas de las herramientas. El workflow `Contrato API` lo comprueba en CI. Los consumidores generan desde docs sin copiar el YAML; la conformidad de la implementación se verifica además en sus propias tareas. Usa `git diff --check` y revisión de contenido y enlaces; registra la verificación realizada en el PR.
 
 ## 4. Guardar y abrir el pull request
 
@@ -74,7 +72,7 @@ git push -u origin HEAD
 
 El archivo y mensaje son ejemplos: sustitúyelos por los de tu tarea. Usa mensajes que expliquen el cambio, como `feat: ... (#12)` o `fix: ... (#12)`.
 
-Abre el PR de la issue con **base: `develop`** y **compare: tu rama de trabajo**. Incluye:
+Abre el PR de la issue con **base: `main`** y **compare: tu rama de trabajo**. Incluye:
 
 - Problema y comportamiento resultante.
 - Issue relacionada y dependencias en otros repositorios.
@@ -100,28 +98,10 @@ Relacionado con #12
 Enlaces a PR/issues relacionados o "Ninguno".
 ```
 
-En el PR hacia `develop`, usa `Relacionado con #12` y detalla qué queda pendiente si la entrega es parcial. La issue permanece abierta hasta que el cambio validado llegue a `main`. En el PR de promoción hacia `main`, usa `Closes #12` por cada issue completamente resuelta; para otro repositorio, usa `Closes organizacion/repositorio#12`. Comprueba el cierre después del merge, sin asumir que GitHub lo hizo automáticamente.
+En docs, enlaza la issue en la PR hacia `main`; usa `Closes #12` solo cuando se cumpla todo el alcance. Comprueba su cierre después de integrar. Los cambios de otros repositorios se enlazan por su URL y conservan su propio seguimiento.
 
 ## 5. Revisar, integrar y cerrar
 
-### Integrar la issue en `develop`
+Solicita revisión a otro integrante, atiende sus observaciones y confirma que la PR se dirija a `main`. Verifica el diff, los enlaces y los criterios aplicables antes de integrar. Conserva evidencia de los cambios de contrato y de las tareas pendientes en sus consumidores; no declares completada una integración funcional solo porque se haya actualizado documentación.
 
-Solicita revisión a otro integrante y atiende sus observaciones. Antes de fusionar, confirma que la base sea `develop`, las dependencias estén disponibles y los criterios de aceptación estén verificados. Integra el PR de la issue mediante **Squash and merge**.
-
-Registra en la issue el PR fusionado y que está integrado en `develop`, pendiente de validación y promoción a `main`. El merge en `develop` no significa que la entrega esté terminada.
-
-### Validar la integración
-
-Prueba el estado actualizado de `develop`, con los cambios de las otras issues y repositorios necesarios para la entrega. Ejecuta las comprobaciones aplicables de esta guía y recorre el flujo afectado de principio a fin. Registra comandos, resultados y dependencias verificadas.
-
-Si aparece una regresión, corrígela mediante otra rama y PR hacia `develop`, y repite las comprobaciones afectadas antes de promover. No promociones una entrega con criterios pendientes o dependencias sin integrar.
-
-### Promover de `develop` a `main`
-
-El responsable de la entrega abre un PR con **base: `main`** y **compare: `develop`**. Incluye las issues y PR que se entregan, evidencia de la validación de integración y cambios necesarios en otros repositorios. Revisa el diff completo: el PR promueve todos los cambios que haya en `develop` respecto de `main`.
-
-Otro integrante revisa la entrega antes de fusionarla usando el método permitido por las reglas del repositorio. Conserva `develop` como rama permanente. Si la promoción usa squash, coordina la sincronización posterior de `main` hacia `develop` mediante PR para que las siguientes entregas partan de un historial coherente.
-
-Después del merge en `main`, verifica el cierre de las issues completamente resueltas. Actualiza el seguimiento en `villa-serena-docs/17 - Avance del Proyecto.md` cuando corresponda, con referencias a los PR de implementación y promoción; no marques trabajo pendiente como terminado.
-
-Si aparece un bloqueo, registra qué falla, evidencia, dependencia y trabajo pendiente en la issue. Conserva los avances y comunica el bloqueo al equipo.
+Si aparece un bloqueo, registra evidencia, dependencia y trabajo pendiente en la issue y conserva los avances.
