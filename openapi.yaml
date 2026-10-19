@@ -473,64 +473,247 @@ paths:
 
   /api/v1/publico/reservas:
     post:
-      tags: [publico]
+      tags:
+        - publico
       operationId: crearReservaWeb
       summary: Crear la reserva web
-      description: |
+      description: >
         HU-HUE-05 · RF-RES-008, RF-HUE-001, RF-PAG-007, RF-RES-010. Revalida la
+
         disponibilidad antes de crear. Si ya existe un huésped con ese correo, la
+
         reserva se asocia a ese perfil sin cambiar sus datos. La reserva nace
+
         `PENDIENTE_PAGO`, canal `DIRECTO_WEB`, con precio fijo y cuenta `ABIERTA`
+
         con el cargo por alojamiento. Si no se paga en 30 minutos se cancela sola.
+
+
+        Hora estimada de llegada opcional, local de America/Guatemala, HH:mm entre 00:00 y 23:59. Omitida o null
+        significa sin indicar; no tiene valor por defecto ni modifica el horario de check-in. Vacío, segundos o
+        zona horaria devuelven 400 DATOS_INVALIDOS. Cambiar la hora con la misma Idempotency-Key devuelve 409
+        BOOKING_REQUEST_CONFLICT; omitirla y enviar null son equivalentes para los reenvíos.
       security: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReservaWebPeticion'
+              $ref: "#/components/schemas/ReservaWebPeticion"
             example:
               tipoHabitacionId: 1
-              entrada: '2026-10-15'
-              salida: '2026-10-17'
+              entrada: "2026-10-15"
+              salida: "2026-10-17"
               numeroHuespedes: 2
               huesped:
                 nombreCompleto: María José López
                 correo: maria.lopez@example.com
-                telefono: '+502 5555 1234'
+                telefono: +502 5555 1234
                 tipoDocumento: DPI
-                numeroDocumento: '2547896320101'
+                numeroDocumento: "2547896320101"
+              horaEstimadaLlegada: "18:30"
       responses:
-        '201':
+        "201":
           description: Reserva creada, pendiente de pago.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ReservaWebCreada'
+                $ref: "#/components/schemas/ReservaWebCreada"
               example:
                 codigo: VS-7K2M9Q
                 estado: PENDIENTE_PAGO
                 tipoHabitacion:
                   id: 1
                   nombre: Doble Superior
-                entrada: '2026-10-15'
-                salida: '2026-10-17'
+                entrada: "2026-10-15"
+                salida: "2026-10-17"
                 noches: 2
                 numeroHuespedes: 2
-                total: 1912.50
-                pagoVenceEn: '2026-10-02T15:00:00-06:00'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '409':
-          description: Ya no hay disponibilidad para esas fechas.
+                total: 1912.5
+                pagoVenceEn: "2026-10-02T15:00:00-06:00"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          description: "CORREO_NO_VERIFICADO: falta verificación vigente para crear la reserva."
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: No se autoriza recuperar un intento con la verificación presentada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Sin disponibilidad o datos distintos para la misma clave idempotente (BOOKING_REQUEST_CONFLICT).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                sinDisponibilidad:
+                  value:
+                    codigo: SIN_DISPONIBILIDAD
+                    mensaje: Ya no hay habitaciones disponibles de ese tipo para esas fechas.
+                    detalles: []
+                solicitudDistinta:
+                  value:
+                    codigo: BOOKING_REQUEST_CONFLICT
+                    mensaje: Esta solicitud ya se utilizó con otros datos.
+                    detalles: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-zA-Z0-9_-]{16,100}$
+          description: >-
+            Identificador del intento. Repetir los mismos datos devuelve la reserva original; cambiar hora u
+            otro dato devuelve 409 BOOKING_REQUEST_CONFLICT.
+          example: reserva-ejemplo-0001
+        - name: X-Booking-Draft
+          in: header
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: >-
+            Borrador verificado, obligatorio para una nueva reserva y para recuperar reenvíos con verificación
+            asociada. Puede omitirse en reenvíos históricos sin verificación.
+        - name: X-Booking-Email-Verification
+          in: header
+          required: false
+          schema:
+            type: string
+            pattern: ^[A-Za-z0-9_-]{43}$
+          description: >-
+            Comprobante vigente del correo y borrador. Obligatorio para nuevas reservas; no se omite al usar
+            hora opcional. Los reenvíos históricos sin verificación conservan su compatibilidad.
+  /api/v1/publico/ofertas/{slug}/reservas:
+    post:
+      tags:
+        - publico
+      operationId: crearReservaWebOferta
+      summary: Crear reserva web de una oferta
+      description: >
+        HU-HUE-05 · Reserva una oferta identificada por slug con el mismo cuerpo de reserva pública.
+        tipoHabitacionId debe coincidir con el tipo de la oferta y numeroHuespedes con su capacidad. Revalida
+        cupo y habitación elegible; nace PENDIENTE_PAGO y usa el precio de la oferta.
+
+
+        Hora estimada de llegada opcional, local de America/Guatemala, HH:mm entre 00:00 y 23:59. Omitida o null
+        significa sin indicar; no tiene valor por defecto ni modifica el horario de check-in. Vacío, segundos o
+        zona horaria devuelven 400 DATOS_INVALIDOS. Cambiar la hora con la misma Idempotency-Key devuelve 409
+        BOOKING_REQUEST_CONFLICT; omitirla y enviar null son equivalentes para los reenvíos.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReservaWebPeticion"
+            example:
+              tipoHabitacionId: 1
+              entrada: "2026-10-15"
+              salida: "2026-10-17"
+              numeroHuespedes: 2
+              huesped:
+                nombreCompleto: María José López
+                correo: maria.lopez@example.com
+                telefono: +502 5555 1234
+                tipoDocumento: DPI
+                numeroDocumento: "2547896320101"
+              horaEstimadaLlegada: "18:30"
+      responses:
+        "201":
+          description: Reserva creada, pendiente de pago.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReservaWebCreada"
               example:
-                codigo: SIN_DISPONIBILIDAD
-                mensaje: Ya no hay habitaciones disponibles de ese tipo para esas fechas.
-                detalles: []
+                codigo: VS-7K2M9Q
+                estado: PENDIENTE_PAGO
+                tipoHabitacion:
+                  id: 1
+                  nombre: Doble Superior
+                entrada: "2026-10-15"
+                salida: "2026-10-17"
+                noches: 2
+                numeroHuespedes: 2
+                total: 1912.5
+                pagoVenceEn: "2026-10-02T15:00:00-06:00"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          description: "CORREO_NO_VERIFICADO: falta verificación vigente para crear la reserva."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: No se autoriza recuperar un intento con la verificación presentada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: >-
+            Sin disponibilidad o datos distintos para la misma clave idempotente (BOOKING_REQUEST_CONFLICT).
+            También OFERTA_NO_ENCONTRADA u OFERTA_INCOMPATIBLE.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                sinDisponibilidad:
+                  value:
+                    codigo: SIN_DISPONIBILIDAD
+                    mensaje: Ya no hay habitaciones disponibles de ese tipo para esas fechas.
+                    detalles: []
+                solicitudDistinta:
+                  value:
+                    codigo: BOOKING_REQUEST_CONFLICT
+                    mensaje: Esta solicitud ya se utilizó con otros datos.
+                    detalles: []
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+          example: estandar-jardin
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-zA-Z0-9_-]{16,100}$
+          description: >-
+            Identificador del intento. Repetir los mismos datos devuelve la reserva original; cambiar hora u
+            otro dato devuelve 409 BOOKING_REQUEST_CONFLICT.
+          example: reserva-ejemplo-0001
+        - name: X-Booking-Draft
+          in: header
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: >-
+            Borrador verificado, obligatorio para una nueva reserva y para recuperar reenvíos con verificación
+            asociada. Puede omitirse en reenvíos históricos sin verificación.
+        - name: X-Booking-Email-Verification
+          in: header
+          required: false
+          schema:
+            type: string
+            pattern: ^[A-Za-z0-9_-]{43}$
+          description: >-
+            Comprobante vigente del correo y borrador. Obligatorio para nuevas reservas; no se omite al usar
+            hora opcional. Los reenvíos históricos sin verificación conservan su compatibilidad.
 
   /api/v1/publico/reservas/{codigo}/pago:
     post:
@@ -982,6 +1165,7 @@ paths:
                 $ref: '#/components/schemas/ReservaDetalle'
               example:
                 codigo: VS-H3N8P1
+                horaEstimadaLlegada: null
                 estado: CONFIRMADA
                 canal: RECEPCION
                 identificadorExterno: null
@@ -1224,6 +1408,7 @@ paths:
                 $ref: '#/components/schemas/ReservaDetalle'
               example:
                 codigo: VS-7K2M9Q
+                horaEstimadaLlegada: "18:30"
                 estado: EN_ESTADIA
                 canal: DIRECTO_WEB
                 identificadorExterno: null
@@ -1425,6 +1610,7 @@ paths:
                 $ref: '#/components/schemas/ReservaDetalle'
               example:
                 codigo: VS-H3N8P1
+                horaEstimadaLlegada: null
                 estado: CANCELADA
                 canal: RECEPCION
                 identificadorExterno: null
@@ -1539,6 +1725,7 @@ paths:
                 $ref: '#/components/schemas/ReservaDetalle'
               example:
                 codigo: VS-Q4R8T2
+                horaEstimadaLlegada: null
                 estado: CONFIRMADA
                 canal: BOOKING
                 identificadorExterno: BK-99887766
@@ -1621,6 +1808,7 @@ paths:
                 $ref: '#/components/schemas/ReservaDetalle'
               example:
                 codigo: VS-H3N8P1
+                horaEstimadaLlegada: null
                 estado: EN_ESTADIA
                 canal: RECEPCION
                 identificadorExterno: null
@@ -8730,6 +8918,22 @@ components:
           minimum: 1
         huesped:
           $ref: '#/components/schemas/HuespedDatos'
+        horaEstimadaLlegada:
+          $ref: "#/components/schemas/HoraEstimadaLlegada"
+    HoraEstimadaLlegada:
+      type:
+        - string
+        - "null"
+      pattern: ^(?:[01][0-9]|2[0-3]):[0-5][0-9]$
+      minLength: 5
+      maxLength: 5
+      description: >-
+        Hora local de America/Guatemala, HH:mm (00:00–23:59), independiente del check-in. En entrada, opcional y
+        nullable: omitida/null = sin indicar. En detalle de Recepción, null si no se indicó o la reserva es
+        histórica. Sin valor por defecto ni relleno histórico. Etiqueta web: Hora estimada de llegada.
+      examples:
+        - "18:30"
+        - null
     ReservaWebCreada:
       type: object
       required: [codigo, estado, tipoHabitacion, entrada, salida, noches, numeroHuespedes, total, pagoVenceEn]
@@ -8990,6 +9194,7 @@ components:
         - saldoPendiente
         - creadaEn
         - historial
+        - horaEstimadaLlegada
       properties:
         codigo:
           $ref: '#/components/schemas/CodigoReserva'
@@ -9036,6 +9241,8 @@ components:
           description: Cambios de estado, del más antiguo al más reciente.
           items:
             $ref: '#/components/schemas/HistorialEstado'
+        horaEstimadaLlegada:
+          $ref: "#/components/schemas/HoraEstimadaLlegada"
     RegistroHuespedRespuesta:
       type: object
       required: [yaExistia, huesped]
@@ -13017,12 +13224,22 @@ x-permisos:
   POST /api/v1/publico/reservas:
     roles: []
     nivel: 1
-    condiciones: |
+    condiciones: >
       HU-HUE-05 · RF-RES-008, RF-HUE-001, RF-PAG-007, RF-RES-010. Revalida la
+
       disponibilidad antes de crear. Si ya existe un huésped con ese correo, la
+
       reserva se asocia a ese perfil sin cambiar sus datos. La reserva nace
+
       `PENDIENTE_PAGO`, canal `DIRECTO_WEB`, con precio fijo y cuenta `ABIERTA`
+
       con el cargo por alojamiento. Si no se paga en 30 minutos se cancela sola.
+
+
+      Hora estimada de llegada opcional, local de America/Guatemala, HH:mm entre 00:00 y 23:59. Omitida o null
+      significa sin indicar; no tiene valor por defecto ni modifica el horario de check-in. Vacío, segundos o
+      zona horaria devuelven 400 DATOS_INVALIDOS. Cambiar la hora con la misma Idempotency-Key devuelve 409
+      BOOKING_REQUEST_CONFLICT; omitirla y enviar null son equivalentes para los reenvíos.
     historias:
       - HU-HUE-05
     requisitos:
@@ -13033,6 +13250,26 @@ x-permisos:
       - RF-RES-010
       - RF-RES-016
     origen: PARTE_1_CONSERVADA
+  POST /api/v1/publico/ofertas/{slug}/reservas:
+    roles: []
+    nivel: 1
+    condiciones: >-
+      Mismos permisos y hora opcional que la reserva pública por tipo. La oferta debe existir y corresponder al
+      tipo y capacidad solicitados. Hora estimada de llegada opcional, local de America/Guatemala, HH:mm entre
+      00:00 y 23:59. Omitida o null significa sin indicar; no tiene valor por defecto ni modifica el horario de
+      check-in. Vacío, segundos o zona horaria devuelven 400 DATOS_INVALIDOS. Cambiar la hora con la misma
+      Idempotency-Key devuelve 409 BOOKING_REQUEST_CONFLICT; omitirla y enviar null son equivalentes para los
+      reenvíos.
+    historias:
+      - HU-HUE-05
+    requisitos:
+      - RF-HUE-001
+      - RF-PAG-007
+      - RF-RES-003
+      - RF-RES-008
+      - RF-RES-010
+      - RF-RES-016
+    origen: RECONCILIADO_API_57_DOCS_22
   POST /api/v1/publico/reservas/{codigo}/pago:
     roles: []
     nivel: 1

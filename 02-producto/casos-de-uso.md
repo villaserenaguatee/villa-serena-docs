@@ -132,6 +132,8 @@ Los IDs UC-09 y UC-12 no se utilizan.
 **Flujo principal (web pública)**
 
 1. El cliente ingresa los 6 datos del huésped principal: nombre completo, correo, teléfono, nacionalidad, tipo y número de documento.
+   El cliente puede indicar además **Hora estimada de llegada**, opcional en `HH:mm` local de `America/Guatemala`, tanto al reservar por tipo como por oferta. Omitida o `null` queda sin indicar; no cambia el check-in ni se completan reservas históricas.
+
 2. El sistema muestra el resumen: tipo, fechas, noches, huéspedes y total.
 3. El cliente confirma.
 4. El sistema **revalida la disponibilidad**.
