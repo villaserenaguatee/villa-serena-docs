@@ -1,6 +1,6 @@
 # Contribuir a la documentación de Villa Serena
 
-Esta guía describe cómo trabajar una issue de documentación, desde su preparación hasta el cierre. Empieza por [00 - Contexto para Nuevo Chat.md](00%20-%20Contexto%20para%20Nuevo%20Chat.md) y consulta las historias de usuario y documentos relacionados con la issue.
+Esta guía describe cómo trabajar una issue de documentación, desde su preparación hasta el cierre. Empieza por el [README.md](README.md) y consulta la guía de metodología en [01-metodologia/scrumban.md](01-metodologia/scrumban.md).
 
 Al participar en el proyecto, sigue el [Código de conducta](CODE_OF_CONDUCT.md).
 
