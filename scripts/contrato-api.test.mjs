@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { load } from 'js-yaml';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
@@ -44,4 +45,53 @@ test('genera tipos desde docs y detecta cambios sin escribir YAML en el consumid
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }
+});
+
+// Regression checks for the payment block reconciled with API #54.
+const contract = load(readFileSync(new URL('../openapi.yaml', import.meta.url), 'utf8'));
+const definitions = contract.components.schemas;
+test('Recurrente replaces only the Stripe webhook operation; other routes remain available', () => {
+  const root = fileURLToPath(new URL('../', import.meta.url));
+  const previous = load(execFileSync('git', ['-C', root, 'show', 'HEAD:openapi.yaml'], { encoding: 'utf8' }));
+  assert.deepEqual(operationDifferences(previous, contract), {
+    missing: ['POST /api/v1/pagos/stripe/webhook'],
+    extra: ['POST /api/v1/pagos/recurrente/webhook'],
+  });
+  for (const route of ['/api/v1/publico/reservas/{codigo}/pago', '/api/v1/publico/reservas/{codigo}/estado', '/api/v1/app/reservas/{codigo}/pago-saldo']) assert.ok(contract.paths[route]);
+  assert.deepEqual(definitions.HuespedDatos, previous.components.schemas.HuespedDatos);
+  assert.deepEqual(definitions.HuespedAdicionalDatos, previous.components.schemas.HuespedAdicionalDatos);
+});
+test('payment DTO keeps urlPago and expiraEn, with historical STRIPE and new RECURRENTE', () => {
+  const dto = definitions.PagoIniciado;
+  assert.deepEqual(dto.required, ['urlPago', 'expiraEn']);
+  assert.deepEqual(Object.keys(dto.properties), ['urlPago', 'expiraEn']);
+  assert.equal(dto.properties.urlPago.format, 'uri');
+  assert.deepEqual(dto.properties.expiraEn.anyOf, [{ $ref: '#/components/schemas/FechaHora' }, { type: 'null' }]);
+  assert.ok(definitions.MetodoPago.enum.includes('STRIPE'));
+  assert.ok(definitions.MetodoPago.enum.includes('RECURRENTE'));
+  assert.deepEqual(definitions.EstadoReservaPublico.required, ['codigo', 'estadoReserva', 'estadoPago', 'puedeReintentar']);
+});
+test('webhook requires three Svix headers together and describes reconciliation, not browser approval', () => {
+  const op = contract.paths['/api/v1/pagos/recurrente/webhook'].post;
+  assert.deepEqual(op.security, [{ recurrenteFirma: [], recurrenteId: [], recurrenteTimestamp: [] }]);
+  for (const [key, name] of [['recurrenteId', 'svix-id'], ['recurrenteTimestamp', 'svix-timestamp'], ['recurrenteFirma', 'svix-signature']]) {
+    assert.equal(contract.components.securitySchemes[key].name, name);
+    assert.equal(contract.components.securitySchemes[key].in, 'header');
+  }
+  assert.equal(op.requestBody.content['application/json'].schema.$ref, '#/components/schemas/EventoRecurrente');
+  assert.match(op.description, /cinco minutos/); assert.match(op.description, /GTQ/);
+  assert.match(op.description, /retorno del navegador no aprueba pagos/);
+  for (const status of ['200', '400', '409', '502']) assert.ok(op.responses[status]);
+  assert.equal(contract.components.securitySchemes.stripeFirma, undefined);
+});
+test('event shape permits backend type fallback, does not require body id, and requires checkout for handled events', () => {
+  const event = definitions.EventoRecurrente;
+  assert.equal(event.required, undefined);
+  assert.deepEqual(event.anyOf.map(branch => branch.required), [['event_type'], ['type']]);
+  assert.equal(event.anyOf[1].properties.event_type.type, 'null');
+  assert.deepEqual(event.if.anyOf[0].properties.event_type.enum, ['intent.succeeded', 'checkout.expired']);
+  assert.deepEqual(event.then.required, ['checkout']);
+  assert.deepEqual(event.then.properties.checkout.required, ['id']);
+  assert.equal(event.additionalProperties, true);
+  assert.equal(definitions.EventoStripe, undefined);
 });
