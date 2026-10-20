@@ -101,6 +101,16 @@ Después de integrar en docs, los consumidores actualizan su revisión fijada y 
 
 ## Diferencias conocidas por reconciliar
 
+### Catálogo y disponibilidad de ofertas (docs #23, primer bloque)
+
+El contrato incluye GET `/api/v1/publico/ofertas` y GET `/api/v1/publico/ofertas/disponibilidad`, usados por la web. Se contrastaron [API `8d6e7e8`](https://github.com/villaserenaguatee/villa-serena-api/tree/8d6e7e8e8cea8847aa45601487bb73f9da6e88ac/src/main/java/com/villaserena/api/reservas) y [web `e6dbb38`](https://github.com/villaserenaguatee/villa-serena-web/blob/e6dbb385b95633cb04a76b57de2ea1bed42a21dd/src/lib/api/public.ts), únicamente en sus revisiones publicadas.
+
+- Catálogo: conserva los nombres actuales (`slug`, `name`, `apiTypeId`, `price`, `bookable`, etc.). `bookable` indica elegibilidad general, no disponibilidad para fechas; las notas editoriales `pendingFeatures` no se publican.
+- Disponibilidad: recibe `entrada`, `salida` y `huespedes`. El BFF de web traduce su parámetro interno `numeroHuespedes` a `huespedes` antes de llamar a Spring. Devuelve ofertas con capacidad, cupo del tipo y una habitación elegible libre durante toda la estadía, sin cantidades restantes. Puede devolver una lista vacía.
+- La cotización por oferta usa precio fijo por noche, con `temporada: null` y `finDeSemana: false`. No reemplaza la cotización por tipo de `/publico/disponibilidad`. `inventarioCompartido` identifica ofertas sobre un mismo inventario; sus cupos no se suman. La creación vuelve a validar disponibilidad.
+
+API y web no cambian en este bloque. Al adoptar el SHA completo de docs integrado, web puede generar los tipos de estas consultas y API comprobarlas junto con las demás operaciones. La [issue #23](https://github.com/villaserenaguatee/villa-serena-docs/issues/23) continúa abierta para los otros bloques. La lectura del código y la validación del contrato no sustituyen una prueba conectada contra Spring; no se ejecutó ese recorrido aquí. La app no cambia por documentar estas consultas públicas.
+
 ### Hora estimada de llegada (docs #22)
 
 [API #57](https://github.com/villaserenaguatee/villa-serena-api/issues/57) y [PR #66, integrada en `dev`](https://github.com/villaserenaguatee/villa-serena-api/pull/66), revisión `01dc12eb004e4a2cc6fd43d4274933e0e9ae50d1`, implementan `horaEstimadaLlegada`. El canónico incorpora ese campo en `ReservaWebPeticion` para POST `/api/v1/publico/reservas` y POST `/api/v1/publico/ofertas/{slug}/reservas`; esta última ruta se declara aquí porque no estaba en la base.
