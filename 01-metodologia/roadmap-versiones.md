@@ -10,7 +10,7 @@ Para evitar el agotamiento y la parálisis por exceso de alcance, el desarrollo 
 |---|---|---|---|---|
 | **`v0.1.0`** | **MVP Crítico** | El flujo principal de punta a punta (Reserva $\rightarrow$ Check-in $\rightarrow$ Check-out) | Baja - Media | **En curso** |
 | **`v0.2.0`** | **Operativa & Móvil** | App del huésped, Room Service en vivo y gestión de piso | Media - Alta | Planificada |
-| **`v0.3.0`** | **Integral & Analítica** | Turnos, inventario aislado, canales externos y métricas | Alta (Opcional) | Futura |
+| **`v0.3.0`** | **Integral & Analítica** | Turnos, inventario compartido, canales externos y métricas | Alta (Opcional) | Futura |
 
 ---
 
@@ -21,7 +21,7 @@ Para evitar el agotamiento y la parálisis por exceso de alcance, el desarrollo 
 
 * **Flujo cubierto:**
   1. **Catálogo y Disponibilidad:** Visualización pública de tipos de habitación y consulta de disponibilidad para fechas seleccionadas.
-  2. **Reserva Web con Pago Único:** Formulario básico de datos del cliente (nombre, correo, teléfono, documento) y procesamiento de pago seguro con Stripe Checkout en modo prueba (100% de la estadía).
+  2. **Reserva Web con Pago Único:** Formulario básico de datos del cliente (nombre, correo, teléfono, documento) y procesamiento de pago mediante el checkout alojado de Recurrente en Sandbox, en GTQ (100% de la estadía), según el [contrato vigente](../03-arquitectura/contrato-api.md).
   3. **Check-in en Recepción:** El personal de recepción busca la reserva por código o apellido, confirma los datos y asigna una habitación libre y limpia.
   4. **Cuentas y Consumos:** Registro básico de cargos a la habitación y verificación del balance de la cuenta.
   5. **Check-out y Factura:** Cierre de la cuenta en recepción con saldo pagado y generación de factura PDF de demostración. La habitación pasa automáticamente al estado `Libre + Sucia`.
@@ -61,6 +61,6 @@ Para evitar el agotamiento y la parálisis por exceso de alcance, el desarrollo 
 
 * **Flujo cubierto:**
   1. **Gestión de Personal y Turnos:** Planificación básica de turnos de trabajo para los empleados del hotel.
-  2. **Inventario Aislado:** Control de stock simple para artículos de consumo y suministros de limpieza.
+  2. **Inventario Compartido:** Control de existencias de insumos mediante entradas, salidas y mermas manuales, compartido con compras y repuestos de mantenimiento, según el [acuerdo de inventario](../02-producto/inventario-turnos-personal.md#7-inventario-compartido-nivel-2).
   3. **Canales de Venta Externos:** Simulación de recepción de reservas externas a través de endpoints de Channel Manager.
   4. **Métricas y Observabilidad:** Dashboards de monitoreo en Prometheus y Grafana (latencia del API, tasas de error y transacciones de reservas).
