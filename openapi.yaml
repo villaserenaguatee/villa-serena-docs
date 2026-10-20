@@ -471,6 +471,112 @@ paths:
                   - campo: salida
                     mensaje: La estadía debe ser de 1 a 30 noches.
 
+  /api/v1/publico/ofertas:
+    get:
+      tags: [publico]
+      operationId: listarOfertasPublicas
+      summary: Consultar catálogo de ofertas
+      description: |
+        Catálogo comercial usado por la web, ordenado por el orden del catálogo.
+        Una oferta tiene slug propio y se vincula a un tipo mediante apiTypeId.
+        Varias ofertas pueden compartir el mismo inventario de habitaciones.
+        bookable indica tipo activo y existencia de una habitación elegible por
+        características; no garantiza disponibilidad para unas fechas concretas.
+        No devuelve pendingFeatures (notas editoriales internas).
+      security: []
+      x-historias: [HU-HUE-02, HU-HUE-04]
+      responses:
+        '200':
+          description: Catálogo completo; puede estar vacío. Incluye ofertas con bookable=false.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OfertaPublica'
+              example:
+                - slug: estandar-jardin
+                  name: Estándar Jardín
+                  type: Estándar
+                  floor: 1
+                  apiTypeId: 3
+                  price: 420
+                  capacity: 2
+                  beds: 1 cama queen
+                  size: 27
+                  image: /images/catalogo-aprobado/ejemplo.jpg
+                  gallery: [/images/catalogo-aprobado/ejemplo.jpg]
+                  description: Habitación con vista al jardín.
+                  features: [Vista al jardín, Wi-Fi incluido]
+                  preferences: [Descanso]
+                  bookable: true
+                  illustrativePhotos: true
+                  verifiedFeatures: [Vista al jardín, Wi-Fi incluido]
+                  inventoryNote: 1 cama queen · Hasta 2 huéspedes · Piso 1
+
+  /api/v1/publico/ofertas/disponibilidad:
+    get:
+      tags: [publico]
+      operationId: buscarDisponibilidadOfertasPublicas
+      summary: Consultar ofertas disponibles y cotización
+      description: |
+        Requiere entrada, salida y huespedes: 1 a 30 noches, sin fechas pasadas,
+        entrada a no más de 365 días y al menos un huésped (America/Guatemala).
+        Filtra por bookable, capacidad de la oferta, cupo del tipo y una misma
+        habitación elegible libre durante toda la estadía. Lista vacía si no hay.
+        Cotiza al precio fijo de la oferta por noche, sin ajustes de temporada o
+        fin de semana. Ofertas con el mismo inventarioCompartido no son cupos
+        independientes ni deben sumarse. No expone cantidades restantes ni IDs
+        de habitaciones. La creación de reserva vuelve a validar disponibilidad.
+      security: []
+      x-historias: [HU-HUE-03, HU-HUE-04]
+      parameters:
+        - $ref: '#/components/parameters/Entrada'
+        - $ref: '#/components/parameters/Salida'
+        - $ref: '#/components/parameters/Huespedes'
+      responses:
+        '200':
+          description: Ofertas disponibles, en orden de catálogo, con total en GTQ y desglose por noche.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OpcionOfertaDisponible'
+              example:
+                - ofertaSlug: estandar-jardin
+                  inventarioCompartido: tipo-3
+                  tipoHabitacion:
+                    id: 3
+                    nombre: Estándar Jardín
+                    descripcion: Habitación con vista al jardín.
+                    capacidad: 2
+                    precioBaseNoche: 420
+                    fotos: [/images/catalogo-aprobado/ejemplo.jpg]
+                  noches: 2
+                  total: 840
+                  desglose:
+                    - fecha: '2026-10-15'
+                      precio: 420
+                      temporada: null
+                      finDeSemana: false
+                    - fecha: '2026-10-16'
+                      precio: 420
+                      temporada: null
+                      finDeSemana: false
+        '400':
+          description: Parámetro ausente o mal formado, FECHAS_INVALIDAS o DATOS_INVALIDOS.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                codigo: DATOS_INVALIDOS
+                mensaje: Los datos enviados no son válidos.
+                detalles:
+                  - campo: huespedes
+                    mensaje: Debe haber al menos un huésped.
+
   /api/v1/publico/reservas:
     post:
       tags:
@@ -8903,6 +9009,114 @@ components:
             tipoHabitacion:
               $ref: '#/components/schemas/TipoHabitacionPublico'
         - $ref: '#/components/schemas/CotizacionEstadia'
+    OfertaPublica:
+      type: object
+      description: Contenido público del catálogo, más precio, tipo e indicador calculados por API.
+      additionalProperties: true
+      not:
+        required: [pendingFeatures]
+      required: [slug, name, type, floor, price, capacity, beds, size, image, gallery, description, features, preferences, apiTypeId, bookable]
+      properties:
+        slug:
+          type: string
+          description: Identificador comercial usado al reservar por oferta.
+        name:
+          type: string
+        type:
+          type: string
+          description: Nombre comercial de la categoría; no sustituye apiTypeId.
+        floor:
+          type: integer
+        price:
+          $ref: '#/components/schemas/Monto'
+        capacity:
+          type: integer
+          minimum: 1
+        beds:
+          type: string
+        size:
+          type: number
+          description: Superficie en metros cuadrados.
+        image:
+          type: string
+          description: Ruta relativa o URL de imagen; puede ser ilustrativa.
+        gallery:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+        features:
+          type: array
+          items:
+            type: string
+        preferences:
+          type: array
+          items:
+            type: string
+        apiTypeId:
+          $ref: '#/components/schemas/Id'
+        bookable:
+          type: boolean
+          description: Elegibilidad general; consultar disponibilidad antes de reservar.
+        illustrativePhotos:
+          type: boolean
+        verifiedFeatures:
+          type: array
+          items:
+            type: string
+        inventoryNote:
+          type: string
+    OpcionOfertaDisponible:
+      type: object
+      description: Cotización de una oferta, distinta de la cotización tarifaria por tipo.
+      required: [ofertaSlug, inventarioCompartido, tipoHabitacion, noches, total, desglose]
+      properties:
+        ofertaSlug:
+          type: string
+        inventarioCompartido:
+          type: string
+          pattern: '^tipo-[0-9]+$'
+          description: Identifica el inventario común del tipo; no representa una cantidad.
+        tipoHabitacion:
+          type: object
+          required: [id, nombre, descripcion, capacidad, precioBaseNoche, fotos]
+          properties:
+            id:
+              $ref: '#/components/schemas/Id'
+            nombre:
+              type: string
+              description: Nombre comercial de la oferta.
+            descripcion:
+              type: string
+            capacidad:
+              type: integer
+              minimum: 1
+            precioBaseNoche:
+              $ref: '#/components/schemas/Monto'
+            fotos:
+              type: array
+              items:
+                type: string
+              description: Imagen principal de la oferta; admite ruta relativa.
+        noches:
+          type: integer
+          minimum: 1
+          maximum: 30
+        total:
+          $ref: '#/components/schemas/Monto'
+        desglose:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/PrecioNoche'
+              - type: object
+                properties:
+                  temporada:
+                    type: 'null'
+                  finDeSemana:
+                    const: false
+            description: Precio fijo de la oferta; temporada=null y finDeSemana=false incluso viernes/sábado.
     ReservaWebPeticion:
       type: object
       required: [tipoHabitacionId, entrada, salida, numeroHuespedes, huesped]
@@ -13221,6 +13435,18 @@ x-permisos:
       - RF-RES-001
       - RF-TAR-004
     origen: PARTE_1_CONSERVADA
+  GET /api/v1/publico/ofertas:
+    roles: []
+    nivel: 1
+    historias: [HU-HUE-02, HU-HUE-04]
+    condiciones: Catálogo público; bookable no garantiza disponibilidad por fecha. Sin notas editoriales internas.
+    origen: RECONCILIADO_API_WEB_DOCS_23
+  GET /api/v1/publico/ofertas/disponibilidad:
+    roles: []
+    nivel: 1
+    historias: [HU-HUE-03, HU-HUE-04]
+    condiciones: Fechas y huéspedes válidos, cupo y habitación elegible; ofertas pueden compartir inventario.
+    origen: RECONCILIADO_API_WEB_DOCS_23
   POST /api/v1/publico/reservas:
     roles: []
     nivel: 1

@@ -106,7 +106,10 @@ test('hora estimada de llegada es opcional y nullable, con minutos locales estri
 test('ambas reservas públicas aceptan hora y conservan privacidad, permisos y reenvíos', () => {
   const root = fileURLToPath(new URL('../', import.meta.url));
   const previous = load(execFileSync('git', ['-C', root, 'show', '827cafcb98932ca93a81575bec6e26736663bcfe:openapi.yaml'], { encoding: 'utf8' }));
-  assert.deepEqual(operationDifferences(previous, contract), { missing: [], extra: ['POST /api/v1/publico/ofertas/{slug}/reservas'] });
+  const creations = document => ({ paths: Object.fromEntries(Object.entries(document.paths)
+    .filter(([path, item]) => item.post && (path === '/api/v1/publico/reservas' || path.startsWith('/api/v1/publico/ofertas/')))
+    .map(([path, item]) => [path, { post: item.post }])) });
+  assert.deepEqual(operationDifferences(creations(previous), creations(contract)), { missing: [], extra: ['POST /api/v1/publico/ofertas/{slug}/reservas'] });
   for (const path of ['/api/v1/publico/reservas', '/api/v1/publico/ofertas/{slug}/reservas']) {
     const op = contract.paths[path].post;
     assert.deepEqual(op.security, []);
@@ -136,6 +139,48 @@ test('ambas reservas públicas aceptan hora y conservan privacidad, permisos y r
         assert.ok(Object.hasOwn(media.example, 'horaEstimadaLlegada'));
       }
     }
+  }
+});
+
+test('consultas de ofertas públicas documentan el catálogo consumido por web sin notas internas', () => {
+  const op = contract.paths['/api/v1/publico/ofertas'].get;
+  assert.deepEqual(op.security, []);
+  assert.equal(op.responses['200'].content['application/json'].schema.items.$ref, '#/components/schemas/OfertaPublica');
+  const dto = definitions.OfertaPublica;
+  for (const field of ['slug', 'name', 'price', 'capacity', 'apiTypeId', 'bookable']) assert.ok(dto.required.includes(field));
+  assert.deepEqual(dto.not, { required: ['pendingFeatures'] });
+  assert.equal(dto.properties.image.format, undefined); // Las imágenes del API pueden ser rutas relativas.
+  const example = op.responses['200'].content['application/json'].example[0];
+  for (const field of dto.required) assert.ok(Object.hasOwn(example, field), field);
+  assert.ok(!Object.hasOwn(example, 'pendingFeatures'));
+  assert.match(op.description, /no garantiza disponibilidad/);
+});
+
+test('disponibilidad de ofertas usa los parámetros de Spring, cotización fija e inventario compartido', () => {
+  const op = contract.paths['/api/v1/publico/ofertas/disponibilidad'].get;
+  assert.deepEqual(op.security, []);
+  assert.deepEqual(op.parameters.map(p => p.$ref), ['Entrada', 'Salida', 'Huespedes'].map(name => `#/components/parameters/${name}`));
+  assert.equal(contract.components.parameters.Huespedes.name, 'huespedes');
+  assert.ok(op.responses['400']);
+  const dto = definitions.OpcionOfertaDisponible;
+  assert.ok(dto.required.includes('ofertaSlug'));
+  assert.ok(dto.required.includes('inventarioCompartido'));
+  assert.equal(dto.properties.tipoHabitacion.properties.fotos.items.format, undefined);
+  const example = op.responses['200'].content['application/json'].example[0];
+  for (const field of dto.required) assert.ok(Object.hasOwn(example, field), field);
+  assert.equal(example.inventarioCompartido, `tipo-${example.tipoHabitacion.id}`);
+  assert.equal(example.noches, example.desglose.length);
+  assert.equal(example.total, example.desglose.reduce((sum, night) => sum + night.precio, 0));
+  for (const night of example.desglose) {
+    assert.equal(night.precio, example.tipoHabitacion.precioBaseNoche);
+    assert.equal(night.temporada, null);
+    assert.equal(night.finDeSemana, false);
+  }
+  const fixedPrice = dto.properties.desglose.items.allOf[1].properties;
+  assert.equal(fixedPrice.temporada.type, 'null');
+  assert.equal(fixedPrice.finDeSemana.const, false);
+  for (const path of ['/api/v1/publico/ofertas', '/api/v1/publico/ofertas/disponibilidad']) {
+    assert.deepEqual(contract['x-permisos'][`GET ${path}`].roles, []);
   }
 });
 
