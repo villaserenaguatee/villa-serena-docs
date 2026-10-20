@@ -99,6 +99,33 @@ La PR actualiza el YAML y los ejemplos afectados y enlaza las tareas de API, web
 
 Después de integrar en docs, los consumidores actualizan su revisión fijada y regeneran tipos o ajustan su implementación. Los cambios incompatibles requieren coordinación para que contrato y consumidores puedan integrarse sin romper flujos existentes.
 
+## Estado de pago y recuperación por intento
+
+[Docs #25](https://github.com/villaserenaguatee/villa-serena-docs/issues/25) coordina
+el cambio con [API #68](https://github.com/villaserenaguatee/villa-serena-api/issues/68).
+La implementación ya está integrada en `dev` mediante [API PR #69](https://github.com/villaserenaguatee/villa-serena-api/pull/69).
+Se amplía la consulta pública y se añaden la consulta protegida del pago de saldo
+y la recuperación por intento. El YAML define sus rutas, encabezados, estados,
+acciones, vencimientos, errores y permisos.
+
+Se conservan los campos anteriores, pero cambia la semántica de `puedeReintentar`:
+solo es verdadero para sustituir un intento fallido o vencido. Los consumidores
+utilizan `accionPago` para iniciar, continuar, esperar, reintentar o no ofrecer
+cobro. Un checkout pagado no confirma la reserva hasta el registro local. Una
+consulta nunca crea sesiones ni acredita pagos.
+
+La recuperación requiere clave y prueba vigente del correo y borrador originales;
+puede renovarse esa prueba. Los intentos históricos sin vínculo de verificación
+no habilitan la nueva consulta; mantienen el reenvío idempotente anterior. Un 404
+no autoriza generar otra clave ante una creación cuyo resultado se desconoce.
+La web conserva el intento antes de enviarlo y mantiene el BFF.
+
+Después de revisar e integrar la PR de docs, API, web y app adoptan deliberadamente
+su SHA. Este cambio no actualiza automáticamente el pin del API ni los tipos o
+pantallas de los consumidores. El catálogo de ofertas, su creación y el webhook
+de Recurrente ya están documentados; el flujo completo de verificación de correo
+sigue pendiente en docs #23.
+
 ## Diferencias conocidas por reconciliar
 
 ### Catálogo y disponibilidad de ofertas (docs #23, primer bloque)
@@ -129,7 +156,7 @@ Este es un inventario inicial obtenido del [código de API en 9396c82](https://g
 | Área | Evidencia en el API | Diferencia con la base del contrato |
 |---|---|---|
 | Verificación de correo de reserva | `VerificacionCorreoReservaController`: `POST /api/v1/publico/correo/{actualizar,solicitar,verificar,estado,google}`. | No se declaran esas operaciones ni sus cuerpos, resultados, caducidad y errores. La existencia de `/google` en el código no significa que siga en el alcance del MVP. |
-| Creación de reservas | `PublicoReservasController` y `PublicoOfertasController`: encabezados `X-Booking-Draft` y `X-Booking-Email-Verification`. | Faltan los encabezados y la relación con la verificación de correo. |
+| Creación de reservas | `PublicoReservasController` y `PublicoOfertasController`: encabezados `X-Booking-Draft` y `X-Booking-Email-Verification`. | Las creaciones normal y por oferta ya declaran sus encabezados; docs #25 añade recuperación por intento. Sigue pendiente el flujo completo de verificación de correo. |
 | Contacto público | `ContactoPublicoController`: `POST /api/v1/publico/contacto` con `Idempotency-Key`; `GET /api/v1/publico/contacto/{id}`. | Faltan operaciones, estados, esquema de petición y respuestas. |
 | Recuperación del personal | `RecuperacionPersonalController`: `POST /api/v1/app/acceso/recuperacion/solicitar` y `/confirmar`. | Faltan operaciones, DTO, validación y respuestas. La ruta contiene `app` aunque el controlador atiende al personal; debe documentarse el comportamiento verificado. |
 | País emisor de pasaporte | `HuespedDatos.paisEmisorPasaporte`, validación y migración V21. | Falta el campo y su condición de obligatoriedad en el esquema. Debe acordarse con la simplificación del MVP antes de actualizarlo. |

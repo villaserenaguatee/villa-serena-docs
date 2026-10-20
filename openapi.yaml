@@ -593,6 +593,12 @@ paths:
         `PENDIENTE_PAGO`, canal `DIRECTO_WEB`, con precio fijo y cuenta `ABIERTA`
 
         con el cargo por alojamiento. Si no se paga en 30 minutos se cancela sola.
+        La web conserva Idempotency-Key antes de enviar. El comprobante corresponde al correo
+        y borrador enviados. Reserva, prueba consumida y respuesta se guardan atómicamente.
+        Repetir la misma clave y datos devuelve la respuesta inicial sin duplicar; cambiar
+        los datos produce BOOKING_REQUEST_CONFLICT. Para intentos nuevos, el replay exige
+        también prueba vigente del mismo correo y borrador. Los históricos conservan su replay.
+
 
 
         Hora estimada de llegada opcional, local de America/Guatemala, HH:mm entre 00:00 y 23:59. Omitida o null
@@ -829,10 +835,15 @@ paths:
       description: |
         HU-HUE-06 · RF-PAG-003, RF-PAG-012. Crea **una** sesión de Recurrente
         Checkout por el 100 % del total, o devuelve la misma si sigue abierta.
-        Si la sesión ya figura pagada o payment_in_progress devuelve 409 PAGO_EN_VERIFICACION;
-        no crea otra sesión ni se debe repetir la reserva.
         El pago queda `PENDIENTE`. Recurrente regresa (pagado o cancelado) a
-        `{WEB_URL}/reserva/resultado?codigo={codigo}`. El pago se verifica en el backend por webhook o conciliación del job de vencimiento, nunca por la redirección.
+        `{WEB_URL}/reserva/resultado?codigo={codigo}`. El pago se verifica en el backend por webhook o conciliación del job de vencimiento,
+        nunca por la redirección.
+        Revalida plazo y estado aunque una consulta previa permitiera la acción.
+        Si el checkout está pagado pendiente de registro o payment_in_progress, responde
+        409 PAGO_EN_VERIFICACION sin crear otro. Si la pasarela falla, responde 502
+        ERROR_PASARELA sin habilitar un nuevo cobro. Solo un checkout confirmado expired
+        permite sustituir el intento pendiente; un unpaid con fecha vencida debe esperar
+        confirmación de vencimiento de la pasarela. Plazo vencido: 409 PLAZO_PAGO_VENCIDO.
       security: []
       parameters:
         - $ref: '#/components/parameters/CodigoReservaPath'
@@ -846,6 +857,12 @@ paths:
               example:
                 urlPago: https://app.recurrente.com/checkout-session/ch_a1B2c3D4
                 expiraEn: '2026-10-02T15:00:00-06:00'
+        '502':
+          description: ERROR_PASARELA; no se pudo verificar o completar la operación.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -865,13 +882,22 @@ paths:
     get:
       tags: [publico]
       operationId: obtenerEstadoReservaPublica
-      summary: Estado de la reserva al volver de Recurrente
+      summary: Estado de la reserva y proceso de pago
       description: |
         HU-HUE-06 (criterio 6) · RF-PAG-004. Solo el estado de la reserva y de su
         pago (VIS-03); ningún dato personal. Casos de la página: `CONFIRMADA` →
         confirmada; `PENDIENTE_PAGO` → pago en proceso o no completado (con
-        reintento si `puedeReintentar`); `CANCELADA` → venció el plazo de 30
-        minutos.
+        acción explícita); `CANCELADA` → reserva cancelada.
+        estadoPago representa el registro local; estadoCheckout representa la observación
+        del proveedor. PAGADO con estadoPago PENDIENTE significa esperar confirmación local,
+        nunca reserva confirmada. La consulta no acredita pagos ni crea sesiones.
+        accionPago distingue INICIAR, CONTINUAR, ESPERAR, REINTENTAR y NINGUNA.
+        puedeReintentar es true únicamente para REINTENTAR; ya no significa simplemente
+        PENDIENTE_PAGO. No se ofrecen acciones de cobro fuera de plazo. Un fallo de pasarela con la reserva aún PENDIENTE_PAGO
+        devuelve NO_VERIFICADO/ESPERAR y puedeReintentar=false. urlPago solo se devuelve para
+        CONTINUAR; expiraEn limita esa sesión y pagoVenceEn limita la reserva.
+        Web y app deben usar accionPago y volver a consultar mientras sea ESPERAR.
+        Las respuestas de estado y recuperación no se almacenan en caché.
       security: []
       parameters:
         - $ref: '#/components/parameters/CodigoReservaPath'
@@ -890,13 +916,23 @@ paths:
                     estadoReserva: CONFIRMADA
                     estadoPago: APROBADO
                     puedeReintentar: false
+                    estadoCheckout: PAGADO
+                    accionPago: NINGUNA
+                    urlPago: null
+                    expiraEn: null
+                    pagoVenceEn: '2026-10-02T15:00:00-06:00'
                 pendiente:
                   summary: Aún sin confirmar
                   value:
                     codigo: VS-7K2M9Q
                     estadoReserva: PENDIENTE_PAGO
                     estadoPago: PENDIENTE
-                    puedeReintentar: true
+                    puedeReintentar: false
+                    estadoCheckout: PROCESANDO
+                    accionPago: ESPERAR
+                    urlPago: null
+                    expiraEn: null
+                    pagoVenceEn: '2026-10-02T15:00:00-06:00'
                 vencida:
                   summary: Cancelada a los 30 minutos
                   value:
@@ -904,6 +940,11 @@ paths:
                     estadoReserva: CANCELADA
                     estadoPago: FALLIDO
                     puedeReintentar: false
+                    estadoCheckout: VENCIDO
+                    accionPago: NINGUNA
+                    urlPago: null
+                    expiraEn: null
+                    pagoVenceEn: '2026-10-02T15:00:00-06:00'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -8464,6 +8505,97 @@ paths:
                 cantidad: 2
                 motivo: Entrega a un área
 
+  /api/v1/publico/reservas/intento:
+    get:
+      tags: [publico]
+      operationId: consultarIntentoReserva
+      summary: Recuperar una reserva por su intento de creación
+      description: |
+        Consulta sin crear reservas, consumir comprobantes ni repetir el cuerpo original.
+        Requiere clave, borrador y comprobante vigente del correo del intento original.
+        Se acepta renovar la verificación del mismo correo y borrador; conocer solo la
+        clave o el correo no autoriza la consulta. RESERVA y OFERTA son alcances separados.
+        Devuelve el código y estado actual, sin datos personales ni la respuesta inicial.
+        Un intento en otra transacción devuelve 409 SOLICITUD_EN_PROCESO sin esperar.
+        Un 404 puede significar intento sin resultado, credenciales incorrectas/vencidas
+        o intento histórico sin vínculo de verificación; nunca autoriza generar otra clave.
+        Se debe conservar la clave y consultar de nuevo o reenviar el POST original con
+        la misma clave y datos. La consulta no identifica una operación en tránsito que
+        todavía no haya llegado al API. Los intentos históricos mantienen el replay previo.
+        Límite 60 consultas por minuto e IP; 429 con Retry-After. Cache-Control no-store.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/BookingIdempotencyKey'
+        - $ref: '#/components/parameters/BookingDraft'
+        - $ref: '#/components/parameters/BookingEmailVerification'
+        - name: origen
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [RESERVA, OFERTA]
+            default: RESERVA
+      responses:
+        '200':
+          description: Reserva recuperada con su estado actual.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EstadoReservaPublico'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: SOLICITUD_EN_PROCESO; conservar la clave y consultar de nuevo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: LIMITE_SOLICITUDES; esperar Retry-After.
+
+  /api/v1/app/reservas/{codigo}/pago-saldo/estado:
+    get:
+      tags: [app]
+      operationId: consultarProcesoPagoSaldoApp
+      summary: Consultar el checkout y la acción de pago del saldo
+      description: |
+        Solo el huésped titular; reserva ajena responde 404. Consulta sin crear sesiones
+        ni acreditar pagos. La acción de cobro requiere EN_ESTADIA, saldo positivo,
+        ventana 00:00 inclusive a 12:00 exclusiva del día de salida en America/Guatemala
+        y ningún pedido EN_CAMINO. Respeta la expiración de la sesión y el límite de salida.
+        Un pago aprobado anterior no impide pagar nuevos cargos; con saldo positivo se
+        considera que aún no hay checkout para ese nuevo saldo. Saldo cero: NINGUNA.
+        Una pasarela inaccesible produce NO_VERIFICADO y no permite reintentar.
+        La misma semántica de estados y acciones del proceso público; sin datos de tarjeta
+        ni identificadores internos del proveedor. Cache-Control no-store.
+      security:
+        - bearerAuth: []
+      x-autorizacion:
+        roles: [HUESPED]
+        nivel: 1
+        propiedad:
+          roles: [HUESPED]
+          regla: Solo registros propios; un registro ajeno responde 404.
+      parameters:
+        - $ref: '#/components/parameters/CodigoReservaPath'
+      responses:
+        '200':
+          description: Estado observado y acción permitida.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcesoPago'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -8496,6 +8628,29 @@ components:
       description: Firma del webhook de Recurrente.
 
   parameters:
+    BookingIdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: Identificador guardado antes de crear; nunca sustituirlo tras una respuesta perdida.
+      schema:
+        type: string
+        pattern: '^[a-zA-Z0-9_-]{16,100}$'
+    BookingDraft:
+      name: X-Booking-Draft
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    BookingEmailVerification:
+      name: X-Booking-Email-Verification
+      in: header
+      required: true
+      description: Comprobante secreto de verificación del correo para ese borrador; nunca ponerlo en URLs ni logs.
+      schema:
+        type: string
+        pattern: '^[A-Za-z0-9_-]{43}$'
     IdPath:
       name: id
       in: path
@@ -9185,23 +9340,61 @@ components:
           anyOf:
             - $ref: '#/components/schemas/FechaHora'
             - type: 'null'
-    EstadoReservaPublico:
+    EstadoCheckout:
+      type: string
+      enum: [SIN_CHECKOUT, ABIERTO, PROCESANDO, PAGADO, VENCIDO, NO_VERIFICADO]
+      description: |
+        Observación del checkout, independiente del estado contable local. PAGADO no
+        confirma por sí solo la reserva. VENCIDO también representa un intento local
+        FALLIDO. NO_VERIFICADO incluye error del proveedor o unpaid cuya fecha venció
+        sin confirmación del proveedor. Un pago local aprobado o reembolsado se representa
+        como PAGADO y no requiere consultar el checkout.
+    AccionPago:
+      type: string
+      enum: [INICIAR, CONTINUAR, ESPERAR, REINTENTAR, NINGUNA]
+      description: |
+        INICIAR crea el primer checkout; CONTINUAR reutiliza el enlace; ESPERAR requiere
+        consultar otra vez sin cobrar; REINTENTAR permite sustituir un intento fallido
+        o expired confirmado dentro del plazo; NINGUNA no ofrece acciones de cobro.
+        El POST siempre revalida las condiciones actuales.
+    ProcesoPago:
       type: object
-      description: Solo el estado; sin datos personales (VIS-03).
-      required: [codigo, estadoReserva, estadoPago, puedeReintentar]
+      required: [estadoPago, estadoCheckout, accionPago, puedeReintentar, urlPago, expiraEn]
       properties:
-        codigo:
-          $ref: '#/components/schemas/CodigoReserva'
-        estadoReserva:
-          $ref: '#/components/schemas/EstadoReserva'
         estadoPago:
-          description: Estado del último pago RECURRENTE; null si no existe un pago de ese método. No reinterpreta pagos STRIPE históricos.
+          description: Registro local; null si aún no hay intento para el saldo actual. No reinterpreta pagos STRIPE históricos.
           oneOf:
             - $ref: '#/components/schemas/EstadoPago'
             - type: 'null'
+        estadoCheckout:
+          $ref: '#/components/schemas/EstadoCheckout'
+        accionPago:
+          $ref: '#/components/schemas/AccionPago'
         puedeReintentar:
           type: boolean
-          description: Verdadero mientras la reserva siga PENDIENTE_PAGO; iniciar pago aún puede devolver 409 PAGO_EN_VERIFICACION.
+          description: True solo para REINTENTAR. Para iniciar o continuar usar accionPago.
+        urlPago:
+          type: [string, 'null']
+          format: uri
+          description: Enlace solo cuando accionPago es CONTINUAR.
+        expiraEn:
+          oneOf:
+            - $ref: '#/components/schemas/FechaHora'
+            - type: 'null'
+          description: Expiración de sesión limitada por la ventana de pago; null si no aplica o no se conoce.
+    EstadoReservaPublico:
+      description: Estado público del último pago RECURRENTE; no reinterpreta pagos STRIPE históricos.
+      allOf:
+        - $ref: '#/components/schemas/ProcesoPago'
+        - type: object
+          required: [codigo, estadoReserva, pagoVenceEn]
+          properties:
+            codigo:
+              $ref: '#/components/schemas/CodigoReserva'
+            estadoReserva:
+              $ref: '#/components/schemas/EstadoReserva'
+            pagoVenceEn:
+              $ref: '#/components/schemas/FechaHora'
 
     # ------------------------------------------------------------------
     # Recurrente y canal
@@ -13308,6 +13501,19 @@ x-estado-contrato:
     payloads antes de congelar.
 
 x-permisos:
+  GET /api/v1/publico/reservas/intento:
+    roles: []
+    nivel: 1
+    condiciones: Clave del intento y prueba vigente del correo y borrador originales; sin datos personales ni creación. Límite de solicitudes por IP.
+    origen: API_68_DOCS_25
+  GET /api/v1/app/reservas/{codigo}/pago-saldo/estado:
+    roles: [HUESPED]
+    nivel: 1
+    propiedad:
+      roles: [HUESPED]
+      regla: Solo registros propios; un registro ajeno responde 404.
+    condiciones: Consulta sin cobros. Acciones de pago sujetas a ventana, saldo, estado de estadía y ausencia de pedidos en camino.
+    origen: API_68_DOCS_25
   POST /api/v1/auth/login:
     roles: []
     nivel: 1
@@ -13460,6 +13666,12 @@ x-permisos:
       `PENDIENTE_PAGO`, canal `DIRECTO_WEB`, con precio fijo y cuenta `ABIERTA`
 
       con el cargo por alojamiento. Si no se paga en 30 minutos se cancela sola.
+      La web conserva Idempotency-Key antes de enviar. El comprobante corresponde al correo
+      y borrador enviados. Reserva, prueba consumida y respuesta se guardan atómicamente.
+      Repetir la misma clave y datos devuelve la respuesta inicial sin duplicar; cambiar
+      los datos produce BOOKING_REQUEST_CONFLICT. Para intentos nuevos, el replay exige
+      también prueba vigente del mismo correo y borrador. Los históricos conservan su replay.
+
 
 
       Hora estimada de llegada opcional, local de America/Guatemala, HH:mm entre 00:00 y 23:59. Omitida o null
@@ -13503,7 +13715,14 @@ x-permisos:
       HU-HUE-06 · RF-PAG-003, RF-PAG-012. Crea **una** sesión de Recurrente
       Checkout por el 100 % del total, o devuelve la misma si sigue abierta.
       El pago queda `PENDIENTE`. Recurrente regresa (pagado o cancelado) a
-      `{WEB_URL}/reserva/resultado?codigo={codigo}`. El pago se verifica en el backend por webhook o conciliación del job de vencimiento, nunca por la redirección.
+      `{WEB_URL}/reserva/resultado?codigo={codigo}`. El pago se verifica en el backend por webhook o conciliación del job de vencimiento,
+      nunca por la redirección.
+      Revalida plazo y estado aunque una consulta previa permitiera la acción.
+      Si el checkout está pagado pendiente de registro o payment_in_progress, responde
+      409 PAGO_EN_VERIFICACION sin crear otro. Si la pasarela falla, responde 502
+      ERROR_PASARELA sin habilitar un nuevo cobro. Solo un checkout confirmado expired
+      permite sustituir el intento pendiente; un unpaid con fecha vencida debe esperar
+      confirmación de vencimiento de la pasarela. Plazo vencido: 409 PLAZO_PAGO_VENCIDO.
     historias:
       - HU-HUE-06
     requisitos:
@@ -13519,8 +13738,17 @@ x-permisos:
       HU-HUE-06 (criterio 6) · RF-PAG-004. Solo el estado de la reserva y de su
       pago (VIS-03); ningún dato personal. Casos de la página: `CONFIRMADA` →
       confirmada; `PENDIENTE_PAGO` → pago en proceso o no completado (con
-      reintento si `puedeReintentar`); `CANCELADA` → venció el plazo de 30
-      minutos.
+      acción explícita); `CANCELADA` → reserva cancelada.
+      estadoPago representa el registro local; estadoCheckout representa la observación
+      del proveedor. PAGADO con estadoPago PENDIENTE significa esperar confirmación local,
+      nunca reserva confirmada. La consulta no acredita pagos ni crea sesiones.
+      accionPago distingue INICIAR, CONTINUAR, ESPERAR, REINTENTAR y NINGUNA.
+      puedeReintentar es true únicamente para REINTENTAR; ya no significa simplemente
+      PENDIENTE_PAGO. No se ofrecen acciones de cobro fuera de plazo. Un fallo de pasarela con la reserva aún PENDIENTE_PAGO
+      devuelve NO_VERIFICADO/ESPERAR y puedeReintentar=false. urlPago solo se devuelve para
+      CONTINUAR; expiraEn limita esa sesión y pagoVenceEn limita la reserva.
+      Web y app deben usar accionPago y volver a consultar mientras sea ESPERAR.
+      Las respuestas de estado y recuperación no se almacenan en caché.
     historias:
       - HU-HUE-06
     requisitos:

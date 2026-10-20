@@ -122,7 +122,7 @@ test('ambas reservas públicas aceptan hora y conservan privacidad, permisos y r
     assert.ok(op.responses['409']);
     assert.equal(op.parameters.find(p => p.name === 'Idempotency-Key').required, true);
   }
-  for (const name of ['EstadoReservaPublico', 'ReservaWebCreada', 'ReservaResumen', 'ReservaCalendario']) {
+  for (const name of ['ReservaWebCreada', 'ReservaResumen', 'ReservaCalendario']) {
     assert.deepEqual(definitions[name], previous.components.schemas[name], name);
   }
   for (const [path, item] of Object.entries(previous.paths)) {
@@ -219,7 +219,53 @@ test('payment DTO keeps urlPago and expiraEn, with historical STRIPE and new REC
   assert.deepEqual(dto.properties.expiraEn.anyOf, [{ $ref: '#/components/schemas/FechaHora' }, { type: 'null' }]);
   assert.ok(definitions.MetodoPago.enum.includes('STRIPE'));
   assert.ok(definitions.MetodoPago.enum.includes('RECURRENTE'));
-  assert.deepEqual(definitions.EstadoReservaPublico.required, ['codigo', 'estadoReserva', 'estadoPago', 'puedeReintentar']);
+  assert.equal(definitions.EstadoReservaPublico.allOf[0].$ref, '#/components/schemas/ProcesoPago');
+  assert.deepEqual(definitions.EstadoReservaPublico.allOf[1].required, ['codigo', 'estadoReserva', 'pagoVenceEn']);
+});
+
+test('proceso de pago distingue acción y checkout sin perder los campos públicos previos', () => {
+  assert.deepEqual(definitions.EstadoCheckout.enum, ['SIN_CHECKOUT', 'ABIERTO', 'PROCESANDO', 'PAGADO', 'VENCIDO', 'NO_VERIFICADO']);
+  assert.deepEqual(definitions.AccionPago.enum, ['INICIAR', 'CONTINUAR', 'ESPERAR', 'REINTENTAR', 'NINGUNA']);
+  const process = definitions.ProcesoPago;
+  assert.deepEqual(process.required, ['estadoPago', 'estadoCheckout', 'accionPago', 'puedeReintentar', 'urlPago', 'expiraEn']);
+  assert.deepEqual(process.properties.urlPago.type, ['string', 'null']);
+  assert.match(process.properties.puedeReintentar.description, /solo para REINTENTAR/);
+  const op = contract.paths['/api/v1/publico/reservas/{codigo}/estado'].get;
+  assert.deepEqual(op.security, []);
+  assert.match(op.description, /no acredita pagos ni crea sesiones/);
+  const example = op.responses['200'].content['application/json'].examples.pendiente.value;
+  assert.equal(example.estadoPago, 'PENDIENTE');
+  assert.equal(example.accionPago, 'ESPERAR');
+  assert.equal(example.puedeReintentar, false);
+  assert.equal(example.urlPago, null);
+  assert.ok(example.pagoVenceEn);
+  for (const field of ['nombre', 'correo', 'huesped', 'checkoutId']) {
+    assert.equal(process.properties[field], undefined);
+    assert.equal(definitions.EstadoReservaPublico.allOf[1].properties[field], undefined);
+  }
+});
+
+test('recuperación exige prueba vigente y conserva la compatibilidad de los reenvíos históricos', () => {
+  const op = contract.paths['/api/v1/publico/reservas/intento'].get;
+  assert.deepEqual(op.security, []);
+  const names = op.parameters.filter(p => p.$ref).map(p => p.$ref.split('/').at(-1));
+  assert.deepEqual(names, ['BookingIdempotencyKey', 'BookingDraft', 'BookingEmailVerification']);
+  for (const name of names) assert.equal(contract.components.parameters[name].required, true);
+  assert.deepEqual(op.parameters.find(p => p.name === 'origen').schema.enum, ['RESERVA', 'OFERTA']);
+  for (const status of ['200', '400', '404', '409', '429']) assert.ok(op.responses[status]);
+  assert.match(op.description, /nunca autoriza generar otra clave/);
+  for (const path of ['/api/v1/publico/reservas', '/api/v1/publico/ofertas/{slug}/reservas']) {
+    const params = contract.paths[path].post.parameters;
+    for (const name of ['X-Booking-Draft', 'X-Booking-Email-Verification']) {
+      assert.equal(params.find(p => p.name === name).required, false);
+    }
+    assert.equal(contract.paths[path].post.requestBody.content['application/json'].example.horaEstimadaLlegada, '18:30');
+  }
+  const guest = contract.paths['/api/v1/app/reservas/{codigo}/pago-saldo/estado'].get;
+  assert.deepEqual(guest.security, [{ bearerAuth: [] }]);
+  assert.deepEqual(guest['x-autorizacion'].roles, ['HUESPED']);
+  assert.match(guest['x-autorizacion'].propiedad.regla, /ajeno responde 404/);
+  assert.equal(guest.responses['200'].content['application/json'].schema.$ref, '#/components/schemas/ProcesoPago');
 });
 test('webhook requires three Svix headers together and describes reconciliation, not browser approval', () => {
   const op = contract.paths['/api/v1/pagos/recurrente/webhook'].post;
