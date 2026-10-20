@@ -44,14 +44,14 @@ Define **los estados** de cada elemento del sistema, **qué cambios de estado es
 | `STRIPE` | Aviso de Stripe (webhook) |
 | `CANAL` | Canal externo (Booking o Expedia) a través de la API; en la demostración, el canal simulado |
 
-**Uso por integrante:**
+**Uso por frente:**
 
-| Integrante | Uso |
+| Frente | Uso |
 |---|---|
-| Pablo y Hugo (BD) | Tipos enumerados, restricciones y tabla de historial de estados |
+| Backend y datos | Tipos enumerados, restricciones y tabla de historial de estados |
 | Backend | Validación de transiciones y efectos automáticos |
-| Kim y Carlos (web y app) | Qué botones mostrar en cada estado y qué etiqueta usar |
-| Alex (pruebas) | Cada fila es una prueba de un cambio permitido; cada cambio no listado, una prueba de rechazo |
+| Frontend web y móvil | Qué botones mostrar en cada estado y qué etiqueta usar |
+| Quien verifica el flujo | Cada fila es una prueba de un cambio permitido; cada cambio no listado, una prueba de rechazo |
 
 ---
 

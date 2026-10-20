@@ -13,7 +13,7 @@ Este documento describe la arquitectura global, topología de servicios, patrón
 5. [Dónde vive cada regla](#5-dónde-vive-cada-regla)
 6. [Seguridad: JWT, BFF y CORS](#6-seguridad-jwt-bff-y-cors) — incluye 6.1 Patrón BFF y seguridad de sesión
 7. [Estructura de los repositorios](#7-estructura-de-los-repositorios)
-8. [Entorno local (hito del 10 de octubre)](#8-entorno-local-hito-del-10-de-octubre)
+8. [Entorno local](#8-entorno-local)
 9. [Despliegue en la VPS (después)](#9-despliegue-en-la-vps-después)
 10. [CI/CD (después)](#10-cicd-después)
 11. [Requisitos no funcionales](#11-requisitos-no-funcionales)
@@ -73,7 +73,7 @@ Confirmadas por el catedrático. No se sustituyen.
 
 ## 3. Vista general
 
-### 3.1 Hito del 10 de octubre (local)
+### 3.1 Entorno de desarrollo local
 
 ```
 NAVEGADOR (cliente y personal)
@@ -89,7 +89,7 @@ api — Spring Boot
   ├──► Mailpit .............. correos de prueba (Docker)
   ├──► MinIO ................ fotos y PDF       (Docker)
   ├──► Expo Push → FCM ...... notificaciones push
-  └──◄ Stripe ............... avisos de pago, reenviados por Stripe CLI
+  └──◄ Recurrente ........... avisos de pago por webhook accesible desde el proveedor
 
 Prometheus (Docker) ──lee métricas de──► api (Actuator)
 Grafana (Docker) ─────muestra──────────► Prometheus
@@ -106,7 +106,7 @@ Grafana (Docker) ─────muestra──────────► Prometh
  ┌───────────────▼──────────────── VPS · Docker Compose ────────────────────┐
  │  web (Next.js) · api (Spring) · postgres · cloudflared · monitoreo        │
  └───────────────────────────────────────────────────────────────────────────┘
-   Archivos y backups: Cloudflare R2 · Correo: Resend · Pagos: Stripe · Push: Expo/FCM
+   Archivos y backups: Cloudflare R2 · Correo: Resend · Pagos: Recurrente · Push: Expo/FCM
 ```
 
 ---
@@ -126,7 +126,7 @@ Grafana (Docker) ─────muestra──────────► Prometh
 | **Spring WebSocket + STOMP** | Los 4 eventos en tiempo real (sección 6) |
 | **Spring Scheduling** (`@Scheduled`) + **tabla Outbox** | Cancelación a los 30 minutos y reintentos de correos y push |
 | **Spring Mail** + **Thymeleaf** | 3 correos: código OTP, confirmación de reserva y factura. En local, **Mailpit**; después, **Resend** |
-| **Stripe Java SDK** | Checkout, webhook (pagado y vencido) y reembolso total |
+| **Cliente HTTP de Recurrente** | Checkout alojado, verificación del webhook y reembolso total; conserva registros históricos del proveedor anterior |
 | **OpenPDF** | PDF de la factura |
 | **AWS SDK S3** | Archivos en **MinIO** (local) o **Cloudflare R2** (después), con URL firmadas para los privados |
 | **RestClient** de Spring | Envío de push a Expo Push API |
@@ -165,7 +165,7 @@ Grafana (Docker) ─────muestra──────────► Prometh
 | **React Hook Form** + **Zod** | Formularios (correo, código, NIT) |
 | **@stomp/stompjs** | Seguimiento en vivo del pedido (evento 2) |
 | **expo-notifications** | Recibir push (Expo Push + FCM) |
-| **expo-web-browser** + **expo-linking** | Abrir Stripe Checkout y volver a la app |
+| **expo-web-browser** + **expo-linking** | Abrir el checkout de Recurrente y volver a la app |
 
 ### 4.4 Datos y archivos
 
@@ -182,7 +182,7 @@ Grafana (Docker) ─────muestra──────────► Prometh
 |---|---|---|
 | **Docker + Docker Compose** | Contenedores locales: `postgres`, `mailpit`, `minio`, `prometheus`, `grafana` | Hito |
 | **Grafana** + **Prometheus** | Tablero mínimo del API (ALC-TRA-09) | Hito |
-| **Stripe CLI** | Reenviar el webhook de Stripe al API local | Hito |
+| **Recurrente Sandbox** | Probar el checkout con webhook accesible mediante una URL acordada; ver la guía de arranque | Desarrollo y demo |
 | **Loki** + alerta por caída o consumo alto | ALC-TRA-09b | Nivel 2 |
 | **VPS Ubuntu 24.04** + **Cloudflare** + **cloudflared** | Producción | Después |
 | **GitHub Actions** + **GHCR** | CI/CD | Después |
@@ -204,7 +204,7 @@ Grafana (Docker) ─────muestra──────────► Prometh
 | **`@Scheduled`** | Cancelación de reservas web sin pago a los 30 minutos (UC-15); procesamiento del Outbox | RN-RES-012, RN-CAN-013 |
 | **Outbox** | Correos y push con reintentos: si fallan, el cambio de estado se guarda igual | RN-NOT-002, RN-NOT-003 |
 | **WebSocket STOMP** | Los 4 eventos en tiempo real | RN-NOT-006 a 009 |
-| **Webhook de Stripe** | Confirmación del pago solo por el aviso, con verificación de firma e idempotencia | RN-PAG-001 a 003 |
+| **Webhook de Recurrente y conciliación** | Verificación del pago en backend con firma e idempotencia; el retorno del navegador no acredita el cobro | RN-PAG-001 a 003 |
 | **Módulo de Channel Manager** | Clave del canal, validaciones, sin duplicados y misma disponibilidad que la web | RN-CM-001, 003, 004; RN-TAR-010, RN-PAG-008 |
 
 **Principio:** la interfaz valida para dar buena experiencia, pero **Spring y la base de datos deciden**. Una regla solo está implementada si se cumple aunque alguien llame al API directamente.
@@ -225,7 +225,7 @@ Grafana (Docker) ─────muestra──────────► Prometh
 | **App** | Guarda los tokens en `expo-secure-store` y llama a Spring directamente |
 | **CORS** | Spring permite solo los orígenes propios: en el hito, `http://localhost:3000`; después, `https://<dominio>`. La app no depende de CORS |
 | **WebSocket** | Conexión STOMP autenticada en el mensaje `CONNECT`. **App:** envía su JWT. **Web:** el BFF pide un **ticket** de un solo uso y 60 segundos (`POST /api/v1/auth/ws-ticket`). Spring autoriza cada suscripción (tabla siguiente) |
-| **Webhook de Stripe** | Firma de Stripe; idempotente por id del evento |
+| **Webhook de Recurrente** | Firma Svix sobre el cuerpo original; idempotente por `svix-id` |
 | **API del canal** | Canal + clave en cada petición, comparada con su hash. Sin HMAC |
 | **Archivos subidos** | Solo imágenes **JPG o PNG de hasta 5 MB** (fotos del hotel, tipos de habitación, menú, amenidades e incidencias). Spring valida el tipo y el tamaño antes de guardarlas; los PDF de facturas los genera el sistema (decisión del 1 de octubre, documento 10, OBS-02) |
 | **Red (después)** | Cloudflare Tunnel: la VPS no abre puertos web ni de base de datos; SSH solo con llave |
@@ -249,14 +249,14 @@ Cómo se implementa la sesión de la web. No agrega funcionalidad: deja por escr
 
 | Petición | Camino | Sesión |
 |---|---|---|
-| Web pública: información del hotel, disponibilidad, crear la reserva, iniciar el pago y página de retorno de Stripe | Navegador → BFF → Spring | Sin sesión |
+| Web pública: información del hotel, disponibilidad, crear la reserva, iniciar el pago y página de retorno de Recurrente | Navegador → BFF → Spring | Sin sesión |
 | Panel del personal (todas las pantallas privadas) | Navegador → BFF → Spring | Cookie de sesión del empleado |
 | WebSocket del panel | Navegador → **Spring directo**, con el ticket de 60 segundos que entrega el BFF | Ticket |
 | App del huésped (API y WebSocket) | App → **Spring directo** | JWT del huésped |
-| Webhook de Stripe y API del canal | Servicio externo → **Spring directo** | Firma de Stripe / clave del canal |
+| Webhook de Recurrente y API del canal | Servicio externo → **Spring directo** | Firma Svix / clave del canal |
 
 - El huésped **no tiene sesión en la web**: solo usa la app. El BFF solo maneja sesiones del personal.
-- El reenviador genérico del BFF (`/api/...` → `/api/v1/...`) **bloquea** las rutas del webhook de Stripe y de la API del canal.
+- El reenviador genérico del BFF (`/api/...` → `/api/v1/...`) **bloquea** las rutas del webhook de Recurrente y de la API del canal.
 
 **2. Inicio de sesión del personal**
 
@@ -335,18 +335,18 @@ Las carpetas fuera del hito son una referencia para después; no hay que impleme
 
 ---
 
-## 8. Entorno local (hito del 10 de octubre)
+## 8. Entorno local
 
 | Paso | Comando o detalle |
 |---|---|
 | Servicios | `docker compose -f docker-compose.dev.yml up -d` desde `villa-serena-infra` (PostgreSQL, Mailpit, MinIO, Prometheus y Grafana) |
-| Backend | `./mvnw spring-boot:run` en `villa-serena-api` (Flyway crea las tablas y carga los datos iniciales) |
+| Backend | `./mvnw spring-boot:run` en `villa-serena-api` (Flyway crea el esquema; el perfil `demo` carga los datos ficticios) |
 | Web | `pnpm dev` en `villa-serena-web` (`http://localhost:3000`) |
 | App | `npx expo start` en `villa-serena-movil` (Expo Go de SDK 54) o el development build para probar push |
-| Stripe | `stripe listen --forward-to localhost:8080/<ruta-del-webhook>` (Stripe CLI). La ruta exacta se define al programar el módulo de pagos |
+| Recurrente | Sandbox y webhook `/api/v1/pagos/recurrente/webhook` accesible por el proveedor; ver [arranque local](../04-guias-y-referencia/arranque-local.md#42-probar-pagos-con-recurrente) |
 | Correos | Se ven en la interfaz web de Mailpit |
 | Monitoreo | Tablero de Grafana con estado del API, peticiones, errores HTTP, CPU y RAM |
-| Secretos | Un `.env` local (claves de Stripe en modo prueba, clave de firma del JWT, credenciales de MinIO, claves del canal simulado), **fuera de Git** |
+| Secretos | Un `.env` local (claves de Recurrente Sandbox, clave de firma del JWT, credenciales de MinIO, claves del canal simulado), **fuera de Git** |
 
 **Para la demostración:** la app en el teléfono debe llegar al API de la computadora (misma red Wi-Fi y la IP local de la computadora). El push necesita el development build y conexión a Internet.
 
@@ -354,7 +354,7 @@ Las carpetas fuera del hito son una referencia para después; no hay que impleme
 
 ## 9. Despliegue en la VPS (después)
 
-Se hace después del 10 de octubre y antes de la entrega final (ALC-TRA-06, ALC-TRA-08).
+Se planifica después de validar el MVP según el [roadmap](../01-metodologia/roadmap-versiones.md), sin fijar aquí una nueva fecha (ALC-TRA-06, ALC-TRA-08).
 
 | Tema | Diseño |
 |---|---|
@@ -378,9 +378,9 @@ ALC-TRA-07. Se configura después del hito.
 | **Pull request** | Backend: `mvn verify` (compilación, formato, pruebas). Web y app: lint y typecheck. Tipos del OpenAPI al día |
 | **Merge a `main`** | Lo anterior → imágenes `api` y `web` a GHCR (etiqueta del commit) → despliegue en la VPS por SSH → APK con EAS Build |
 
-**Integración durante el desarrollo:** las PR de tareas se dirigen a `develop`, con revisión y las verificaciones configuradas. `main` y `develop` están protegidas; `main` recibe la entrega del sistema terminado mediante PR desde `develop`. Si falta `develop`, se propone crearla desde `main`. Los workflows del tablero y de colaboración pueden funcionar antes del despliegue.
+**Integración durante el desarrollo:** las PR se dirigen a la rama acordada de cada repositorio (`main` en docs; `dev` o `develop` en código), con revisión y las verificaciones configuradas. Las protecciones y resultados efectivos se consultan en GitHub. Los workflows del tablero y de colaboración pueden funcionar antes del despliegue.
 
-**Configuración por entorno:** los perfiles `local`, `dev` y `prod` distinguen la computadora de cada integrante, las pruebas compartidas y el despliegue posterior. Aprovechan los archivos existentes y mantienen las credenciales fuera de Git, sin imponer una extensión de archivo. Un Tunnel temporal puede facilitar las pruebas del API desde frontend, con autenticación, acceso acordado y cierre al terminar; no expone servicios administrativos de Docker.
+**Configuración por entorno:** se usan los archivos y variables existentes, con credenciales fuera de Git. El API activa `demo` para cargar datos ficticios según la [guía de arranque](../04-guias-y-referencia/arranque-local.md); no es necesario crear perfiles nuevos. Un Tunnel temporal puede facilitar las pruebas del API desde frontend, con autenticación, acceso acordado y cierre al terminar; no expone servicios administrativos de Docker.
 
 ---
 
@@ -398,7 +398,7 @@ ALC-TRA-07. Se configura después del hito.
 | RNF-SEC-006 | En la web, los JWT solo existen en cookies httpOnly del BFF. | Hito |
 | RNF-SEC-007 | CORS restringido a los orígenes propios. | Hito |
 | RNF-SEC-008 | Contraseñas, códigos OTP y claves de canal guardados con hash. | Hito |
-| RNF-SEC-009 | El sistema no recibe ni guarda datos de tarjeta; el webhook verifica la firma de Stripe. | Hito |
+| RNF-SEC-009 | El sistema no recibe ni guarda datos de tarjeta; el webhook verifica la firma Svix de Recurrente. | Hito |
 | RNF-SEC-010 | Los PDF de facturas y las fotos de incidencias se entregan con URL firmadas de corta duración. | Hito |
 | RNF-SEC-011 | Los secretos solo están en `.env` fuera de Git y en GitHub Secrets. | Hito |
 
@@ -459,7 +459,7 @@ ALC-TRA-07. Se configura después del hito.
 | EventCalendar no trae componente oficial de React | Envolverlo en un componente que lo monta en un `useEffect` |
 | Spring necesita ~1 GB de RAM | Límites de memoria de la JVM; VPS de 4 GB como mínimo |
 | Una sola VPS es un punto único de falla | Reinicio automático, backups en R2 y rollback (después) |
-| Stripe no ofrece modo real en Guatemala | Sin impacto: todo en modo prueba |
+| La demostración usa Recurrente Sandbox | No acredita preparación para cobros reales; producción requiere configuración y validación propias |
 | La factura no está certificada ante la SAT | Se identifica como "factura de demostración"; FEL real queda en Fase 2 |
 | Limitaciones funcionales aceptadas | Están en los documentos 07 y 09 y en el índice de historias (sección 7); no requieren tecnología adicional |
 
@@ -469,7 +469,7 @@ ALC-TRA-07. Se configura después del hito.
 
 | Servicio | Plan | Costo | Cuándo |
 |---|---|---|---|
-| Stripe | Modo prueba | $0 | Hito |
+| Recurrente | Sandbox, sin cobros reales | No estima tarifas de producción | Desarrollo y demo |
 | Expo (EAS) + Firebase (FCM) | Free | $0 | Hito |
 | GitHub | Free | $0 | Hito |
 | Mailpit, MinIO, Prometheus, Grafana (Docker local) | Software libre | $0 | Hito |

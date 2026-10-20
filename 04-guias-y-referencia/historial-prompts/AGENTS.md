@@ -1,5 +1,7 @@
 # AGENTS.md — Acuerdos de trabajo con IA en Villa Serena
 
+> **Plantilla histórica, no instrucciones operativas actuales.** Se conserva el contenido original como referencia. Para tareas nuevas prevalecen el [AGENTS.md de la raíz](../../AGENTS.md), las instrucciones de la sesión y las issues vigentes. No aplicar las fechas, asignaciones, ramas, proveedor de pago ni copias de contrato descritos abajo.
+
 > Esta es la plantilla compartida de instrucciones para los cinco repositorios. Su ubicación de uso es la raíz de cada repositorio; `CLAUDE.md` remite a ella mediante `@AGENTS.md`.
 
 ## 1. Proyecto y resultado esperado

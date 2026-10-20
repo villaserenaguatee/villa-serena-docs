@@ -20,10 +20,10 @@ Especifica los permisos detallados de lectura, creación, modificación y anulac
 
 Define **qué acción exacta puede hacer cada rol**. Es la referencia para:
 
-- **Pablo y Hugo:** Spring Security (roles en el JWT, `@PreAuthorize` y verificación de a quién pertenece cada registro).
+- **Backend y seguridad:** roles en el JWT, `@PreAuthorize` y verificación de a quién pertenece cada registro.
 - **Backend:** autorización en cada operación.
-- **Kim y Carlos:** qué menús, pantallas y botones ve cada rol.
-- **Alex:** pruebas de autorización (cada "—" es una petición que debe rechazarse).
+- **Frontend web y móvil:** qué menús, pantallas y botones ve cada rol.
+- **Quien verifica el flujo:** pruebas de autorización (cada "—" es una petición que debe rechazarse).
 
 | Símbolo | Significado |
 |---|---|

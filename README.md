@@ -12,7 +12,7 @@ Bienvenido a la documentación oficial y base de conocimiento de **Villa Serena*
 
 Villa Serena busca resolver la administración integral de un hotel boutique mediante cuatro componentes desacoplados:
 
-1. **Web Pública (Huéspedes):** Portal de reservas con verificación de disponibilidad en tiempo real y pasarela de pago (Stripe en modo prueba).
+1. **Web Pública (Huéspedes):** Portal de reservas con verificación de disponibilidad en tiempo real y pasarela de pago (Recurrente en Sandbox, en GTQ).
 2. **Web Privada (Personal del Hotel):** Panel operativo para Recepción, Room Service, Limpieza/Mantenimiento y Administración, implementado con arquitectura BFF (*Backend for Frontend*).
 3. **App Móvil (Huéspedes en Estadía):** Aplicación Android (React Native + Expo) para conserjería digital: pedidos a la habitación, solicitudes de toallas/artículos, seguimiento en vivo y notificaciones push.
 4. **Backend / API REST Central:** Núcleo de lógica empresarial en Spring Boot 4.1 con base de datos relacional PostgreSQL 17, comunicación en tiempo real vía WebSockets (STOMP) y colas transaccionales de eventos.
@@ -32,7 +32,7 @@ villa-serena-docs/
 ```
 
 ### [01 · Metodología y Planificación](01-metodologia/)
-* **[Marco de Trabajo Scrumban](01-metodologia/scrumban.md):** Ciclo de vida de tareas en GitHub (`Issue → Rama → PR → develop`), Definition of Done (DoD) y acuerdos de colaboración del equipo.
+* **[Marco de Trabajo Scrumban](01-metodologia/scrumban.md):** Ciclo de vida de tareas en GitHub (`Issue → Rama → PR → rama de integración`; en docs, `main`), Definition of Done (DoD) y acuerdos de colaboración del equipo.
 * **[Roadmap por Versiones Incrementales](01-metodologia/roadmap-versiones.md):** Desglose del desarrollo por fases de menor a mayor complejidad (`v0.1.0 MVP`, `v0.2.0 Operativa`, `v0.3.0 Integral`).
 
 ### [02 · Especificación de Producto](02-producto/)
@@ -40,7 +40,7 @@ villa-serena-docs/
 * **[Requisitos Funcionales](02-producto/requisitos-funcionales.md):** Requisitos detallados del sistema agrupados por módulo.
 * **[Requisitos No Funcionales](02-producto/requisitos-no-funcionales.md):** Criterios de seguridad, rendimiento, concurrencia y observabilidad.
 * **[Reglas de Negocio](02-producto/reglas-de-negocio.md):** Políticas del hotel (cancelaciones 48h, pago único, tarifas, horarios fijos de check-in/out).
-* **[Roles y Matriz de Permisos](02-producto/roles-y-permisos.md):** Definición de roles (Recepción, Room Service, Limpieza, Mantenimiento, Administrador) y accesos permitidos.
+* **[Roles y responsabilidades](02-producto/roles-y-responsabilidades.md)** y **[matriz de permisos](02-producto/matriz-de-permisos.md):** Roles del personal y accesos permitidos.
 * **[Casos de Uso](02-producto/casos-de-uso.md):** Flujos de interacción detallados del sistema.
 
 ### [03 · Arquitectura y Diseño Técnico](03-arquitectura/)
@@ -52,7 +52,7 @@ villa-serena-docs/
 
 ### [04 · Guías y Referencia Operativa](04-guias-y-referencia/)
 * **[Guía de Arranque Local](04-guias-y-referencia/arranque-local.md):** Pasos para levantar el ecosistema completo con Docker Compose.
-* **[Guía de Stripe CLI](04-guias-y-referencia/stripe-cli.md):** Configuración de webhooks locales para pruebas de pago.
+* **[Pagos con Recurrente](04-guias-y-referencia/arranque-local.md#42-probar-pagos-con-recurrente):** Configuración local de Sandbox y webhook. La [guía de Stripe CLI](04-guias-y-referencia/stripe-cli.md) se conserva como referencia histórica.
 * **[Diseño de Integración con Canales](04-guias-y-referencia/integracion-canales.md):** Simulación de ingesta de reservas externas.
 
 ---
@@ -63,11 +63,15 @@ El código del proyecto se encuentra distribuido en los siguientes repositorios 
 
 | Repositorio | Descripción | Stack Tecnológico |
 |---|---|---|
-| [`villa-serena-api`](https://github.com/villaserenaguate/villa-serena-api) | Backend central y API REST | Java 21, Spring Boot 4.1, PostgreSQL 17, Flyway |
-| [`villa-serena-web`](https://github.com/villaserenaguate/villa-serena-web) | Portal público y panel del personal (BFF) | Next.js 15, React 19, TypeScript, Tailwind CSS |
-| [`villa-serena-movil`](https://github.com/villaserenaguate/villa-serena-movil) | App de conserjería para huéspedes | React Native, Expo SDK 54, Expo Router |
-| [`villa-serena-infra`](https://github.com/villaserenaguate/villa-serena-infra) | Infraestructura y despliegue local/remoto | Docker Compose, Terraform, Ansible, AWS |
-| [`villa-serena-docs`](https://github.com/villaserenaguate/villa-serena-docs) | Wiki y contrato API canónico | Markdown, Mermaid, OpenAPI y herramientas Node.js |
+| [`villa-serena-api`](https://github.com/villaserenaguatee/villa-serena-api) | Backend central y API REST | Java 21, Spring Boot 4.1, PostgreSQL 17, Flyway |
+| [`villa-serena-web`](https://github.com/villaserenaguatee/villa-serena-web) | Portal público y panel del personal (BFF) | Next.js 15, React 19, TypeScript, Tailwind CSS |
+| [`villa-serena-movil`](https://github.com/villaserenaguatee/villa-serena-movil) | App de conserjería para huéspedes | React Native, Expo SDK 54, Expo Router |
+| [`villa-serena-infra`](https://github.com/villaserenaguatee/villa-serena-infra) | Infraestructura y despliegue local/remoto | Docker Compose, Terraform, Ansible, AWS |
+| [`villa-serena-docs`](https://github.com/villaserenaguatee/villa-serena-docs) | Wiki y contrato API canónico | Markdown, Mermaid, OpenAPI y herramientas Node.js |
+
+## Referencias históricas
+
+[Documentos archivados](04-guias-y-referencia/historico/README.md) y [prompts antiguos](04-guias-y-referencia/historial-prompts/README.md) conservan decisiones, responsables y fechas anteriores. Para trabajar hoy se usan las guías vigentes, el roadmap y las issues; no se ejecutan los prompts antiguos como instrucciones actuales.
 
 ## Comprobar el contrato
 

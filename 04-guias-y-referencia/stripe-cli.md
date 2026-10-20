@@ -1,4 +1,6 @@
-# Guía de Stripe CLI (Pagos de Prueba Locales)
+# Guía de Stripe CLI (referencia histórica)
+
+> **Documento histórico del proveedor anterior.** Estos pasos y rutas no se usan para pagos nuevos. La pasarela vigente es Recurrente: consulta la [guía de arranque](arranque-local.md#42-probar-pagos-con-recurrente) y el [contrato actual](../03-arquitectura/contrato-api.md). Se conserva el contenido siguiente sin actualizarlo como manual operativo.
 
 Instrucciones para escuchar y reenviar webhooks de Stripe hacia el backend local (`villa-serena-api`) para pruebas de reservas y pagos sin dinero real.
 

@@ -10,7 +10,7 @@ Define qué debe hacer el sistema por módulo, a partir del alcance y las 68 his
 |---|---|
 | ID | Identificador estable. No se reutilizan los IDs retirados. |
 | Requisito | Comportamiento verificable y sus condiciones principales. Los códigos de estado son los del documento 07. |
-| Nivel | `1`: obligatorio en local para el 10 de octubre de 2026. `2`: solo si da tiempo tras completar Nivel 1. `Después`: infraestructura posterior al hito y anterior a la entrega final. `Fase 2`: fuera de V1; no se incorporan RF activos de ese nivel. |
+| Nivel | `1`: capacidades base del producto. `2`: capacidades opcionales. `Después`: infraestructura posterior al MVP. La distribución por entregas sigue el [roadmap](../01-metodologia/roadmap-versiones.md), sin imponer la fecha histórica del 10 de octubre. `Fase 2`: fuera de V1; no se incorporan RF activos de ese nivel. |
 | HU | IDs completos de historias o referencia expresa a la tarea técnica. |
 | RN | IDs vigentes del documento 10; `—` cuando no existe una RN aplicable. No se usan aquí códigos de alcance como si fueran RN. |
 

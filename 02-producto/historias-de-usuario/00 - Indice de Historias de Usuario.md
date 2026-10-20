@@ -24,7 +24,7 @@
 **Numeración:** un ID nunca se reutiliza.
 
 **Campos de la plantilla (documento 03):**
-- El campo **Nivel** indica la prioridad (1 = obligatorio para el 10 de octubre; 2 = si da tiempo).
+- El campo **Nivel** indica la prioridad (1 = capacidades base; 2 = opcionales; las entregas siguen el [roadmap](../../01-metodologia/roadmap-versiones.md)).
 - El campo **Reglas relacionadas** se toma del documento 10 — Reglas de Negocio, sección 19. Los valores concretos siguen escritos en los criterios.
 
 ---
