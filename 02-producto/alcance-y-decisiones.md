@@ -71,8 +71,8 @@ Los **IDs de alcance** (ej. `ALC-PUB-03`) son estables y todos los documentos lo
 | D-16 | **Cancelación de todo o nada** | Solo **Recepción** cancela (a pedido del huésped), y solo reservas `Confirmada` que no vengan de un canal externo; las `Pendiente de pago` se cancelan solas a los 30 minutos. Con **48 horas o más** antes de las **15:00 del día de llegada**: reembolso **total** por Stripe (si pagó en línea). Con menos de 48 horas o si no llega: **no hay reembolso** (si no llega, Recepción cancela la reserva con el motivo "No se presentó"; no existe el estado `No-show`). No se calculan penalidades |
 | D-17 | **Sin cambio de habitación durante la estadía** | La habitación se asigna o cambia **solo antes del check-in**. Si hay un daño con el huésped dentro, se atiende con el huésped alojado |
 | D-18 | **Facturación mínima** | Solo se factura **en el check-out**. Se emite, se imprime (80 mm o carta) y se envía en PDF por correo. **Sin anulación de facturas ni marca "COPIA"**. Los datos fiscales van en la configuración del hotel; la **serie fija** y su número inicial se cargan en los datos iniciales y no se editan |
-| D-19 | **Mantenimiento de 3 pasos** | Reportar daño → el técnico lo toma (**En proceso**) → **Resuelta**. Sin asignación del Administrador, sin reasignaciones ni repuestos |
-| D-20 | **Sin integración de inventario** | Room Service, limpieza y mantenimiento **no descuentan inventario**. El menú solo marca cada ítem como **Disponible** o **Agotado** |
+| D-19 | **Mantenimiento de 3 pasos** | Reportar daño → el técnico lo toma (**En proceso**) → **Resuelta**. Sin asignación del Administrador ni reasignaciones en el flujo mínimo de incidencias. Las órdenes operativas existentes sí registran repuestos compartidos con inventario (docs #21) |
+| D-20 | **Inventario compartido con compras y repuestos** | Se conserva el flujo actual de API y web (docs #21): movimientos manuales, compras y repuestos de órdenes modifican las mismas existencias. Room Service, limpieza y solicitudes no descuentan automáticamente. El menú conserva **Disponible** o **Agotado** |
 | D-21 | **Tiempo real solo para 4 eventos** | Nuevo pedido, cambio de estado del pedido, nueva solicitud y cambio de estado de habitación. No se crea una arquitectura de eventos para todas las entidades |
 | D-22 | **Hito del 10 de octubre en local** | Todo el Nivel 1 funcionando en local con Docker. VPS, Cloudflare, CI/CD y backups van **después** |
 
@@ -132,7 +132,7 @@ La columna **Nivel** indica la prioridad (sección 2).
 | ALC-ADM-01 | Gestión de personal: crear, editar y desactivar empleados; **generar una contraseña temporal** | 1 |
 | ALC-ADM-02 | Asignar rol (y área, en Mantenimiento/Limpieza) a cada empleado | 1 |
 | ALC-ADM-03 | **Turnos mínimos:** definir turnos y asignarlos a empleados, sin reglas adicionales | 2 |
-| ALC-ADM-04 | **Inventario aislado:** productos con stock y mínimo, entradas y salidas manuales, marca de "stock bajo". Sin conexión con otros módulos | 2 |
+| ALC-ADM-04 | **Inventario compartido:** insumos con stock y mínimo, entradas/salidas/mermas manuales, compras y repuestos de órdenes sobre las mismas existencias; marca de "stock bajo" | 2 |
 | ALC-ADM-06 | Catálogo de tipos de habitación y habitaciones (fotos, capacidad, precio base) | 1 |
 | ALC-ADM-07 | Menú de Room Service, incluido reactivar ítems agotados | 1 |
 | ALC-ADM-08 | Catálogo de amenidades del hotel (para la app) | 2 |
@@ -234,17 +234,18 @@ Se hacen después del hito y antes de la entrega final.
 | ALC-REC-09 | Vista del día especializada | Lo cubren los filtros rápidos de ALC-REC-08 |
 | ALC-REC-11 | Recepción registra y distribuye solicitudes | El huésped las crea desde la app y llegan directo a Limpieza |
 | ALC-REC-14 | Aviso a Recepción de nuevas solicitudes | Las solicitudes van directo a Limpieza, que recibe el aviso |
-| ALC-ADM-05 | Reportes de faltantes y reposición | Depende del inventario integrado, que se elimina |
+| ALC-ADM-05 | Reportes de faltantes y reposición | No se agrega como requisito de esta reconciliación del inventario |
 | ALC-APP-09 | Historial de estadías en la app | Basta la pantalla final del check-out (ALC-APP-08) |
 | ALC-RS-03 | Pedido telefónico | Los pedidos entran solo desde la app |
 | ALC-RS-07 | Marcar ítem como agotado (separado) | Se une con ALC-RS-06 |
 | ALC-RS-09 | Historial de pedidos con filtros y tiempo de entrega | Analítica secundaria |
 | ALC-MYL-04 | Información de la habitación y observaciones | No bloquea el flujo |
-| ALC-MYL-05 | Insumos usados en la limpieza | Sin inventario integrado |
-| ALC-MYL-06 | Reportar faltantes de insumos | Sin inventario integrado |
+| ALC-MYL-05 | Insumos usados en la limpieza | No hay descuento automático desde limpieza |
+| ALC-MYL-06 | Reportar faltantes de insumos | No se incorpora un flujo de solicitudes de reposición |
 | ALC-MYL-08 | Objetos olvidados | Módulo independiente del flujo principal |
-| ALC-MYL-10 | Repuestos de mantenimiento | Sin inventario integrado |
 | ALC-MYL-11 | Historial de servicios | Puede agregarse después |
+
+ALC-MYL-10 (repuestos de mantenimiento) deja de estar excluido: docs #21 conserva su implementación en órdenes sobre los mismos insumos. No cambia el flujo mínimo de incidencias. Véase [contrato de inventario](../03-arquitectura/inventario-contrato.md).
 
 **También quedan fuera** (partes de funcionalidades que sí se construyen): modificar reservas; cambio de habitación durante la estadía; abonos y pagos parciales; penalidad de "primera noche"; reembolsos parciales y en efectivo; anulación de facturas y marca "COPIA"; asignación y reasignación de incidencias por el Administrador; cancelación de reservas desde el canal; firma HMAC; pantalla de administración de canales; vista previa de tarifas; recordatorio push de check-out; avisos a Recepción de reservas nuevas y check-outs.
 

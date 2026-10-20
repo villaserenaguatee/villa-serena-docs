@@ -146,7 +146,7 @@
 2. Filtro rápido **"Llegan hoy":** reservas `Confirmada` con fecha de entrada hoy, con acceso directo al check-in (HU-REC-12).
 3. Filtro rápido **"Salen hoy":** reservas `En estadía` con fecha de salida hoy, con su saldo pendiente y acceso directo al check-out (HU-REC-14).
 4. Los resultados muestran código, huésped principal, fechas, tipo, habitación (o "Sin asignar"), estado y canal de origen.
-5. El detalle de la reserva muestra los datos del huésped y de los adicionales, las fechas, el tipo, la habitación, el total, el canal y el **historial de estados** con fecha, hora y responsable de cada cambio.
+5. El detalle de la reserva muestra los datos del huésped y de los adicionales, las fechas, el tipo, la habitación, el total, el canal y el **historial de estados** con fecha, hora y responsable de cada cambio. Incluye **Hora estimada de llegada** (`HH:mm`, hora local `America/Guatemala`) cuando el cliente la indicó en la reserva pública; `null` significa sin indicar, también en reservas históricas. No cambia el horario ni los requisitos del check-in.
 6. Desde el detalle solo se ofrecen las acciones válidas para el estado actual (asignar habitación, check-in, cancelar, ver la cuenta, check-out, imprimir factura).
 7. Si no hay resultados, se muestra un mensaje claro.
 

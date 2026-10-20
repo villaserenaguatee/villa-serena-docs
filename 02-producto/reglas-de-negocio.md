@@ -60,7 +60,7 @@ Los IDs de parámetros no se reutilizan. PAR-20 (archivos) está en el documento
 | RN-RES-008 | Disponibilidad de un tipo en cada noche = habitaciones `ACTIVO` del tipo que no estén `FUERA_DE_SERVICIO` − reservas del tipo en `PENDIENTE_PAGO`, `CONFIRMADA` o `EN_ESTADIA` que ocupen esa noche, con o sin habitación asignada. Solo se ofrece el tipo si queda al menos 1 habitación en todas las noches del rango. | HU-HUE-03 (C4, C5); HU-REC-03 (C4) |
 | RN-RES-009 | La reserva tiene un código único no secuencial, que se incluye en su confirmación por correo; la reserva de canal recibe un código propio del hotel. | HU-HUE-05 (C6); HU-REC-04 (C5); HU-CM-01 (C6, C7); HU-HUE-07 (C2) |
 | RN-RES-010 | Toda reserva recibe automáticamente uno de estos canales de origen: `DIRECTO_WEB`, `RECEPCION`, `BOOKING` o `EXPEDIA`. El canal no se edita; las reservas externas conservan además su identificador externo. | HU-CM-02 (C1, C4); HU-HUE-05 (C6); HU-REC-04 (C5); HU-CM-01 (C6) |
-| RN-RES-011 | La reserva web nace `PENDIENTE_PAGO`; las de Recepción y canal nacen `CONFIRMADA`. Recepción registra quién creó la reserva. | HU-HUE-05 (C6); HU-REC-04 (C5); HU-CM-01 (C6) |
+| RN-RES-011 | La reserva web nace `PENDIENTE_PAGO`; las de Recepción y canal nacen `CONFIRMADA`. Recepción registra quién creó la reserva. En la reserva pública por tipo u oferta, la hora estimada de llegada es opcional y nullable: `HH:mm` local de `America/Guatemala`; omitida/null significa sin indicar, sin valor por defecto ni relleno histórico. No modifica el horario o las reglas de check-in y solo se expone en el detalle autorizado de Recepción. | HU-HUE-05 (C6, C10); HU-REC-04 (C5); HU-CM-01 (C6) |
 | RN-RES-012 | Si no se paga en 30 minutos, la reserva web se cancela automáticamente y el pago queda `FALLIDO` al vencer la sesión sin pagarse. Antes de cancelarla se consulta la sesión de Stripe: si ya estaba pagada, se confirma en lugar de cancelarse. | HU-HUE-06 (C4, C5) |
 | RN-RES-013 | Solo se asigna o cambia habitación antes del check-in, con la reserva `PENDIENTE_PAGO` o `CONFIRMADA`. Debe ser del mismo tipo reservado, no estar `FUERA_DE_SERVICIO` y no tener traslapes; no necesita estar `LIMPIA` para asignarse. El cambio registra fecha, hora y responsable. | HU-REC-07 (C1–C5); HU-REC-04 (C2) |
 | RN-RES-014 | El check-in requiere reserva `CONFIRMADA`, habitación asignada `LIBRE` + `LIMPIA` y que hoy esté entre la fecha de entrada y el día anterior a la salida. Las noches no usadas se cobran igual. La hora fija de referencia es 15:00, pero se permite entrar antes si la habitación cumple las condiciones. Se registran fecha, hora y recepcionista. | HU-REC-12 (C1, C3–C5); HU-HUE-01 (C2) |
@@ -323,12 +323,12 @@ Inventario y turnos se construyen solo si da tiempo, según el alcance. Su posib
 
 | ID | Regla | Historias |
 |---|---|--- |
-| RN-INV-001 | **Nivel 2.** El inventario es aislado: el stock solo cambia con movimientos manuales del Administrador; Room Service, limpieza, solicitudes y mantenimiento no lo modifican. | HU-ADM-13 (C7) |
-| RN-INV-002 | **Nivel 2.** El stock no queda negativo; se rechaza una salida que supere el stock actual. | HU-ADM-13 (C3) |
-| RN-INV-003 | **Nivel 2.** Cada movimiento registra fecha, hora, tipo, cantidad, motivo y responsable; se consulta el historial de cada producto. | HU-ADM-13 (C4) |
+| RN-INV-001 | **Nivel 2.** Inventario, compras y repuestos de mantenimiento comparten las existencias de insumos. Las compras aumentan stock; las órdenes ajustan el consumo de repuestos por diferencia. Room Service, limpieza y solicitudes no descuentan automáticamente. | HU-ADM-13 (C7) |
+| RN-INV-002 | **Nivel 2.** El stock no queda negativo; se rechaza una salida, merma o consumo de repuestos que supere el stock actual. | HU-ADM-13 (C3) |
+| RN-INV-003 | **Nivel 2.** Cada movimiento manual registra fecha UTC, tipo, cantidad, motivo e insumo. La API lista los movimientos manuales; responsable y cambios de existencias quedan en auditoría. La respuesta no genera responsable ni stock resultante; compras y repuestos no crean movimientos manuales. | HU-ADM-13 (C4) |
 | RN-INV-005 | **Nivel 2.** Un producto con stock igual o menor al mínimo muestra “Stock bajo”; se puede filtrar por esa marca y por categoría. | HU-ADM-13 (C5) |
-| RN-INV-010 | **Nivel 2.** El producto tiene nombre único, categoría, unidad y stock mínimo; comienza con stock cero y se puede desactivar. | HU-ADM-13 (C1, C6) |
-| RN-INV-011 | **Nivel 2.** Las entradas aumentan el stock y las salidas lo disminuyen; ambas requieren cantidad mayor que cero y motivo obligatorio. | HU-ADM-13 (C2) |
+| RN-INV-010 | **Nivel 2.** El insumo tiene nombre, categoría, unidad, stock inicial no negativo, mínimo y costo unitario. No se exige nombre único ni se implementa desactivación. Al editar el catálogo no se modifica directamente el stock. | HU-ADM-13 (C1, C6) |
+| RN-INV-011 | **Nivel 2.** Las entradas aumentan el stock; salidas y mermas lo disminuyen. Requieren cantidad mayor que cero, máximo 99999999, y motivo no vacío de hasta 500 caracteres. Los movimientos son inmutables; el reenvío idéntico del mismo UUID no vuelve a aplicarlos. | HU-ADM-13 (C2) |
 
 ---
 

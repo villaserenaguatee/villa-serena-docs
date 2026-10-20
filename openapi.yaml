@@ -14,6 +14,11 @@ info:
     la implementación continúa por issues; este documento no demuestra que
     todas las operaciones estén implementadas. Nivel 2 es opcional.
     Consulta 03-arquitectura/contrato-api.md para el proceso y las diferencias conocidas.
+    Pagos reconciliados con API #54 (PR #61), revisión 414220894184143f6416693d67b8ffbb7df37698.
+    Recurrente procesa pagos nuevos en GTQ; STRIPE se conserva solo en registros históricos.
+
+    Inventario reconciliado con el flujo de API y web (docs #21); compras y repuestos comparten insumos.
+    Consulta 03-arquitectura/inventario-contrato.md para evidencia, compatibilidad y adopción.
 
     **Convenciones**
     - JSON en camelCase.
@@ -31,7 +36,7 @@ info:
     - Personal y huésped: JWT en `Authorization: Bearer <token>` (15 minutos) y
       refresh token rotativo de 7 días.
     - API del canal: encabezados `X-Canal-Codigo` y `X-Canal-Clave`.
-    - Webhook de Stripe: encabezado `Stripe-Signature`.
+    - Webhook de Recurrente: encabezados `svix-id`, `svix-timestamp` y `svix-signature`.
   contact:
     name: Equipo Villa Serena
 servers:
@@ -45,7 +50,7 @@ tags:
   - name: publico
     description: Web pública sin sesión (HU-HUE-01 a HU-HUE-06)
   - name: pagos
-    description: Avisos de Stripe (webhook)
+    description: Avisos de Recurrente (webhook)
   - name: canal
     description: API para canales externos (HU-CM-01)
   - name: huespedes
@@ -466,79 +471,361 @@ paths:
                   - campo: salida
                     mensaje: La estadía debe ser de 1 a 30 noches.
 
+  /api/v1/publico/ofertas:
+    get:
+      tags: [publico]
+      operationId: listarOfertasPublicas
+      summary: Consultar catálogo de ofertas
+      description: |
+        Catálogo comercial usado por la web, ordenado por el orden del catálogo.
+        Una oferta tiene slug propio y se vincula a un tipo mediante apiTypeId.
+        Varias ofertas pueden compartir el mismo inventario de habitaciones.
+        bookable indica tipo activo y existencia de una habitación elegible por
+        características; no garantiza disponibilidad para unas fechas concretas.
+        No devuelve pendingFeatures (notas editoriales internas).
+      security: []
+      x-historias: [HU-HUE-02, HU-HUE-04]
+      responses:
+        '200':
+          description: Catálogo completo; puede estar vacío. Incluye ofertas con bookable=false.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OfertaPublica'
+              example:
+                - slug: estandar-jardin
+                  name: Estándar Jardín
+                  type: Estándar
+                  floor: 1
+                  apiTypeId: 3
+                  price: 420
+                  capacity: 2
+                  beds: 1 cama queen
+                  size: 27
+                  image: /images/catalogo-aprobado/ejemplo.jpg
+                  gallery: [/images/catalogo-aprobado/ejemplo.jpg]
+                  description: Habitación con vista al jardín.
+                  features: [Vista al jardín, Wi-Fi incluido]
+                  preferences: [Descanso]
+                  bookable: true
+                  illustrativePhotos: true
+                  verifiedFeatures: [Vista al jardín, Wi-Fi incluido]
+                  inventoryNote: 1 cama queen · Hasta 2 huéspedes · Piso 1
+
+  /api/v1/publico/ofertas/disponibilidad:
+    get:
+      tags: [publico]
+      operationId: buscarDisponibilidadOfertasPublicas
+      summary: Consultar ofertas disponibles y cotización
+      description: |
+        Requiere entrada, salida y huespedes: 1 a 30 noches, sin fechas pasadas,
+        entrada a no más de 365 días y al menos un huésped (America/Guatemala).
+        Filtra por bookable, capacidad de la oferta, cupo del tipo y una misma
+        habitación elegible libre durante toda la estadía. Lista vacía si no hay.
+        Cotiza al precio fijo de la oferta por noche, sin ajustes de temporada o
+        fin de semana. Ofertas con el mismo inventarioCompartido no son cupos
+        independientes ni deben sumarse. No expone cantidades restantes ni IDs
+        de habitaciones. La creación de reserva vuelve a validar disponibilidad.
+      security: []
+      x-historias: [HU-HUE-03, HU-HUE-04]
+      parameters:
+        - $ref: '#/components/parameters/Entrada'
+        - $ref: '#/components/parameters/Salida'
+        - $ref: '#/components/parameters/Huespedes'
+      responses:
+        '200':
+          description: Ofertas disponibles, en orden de catálogo, con total en GTQ y desglose por noche.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OpcionOfertaDisponible'
+              example:
+                - ofertaSlug: estandar-jardin
+                  inventarioCompartido: tipo-3
+                  tipoHabitacion:
+                    id: 3
+                    nombre: Estándar Jardín
+                    descripcion: Habitación con vista al jardín.
+                    capacidad: 2
+                    precioBaseNoche: 420
+                    fotos: [/images/catalogo-aprobado/ejemplo.jpg]
+                  noches: 2
+                  total: 840
+                  desglose:
+                    - fecha: '2026-10-15'
+                      precio: 420
+                      temporada: null
+                      finDeSemana: false
+                    - fecha: '2026-10-16'
+                      precio: 420
+                      temporada: null
+                      finDeSemana: false
+        '400':
+          description: Parámetro ausente o mal formado, FECHAS_INVALIDAS o DATOS_INVALIDOS.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                codigo: DATOS_INVALIDOS
+                mensaje: Los datos enviados no son válidos.
+                detalles:
+                  - campo: huespedes
+                    mensaje: Debe haber al menos un huésped.
+
   /api/v1/publico/reservas:
     post:
-      tags: [publico]
+      tags:
+        - publico
       operationId: crearReservaWeb
       summary: Crear la reserva web
-      description: |
+      description: >
         HU-HUE-05 · RF-RES-008, RF-HUE-001, RF-PAG-007, RF-RES-010. Revalida la
+
         disponibilidad antes de crear. Si ya existe un huésped con ese correo, la
+
         reserva se asocia a ese perfil sin cambiar sus datos. La reserva nace
+
         `PENDIENTE_PAGO`, canal `DIRECTO_WEB`, con precio fijo y cuenta `ABIERTA`
+
         con el cargo por alojamiento. Si no se paga en 30 minutos se cancela sola.
         La web conserva Idempotency-Key antes de enviar. El comprobante corresponde al correo
         y borrador enviados. Reserva, prueba consumida y respuesta se guardan atómicamente.
         Repetir la misma clave y datos devuelve la respuesta inicial sin duplicar; cambiar
         los datos produce BOOKING_REQUEST_CONFLICT. Para intentos nuevos, el replay exige
         también prueba vigente del mismo correo y borrador. Los históricos conservan su replay.
+
+
+
+        Hora estimada de llegada opcional, local de America/Guatemala, HH:mm entre 00:00 y 23:59. Omitida o null
+        significa sin indicar; no tiene valor por defecto ni modifica el horario de check-in. Vacío, segundos o
+        zona horaria devuelven 400 DATOS_INVALIDOS. Cambiar la hora con la misma Idempotency-Key devuelve 409
+        BOOKING_REQUEST_CONFLICT; omitirla y enviar null son equivalentes para los reenvíos.
       security: []
-      parameters:
-        - $ref: '#/components/parameters/BookingIdempotencyKey'
-        - $ref: '#/components/parameters/BookingDraft'
-        - $ref: '#/components/parameters/BookingEmailVerification'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReservaWebPeticion'
+              $ref: "#/components/schemas/ReservaWebPeticion"
             example:
               tipoHabitacionId: 1
-              entrada: '2026-10-15'
-              salida: '2026-10-17'
+              entrada: "2026-10-15"
+              salida: "2026-10-17"
               numeroHuespedes: 2
               huesped:
                 nombreCompleto: María José López
                 correo: maria.lopez@example.com
-                telefono: '+502 5555 1234'
+                telefono: +502 5555 1234
                 tipoDocumento: DPI
-                numeroDocumento: '2547896320101'
+                numeroDocumento: "2547896320101"
+              horaEstimadaLlegada: "18:30"
       responses:
-        '201':
+        "201":
           description: Reserva creada, pendiente de pago.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ReservaWebCreada'
+                $ref: "#/components/schemas/ReservaWebCreada"
               example:
                 codigo: VS-7K2M9Q
                 estado: PENDIENTE_PAGO
                 tipoHabitacion:
                   id: 1
                   nombre: Doble Superior
-                entrada: '2026-10-15'
-                salida: '2026-10-17'
+                entrada: "2026-10-15"
+                salida: "2026-10-17"
                 noches: 2
                 numeroHuespedes: 2
-                total: 1912.50
-                pagoVenceEn: '2026-10-02T15:00:00-06:00'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '409':
-          description: Sin disponibilidad o BOOKING_REQUEST_CONFLICT por reutilizar la clave con otros datos.
+                total: 1912.5
+                pagoVenceEn: "2026-10-02T15:00:00-06:00"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          description: "CORREO_NO_VERIFICADO: falta verificación vigente para crear la reserva."
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: No se autoriza recuperar un intento con la verificación presentada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Sin disponibilidad o datos distintos para la misma clave idempotente (BOOKING_REQUEST_CONFLICT).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                sinDisponibilidad:
+                  value:
+                    codigo: SIN_DISPONIBILIDAD
+                    mensaje: Ya no hay habitaciones disponibles de ese tipo para esas fechas.
+                    detalles: []
+                solicitudDistinta:
+                  value:
+                    codigo: BOOKING_REQUEST_CONFLICT
+                    mensaje: Esta solicitud ya se utilizó con otros datos.
+                    detalles: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-zA-Z0-9_-]{16,100}$
+          description: >-
+            Identificador del intento. Repetir los mismos datos devuelve la reserva original; cambiar hora u
+            otro dato devuelve 409 BOOKING_REQUEST_CONFLICT.
+          example: reserva-ejemplo-0001
+        - name: X-Booking-Draft
+          in: header
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: >-
+            Borrador verificado, obligatorio para una nueva reserva y para recuperar reenvíos con verificación
+            asociada. Puede omitirse en reenvíos históricos sin verificación.
+        - name: X-Booking-Email-Verification
+          in: header
+          required: false
+          schema:
+            type: string
+            pattern: ^[A-Za-z0-9_-]{43}$
+          description: >-
+            Comprobante vigente del correo y borrador. Obligatorio para nuevas reservas; no se omite al usar
+            hora opcional. Los reenvíos históricos sin verificación conservan su compatibilidad.
+  /api/v1/publico/ofertas/{slug}/reservas:
+    post:
+      tags:
+        - publico
+      operationId: crearReservaWebOferta
+      summary: Crear reserva web de una oferta
+      description: >
+        HU-HUE-05 · Reserva una oferta identificada por slug con el mismo cuerpo de reserva pública.
+        tipoHabitacionId debe coincidir con el tipo de la oferta y numeroHuespedes con su capacidad. Revalida
+        cupo y habitación elegible; nace PENDIENTE_PAGO y usa el precio de la oferta.
+
+
+        Hora estimada de llegada opcional, local de America/Guatemala, HH:mm entre 00:00 y 23:59. Omitida o null
+        significa sin indicar; no tiene valor por defecto ni modifica el horario de check-in. Vacío, segundos o
+        zona horaria devuelven 400 DATOS_INVALIDOS. Cambiar la hora con la misma Idempotency-Key devuelve 409
+        BOOKING_REQUEST_CONFLICT; omitirla y enviar null son equivalentes para los reenvíos.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReservaWebPeticion"
+            example:
+              tipoHabitacionId: 1
+              entrada: "2026-10-15"
+              salida: "2026-10-17"
+              numeroHuespedes: 2
+              huesped:
+                nombreCompleto: María José López
+                correo: maria.lopez@example.com
+                telefono: +502 5555 1234
+                tipoDocumento: DPI
+                numeroDocumento: "2547896320101"
+              horaEstimadaLlegada: "18:30"
+      responses:
+        "201":
+          description: Reserva creada, pendiente de pago.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReservaWebCreada"
               example:
-                codigo: SIN_DISPONIBILIDAD
-                mensaje: Ya no hay habitaciones disponibles de ese tipo para esas fechas.
-                detalles: []
+                codigo: VS-7K2M9Q
+                estado: PENDIENTE_PAGO
+                tipoHabitacion:
+                  id: 1
+                  nombre: Doble Superior
+                entrada: "2026-10-15"
+                salida: "2026-10-17"
+                noches: 2
+                numeroHuespedes: 2
+                total: 1912.5
+                pagoVenceEn: "2026-10-02T15:00:00-06:00"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          description: "CORREO_NO_VERIFICADO: falta verificación vigente para crear la reserva."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: No se autoriza recuperar un intento con la verificación presentada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: >-
+            Sin disponibilidad o datos distintos para la misma clave idempotente (BOOKING_REQUEST_CONFLICT).
+            También OFERTA_NO_ENCONTRADA u OFERTA_INCOMPATIBLE.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                sinDisponibilidad:
+                  value:
+                    codigo: SIN_DISPONIBILIDAD
+                    mensaje: Ya no hay habitaciones disponibles de ese tipo para esas fechas.
+                    detalles: []
+                solicitudDistinta:
+                  value:
+                    codigo: BOOKING_REQUEST_CONFLICT
+                    mensaje: Esta solicitud ya se utilizó con otros datos.
+                    detalles: []
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+          example: estandar-jardin
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-zA-Z0-9_-]{16,100}$
+          description: >-
+            Identificador del intento. Repetir los mismos datos devuelve la reserva original; cambiar hora u
+            otro dato devuelve 409 BOOKING_REQUEST_CONFLICT.
+          example: reserva-ejemplo-0001
+        - name: X-Booking-Draft
+          in: header
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: >-
+            Borrador verificado, obligatorio para una nueva reserva y para recuperar reenvíos con verificación
+            asociada. Puede omitirse en reenvíos históricos sin verificación.
+        - name: X-Booking-Email-Verification
+          in: header
+          required: false
+          schema:
+            type: string
+            pattern: ^[A-Za-z0-9_-]{43}$
+          description: >-
+            Comprobante vigente del correo y borrador. Obligatorio para nuevas reservas; no se omite al usar
+            hora opcional. Los reenvíos históricos sin verificación conservan su compatibilidad.
 
   /api/v1/publico/reservas/{codigo}/pago:
     post:
@@ -549,8 +836,8 @@ paths:
         HU-HUE-06 · RF-PAG-003, RF-PAG-012. Crea **una** sesión de Recurrente
         Checkout por el 100 % del total, o devuelve la misma si sigue abierta.
         El pago queda `PENDIENTE`. Recurrente regresa (pagado o cancelado) a
-        `{WEB_URL}/reserva/resultado?codigo={codigo}`. El pago se confirma solo
-        por el webhook, nunca por la redirección.
+        `{WEB_URL}/reserva/resultado?codigo={codigo}`. El pago se verifica en el backend por webhook o conciliación del job de vencimiento,
+        nunca por la redirección.
         Revalida plazo y estado aunque una consulta previa permitiera la acción.
         Si el checkout está pagado pendiente de registro o payment_in_progress, responde
         409 PAGO_EN_VERIFICACION sin crear otro. Si la pasarela falla, responde 502
@@ -568,7 +855,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PagoIniciado'
               example:
-                urlPago: https://app.recurrente.com/checkout-session/ch_ejemplo
+                urlPago: https://app.recurrente.com/checkout-session/ch_a1B2c3D4
                 expiraEn: '2026-10-02T15:00:00-06:00'
         '502':
           description: ERROR_PASARELA; no se pudo verificar o completar la operación.
@@ -606,7 +893,7 @@ paths:
         nunca reserva confirmada. La consulta no acredita pagos ni crea sesiones.
         accionPago distingue INICIAR, CONTINUAR, ESPERAR, REINTENTAR y NINGUNA.
         puedeReintentar es true únicamente para REINTENTAR; ya no significa simplemente
-        PENDIENTE_PAGO. No se ofrecen acciones de cobro fuera de plazo. Un fallo de pasarela
+        PENDIENTE_PAGO. No se ofrecen acciones de cobro fuera de plazo. Un fallo de pasarela con la reserva aún PENDIENTE_PAGO
         devuelve NO_VERIFICADO/ESPERAR y puedeReintentar=false. urlPago solo se devuelve para
         CONTINUAR; expiraEn limita esa sesión y pagoVenceEn limita la reserva.
         Web y app deben usar accionPago y volver a consultar mientras sea ESPERAR.
@@ -664,50 +951,66 @@ paths:
           $ref: '#/components/responses/NotFound'
 
   # ====================================================================
-  # /pagos — webhook de Stripe
+  # /pagos — webhook de Recurrente
   # ====================================================================
-  /api/v1/pagos/stripe/webhook:
+  /api/v1/pagos/recurrente/webhook:
     post:
       tags: [pagos]
-      operationId: recibirWebhookStripe
-      summary: Aviso de Stripe (webhook)
+      operationId: recibirWebhookRecurrente
+      summary: Aviso de Recurrente (webhook)
       description: |
-        HU-HUE-06 · RF-PAG-004. Verifica la firma con `STRIPE_WEBHOOK_SECRET` y es
-        idempotente por el id del evento. Solo procesa 2 eventos:
-        `checkout.session.completed` (pago `APROBADO`; la reserva pasa a
-        `CONFIRMADA` y se envía el correo) y `checkout.session.expired` (pago
-        `FALLIDO`). Cualquier otro evento se responde 200 y se ignora. El BFF
-        bloquea esta ruta; Stripe CLI la llama directo.
+        Verifica la firma Svix sobre el cuerpo original con RECURRENTE_WEBHOOK_SECRET
+        y una tolerancia de cinco minutos. Idempotencia por svix-id. intent.succeeded
+        consulta el checkout en Recurrente y confirma únicamente si está pagado.
+        checkout.expired solo marca FALLIDO si el proveedor confirma expired.
+        Comprueba importe registrado, GTQ e identificador del pago antes de aprobar.
+        El job de vencimiento consulta al proveedor antes de cancelar; no libera el cupo
+        si el pago sigue en proceso y puede conciliar un pago confirmado por Recurrente.
+        Otros eventos válidos se ignoran con 200. El retorno del navegador no aprueba pagos.
+        No requiere JWT; sí las tres cabeceras Svix. No se expone a través del BFF.
       security:
-        - stripeFirma: []
+        - recurrenteFirma: []
+          recurrenteId: []
+          recurrenteTimestamp: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EventoStripe'
+              $ref: '#/components/schemas/EventoRecurrente'
             example:
-              id: evt_1Q2w3E4r5T6y7U8i
-              type: checkout.session.completed
-              data:
-                object:
-                  id: cs_test_a1B2c3D4
-                  payment_status: paid
-                  metadata:
-                    codigoReserva: VS-7K2M9Q
+              id: in_ejemplo
+              type: payment
+              event_type: intent.succeeded
+              status: succeeded
+              checkout:
+                id: ch_ejemplo
+                status: paid
       responses:
         '200':
           description: Evento recibido (también si ya se había procesado o se ignora).
         '400':
-          description: Firma inválida o cuerpo ilegible.
+          description: FIRMA_INVALIDA (cabeceras, firma o timestamp inválidos) o EVENTO_INVALIDO (cuerpo inválido).
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
               example:
                 codigo: FIRMA_INVALIDA
-                mensaje: La firma del aviso de Stripe no es válida.
+                mensaje: La firma del aviso de Recurrente no es válida.
                 detalles: []
+        '409':
+          description: PAGO_NO_COINCIDE; importe o moneda no coinciden con el pago registrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: ERROR_PASARELA; no se pudo consultar/conciliar el checkout. No se aprueba el pago.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   # ====================================================================
   # /canal — API para canales externos (HU-CM-01)
@@ -1009,6 +1312,7 @@ paths:
                 $ref: '#/components/schemas/ReservaDetalle'
               example:
                 codigo: VS-H3N8P1
+                horaEstimadaLlegada: null
                 estado: CONFIRMADA
                 canal: RECEPCION
                 identificadorExterno: null
@@ -1251,6 +1555,7 @@ paths:
                 $ref: '#/components/schemas/ReservaDetalle'
               example:
                 codigo: VS-7K2M9Q
+                horaEstimadaLlegada: "18:30"
                 estado: EN_ESTADIA
                 canal: DIRECTO_WEB
                 identificadorExterno: null
@@ -1379,8 +1684,9 @@ paths:
         HU-REC-05 (criterio 4) · RF-PAG-009. Rol `RECEPCION`. Dice qué pasará con
         el dinero, sin cambiar nada: `REEMBOLSO_TOTAL` si faltan 48 horas o más
         para las 15:00 del día de llegada (America/Guatemala) y hubo pago con
-        Stripe; `SIN_REEMBOLSO` si faltan menos; `SIN_PAGOS` si la reserva no
-        tiene pagos. Responde 409 si la reserva no se puede cancelar.
+        Recurrente; `SIN_REEMBOLSO` si faltan menos; `SIN_PAGOS` si la reserva no
+        tiene pagos. Incluye pagos históricos al calcular la vista previa; no ejecuta reembolsos.
+        Responde 409 si la reserva no se puede cancelar.
       parameters:
         - $ref: '#/components/parameters/CodigoReservaPath'
       responses:
@@ -1426,8 +1732,10 @@ paths:
         HU-REC-05, HU-CM-02 (criterio 5) · RF-RES-005, RF-PAG-009. Rol
         `RECEPCION`. Solo `CONFIRMADA` y nunca de canal externo. Motivo
         obligatorio ("No se presentó" para quien no llega). Si corresponde, pide el
-        reembolso total a Stripe (pago `REEMBOLSADO`); si Stripe lo rechaza, **no**
-        cancela y responde 409 `REEMBOLSO_RECHAZADO`. Al cancelar: reserva
+        reembolso total a Recurrente (pago `REEMBOLSADO`); si Recurrente lo rechaza, **no**
+        cancela y responde 409 `REEMBOLSO_RECHAZADO`. Si corresponde reembolsar un pago
+        histórico STRIPE, responde 409 `PAGO_LEGADO_REQUIERE_CONCILIACION` sin cancelar
+        ni enviar ese pago a Recurrente. Al cancelar: reserva
         `CANCELADA`, cuenta `CERRADA`, habitación liberada e historial con el
         motivo. No se envía correo.
       parameters:
@@ -1449,6 +1757,7 @@ paths:
                 $ref: '#/components/schemas/ReservaDetalle'
               example:
                 codigo: VS-H3N8P1
+                horaEstimadaLlegada: null
                 estado: CANCELADA
                 canal: RECEPCION
                 identificadorExterno: null
@@ -1502,7 +1811,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: La reserva no se puede cancelar o Stripe rechazó el reembolso.
+          description: La reserva no se puede cancelar o Recurrente rechazó el reembolso.
           content:
             application/json:
               schema:
@@ -1521,10 +1830,16 @@ paths:
                     mensaje: Solo se pueden cancelar reservas confirmadas.
                     detalles: []
                 reembolso:
-                  summary: Stripe rechazó el reembolso
+                  summary: Recurrente rechazó el reembolso
                   value:
                     codigo: REEMBOLSO_RECHAZADO
-                    mensaje: Stripe rechazó el reembolso; la reserva no se canceló.
+                    mensaje: Recurrente rechazó el reembolso; la reserva no se canceló.
+                    detalles: []
+                pagoHistorico:
+                  summary: Pago histórico pendiente de conciliación con el proveedor original
+                  value:
+                    codigo: PAGO_LEGADO_REQUIERE_CONCILIACION
+                    mensaje: El pago histórico requiere conciliar el reembolso con su proveedor original.
                     detalles: []
 
   /api/v1/reservas/{codigo}/habitacion:
@@ -1557,6 +1872,7 @@ paths:
                 $ref: '#/components/schemas/ReservaDetalle'
               example:
                 codigo: VS-Q4R8T2
+                horaEstimadaLlegada: null
                 estado: CONFIRMADA
                 canal: BOOKING
                 identificadorExterno: BK-99887766
@@ -1639,6 +1955,7 @@ paths:
                 $ref: '#/components/schemas/ReservaDetalle'
               example:
                 codigo: VS-H3N8P1
+                horaEstimadaLlegada: null
                 estado: EN_ESTADIA
                 canal: RECEPCION
                 identificadorExterno: null
@@ -2885,7 +3202,7 @@ paths:
                     estado: APROBADO
                   - id: 1
                     fechaHora: 2026-10-08T15:40:00Z
-                    metodo: STRIPE
+                    metodo: RECURRENTE
                     monto: 50
                     estado: APROBADO
         "400":
@@ -3059,7 +3376,7 @@ paths:
                   pagos:
                     - metodo: CANAL
                       monto: 1800
-                    - metodo: STRIPE
+                    - metodo: RECURRENTE
                       monto: 50
                   total: 1850
                   leyendaIva: IVA incluido
@@ -3103,8 +3420,8 @@ paths:
 
 
         Solo EN_ESTADIA en ventana 00:00–12:00 de salida y sin EN_CAMINO. Saldo positivo completo; si es 0
-        devuelve 204 sin crear sesión. No acepta monto ni tarjeta. Retorno villaserena://; solo el webhook
-        acredita el pago. Se reutiliza el checkout abierto; PROCESANDO o PAGADO pendiente de registro produce 409 PAGO_EN_VERIFICACION sin otro checkout.
+        devuelve 204 sin crear sesión. No acepta monto ni tarjeta. Retorno a APP_URL_RETORNO con codigo; el retorno no acredita el pago.
+        Reutiliza la sesión abierta. Si está pagada o en proceso devuelve 409 PAGO_EN_VERIFICACION.
       security:
         - bearerAuth: []
       x-historias:
@@ -3130,8 +3447,8 @@ paths:
             - HUESPED
           regla: Solo registros propios; un registro ajeno responde 404.
         condiciones: Solo EN_ESTADIA en ventana 00:00–12:00 de salida y sin EN_CAMINO. Saldo positivo completo; si es
-          0 devuelve 204 sin crear sesión. No acepta monto ni tarjeta. Retorno villaserena://; solo el webhook
-          acredita el pago. Se reutiliza el checkout abierto; PROCESANDO o PAGADO pendiente de registro produce 409 PAGO_EN_VERIFICACION sin otro checkout.
+          0 devuelve 204 sin crear sesión. No acepta monto ni tarjeta. Retorno a APP_URL_RETORNO con codigo; el retorno no acredita el pago.
+          Reutiliza la sesión abierta. Si está pagada o en proceso devuelve 409 PAGO_EN_VERIFICACION.
       responses:
         "200":
           description: Iniciar pago del saldo con Recurrente.
@@ -3140,7 +3457,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/PagoIniciado"
               example:
-                urlPago: http://localhost:9000/publico/foto-demo.jpg
+                urlPago: https://app.recurrente.com/checkout-session/ch_saldo_ejemplo
                 expiraEn: 2026-10-02T14:30:00-06:00
         "204":
           description: Saldo exactamente cero; no se creó sesión. Confirmar check-out.
@@ -3233,7 +3550,7 @@ paths:
                 pagos:
                   - metodo: CANAL
                     monto: 1800
-                  - metodo: STRIPE
+                  - metodo: RECURRENTE
                     monto: 50
                 total: 1850
                 leyendaIva: IVA incluido
@@ -4653,14 +4970,14 @@ paths:
                     monto: 1800
                     estado: APROBADO
                     referencia: Pago de prueba
-                    responsable: STRIPE
+                    responsable: RECURRENTE
                   - id: 1
                     fechaHora: 2026-10-08T15:40:00Z
-                    metodo: STRIPE
+                    metodo: RECURRENTE
                     monto: 50
                     estado: APROBADO
                     referencia: Pago de prueba
-                    responsable: STRIPE
+                    responsable: RECURRENTE
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
@@ -4965,7 +5282,7 @@ paths:
                   pagos:
                     - metodo: CANAL
                       monto: 1800
-                    - metodo: STRIPE
+                    - metodo: RECURRENTE
                       monto: 50
                   total: 1850
                   leyendaIva: IVA incluido
@@ -5079,7 +5396,7 @@ paths:
                 pagos:
                   - metodo: CANAL
                     monto: 1800
-                  - metodo: STRIPE
+                  - metodo: RECURRENTE
                     monto: 50
                 total: 1850
                 leyendaIva: IVA incluido
@@ -7832,13 +8149,16 @@ paths:
           schema:
             $ref: "#/components/schemas/Id"
           example: 1
-  /api/v1/admin/inventario/productos:
+  /api/v1/gestion/insumos:
     get:
       tags:
         - admin
-      operationId: listarProductosInventarioAdmin
-      summary: Consultar inventario
-      description: HU-ADM-13
+      operationId: listarInsumoGestion
+      summary: Consultar insumos
+      description: >-
+        GET permite ADMIN o MANTENIMIENTO_LIMPIEZA con área MANTENIMIENTO o AMBAS; POST solo ADMIN. No hay
+        filtros de servidor: la web calcula stock bajo y filtra en memoria. POST permite crear o actualizar con
+        la versión actual, enviando todos los datos requeridos.
       security:
         - bearerAuth: []
       x-historias:
@@ -7849,60 +8169,46 @@ paths:
       x-autorizacion:
         roles:
           - ADMIN
+          - MANTENIMIENTO_LIMPIEZA
         nivel: 2
+        condiciones: >-
+          GET permite ADMIN o MANTENIMIENTO_LIMPIEZA con área MANTENIMIENTO o AMBAS; POST solo ADMIN. No hay
+          filtros de servidor: la web calcula stock bajo y filtra en memoria. POST permite crear o actualizar
+          con la versión actual, enviando todos los datos requeridos.
       responses:
         "200":
-          description: Consultar inventario.
+          description: Lista completa, ordenada por creación e id.
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/ProductoInventario"
+                  $ref: "#/components/schemas/Insumo"
               example:
-                - id: 1
-                  nombre: Villa Serena
-                  categoria: Amenidades
-                  unidadMedida: Unidad
-                  stockMinimo: 0
-                  stockActual: 0
-                  stockBajo: false
-                  estado: ACTIVO
-        "400":
-          $ref: "#/components/responses/BadRequest"
+                - id: 7f81edc9-cdbc-48f2-8c6a-52b9301117ac
+                  version: 1
+                  nombre: Foco LED
+                  categoria: Mantenimiento
+                  unidad: Unidad
+                  stock: 10
+                  stockMinimo: 2
+                  costoUnitario: 15
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
-      parameters:
-        - name: categoria
-          in: query
-          required: false
-          schema:
-            type: string
-            minLength: 1
-          example: Demostración
-        - name: soloStockBajo
-          in: query
-          required: false
-          schema:
-            type: boolean
-          example: false
-        - name: estado
-          in: query
-          required: false
-          schema:
-            $ref: "#/components/schemas/EstadoCatalogo"
-          example: ACTIVO
     post:
       tags:
         - admin
-      operationId: crearProductoInventarioAdmin
-      summary: Crear producto de inventario
-      description: |-
-        HU-ADM-13
-
-        Nombre único; stock inicial cero. Stock nunca se edita en catálogo.
+      operationId: guardarInsumoGestion
+      summary: Registrar insumos
+      description: >-
+        GET permite ADMIN o MANTENIMIENTO_LIMPIEZA con área MANTENIMIENTO o AMBAS; POST solo ADMIN. No hay
+        filtros de servidor: la web calcula stock bajo y filtra en memoria. POST permite crear o actualizar con
+        la versión actual, enviando todos los datos requeridos. UUID generado por el cliente. Un reenvío con el
+        mismo id, version=0 y datos de creación idénticos devuelve el registro sin repetir sus efectos.
+        Reutilizar el id con otros datos y version=0 devuelve 409 VERSION_CAMBIADA. Una versión distinta de la
+        actual devuelve 409 VERSION_CAMBIADA.
       security:
         - bearerAuth: []
       x-historias:
@@ -7914,23 +8220,26 @@ paths:
         roles:
           - ADMIN
         nivel: 2
-        condiciones: Nombre único; stock inicial cero. Stock nunca se edita en catálogo.
+        condiciones: >-
+          GET permite ADMIN o MANTENIMIENTO_LIMPIEZA con área MANTENIMIENTO o AMBAS; POST solo ADMIN. No hay
+          filtros de servidor: la web calcula stock bajo y filtra en memoria. POST permite crear o actualizar
+          con la versión actual, enviando todos los datos requeridos.
       responses:
-        "201":
-          description: Crear producto de inventario.
+        "200":
+          description: Registro plano creado, actualizado o recuperado por reenvío.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProductoInventario"
+                $ref: "#/components/schemas/Insumo"
               example:
-                id: 1
-                nombre: Villa Serena
-                categoria: Amenidades
-                unidadMedida: Unidad
-                stockMinimo: 0
-                stockActual: 0
-                stockBajo: false
-                estado: ACTIVO
+                id: 7f81edc9-cdbc-48f2-8c6a-52b9301117ac
+                version: 1
+                nombre: Foco LED
+                categoria: Mantenimiento
+                unidad: Unidad
+                stock: 10
+                stockMinimo: 2
+                costoUnitario: 15
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
@@ -7944,135 +8253,26 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ProductoInventarioPeticion"
+              $ref: "#/components/schemas/InsumoPeticion"
             example:
-              nombre: Jabón
-              categoria: Amenidades
-              unidadMedida: Unidad
-              stockMinimo: 5
-  /api/v1/admin/inventario/productos/{id}:
-    patch:
-      tags:
-        - admin
-      operationId: editarProductoInventarioAdmin
-      summary: Editar producto de inventario
-      description: HU-ADM-13
-      security:
-        - bearerAuth: []
-      x-historias:
-        - HU-ADM-13
-      x-requisitos:
-        - RF-ADM-004
-        - RF-ADM-016
-      x-autorizacion:
-        roles:
-          - ADMIN
-        nivel: 2
-      responses:
-        "200":
-          description: Editar producto de inventario.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ProductoInventario"
-              example:
-                id: 1
-                nombre: Villa Serena
-                categoria: Amenidades
-                unidadMedida: Unidad
-                stockMinimo: 0
-                stockActual: 0
-                stockBajo: false
-                estado: ACTIVO
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            $ref: "#/components/schemas/Id"
-          example: 1
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/EditarProductoInventarioPeticion"
-            example:
-              nombre: Villa Serena
-              categoria: Amenidades
-              unidadMedida: Unidad
-              stockMinimo: 0
-  /api/v1/admin/inventario/productos/{id}/desactivar:
-    post:
-      tags:
-        - admin
-      operationId: desactivarProductoInventarioAdmin
-      summary: Desactivar producto
-      description: HU-ADM-13
-      security:
-        - bearerAuth: []
-      x-historias:
-        - HU-ADM-13
-      x-requisitos:
-        - RF-ADM-004
-        - RF-ADM-016
-      x-autorizacion:
-        roles:
-          - ADMIN
-        nivel: 2
-      responses:
-        "200":
-          description: Desactivar producto.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ProductoInventario"
-              example:
-                id: 1
-                nombre: Villa Serena
-                categoria: Amenidades
-                unidadMedida: Unidad
-                stockMinimo: 0
-                stockActual: 0
-                stockBajo: false
-                estado: INACTIVO
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            $ref: "#/components/schemas/Id"
-          example: 1
-  /api/v1/admin/inventario/productos/{id}/movimientos:
+              id: 7f81edc9-cdbc-48f2-8c6a-52b9301117ac
+              version: 0
+              datos:
+                nombre: Foco LED
+                categoria: Mantenimiento
+                unidad: Unidad
+                stock: 10
+                stockMinimo: 2
+                costoUnitario: 15
+  /api/v1/gestion/compras:
     get:
       tags:
         - admin
-      operationId: historialInventarioAdmin
-      summary: Consultar movimientos de producto
-      description: |-
-        HU-ADM-13
-
-        Historial por fecha con tipo, cantidad, motivo y responsable.
+      operationId: listarCompraInventarioGestion
+      summary: Consultar compras
+      description: >-
+        Solo ADMIN. Compras y repuestos de órdenes comparten las existencias de insumos. Las compras no se
+        sobrescriben: intentarlo con la versión actual devuelve 400 DATOS_INVALIDOS.
       security:
         - bearerAuth: []
       x-historias:
@@ -8084,10 +8284,140 @@ paths:
         roles:
           - ADMIN
         nivel: 2
-        condiciones: Historial por fecha con tipo, cantidad, motivo y responsable.
+        condiciones: >-
+          Solo ADMIN. Compras y repuestos de órdenes comparten las existencias de insumos. Las compras no se
+          sobrescriben: intentarlo con la versión actual devuelve 400 DATOS_INVALIDOS.
       responses:
         "200":
-          description: Consultar movimientos de producto.
+          description: Lista completa, ordenada por creación e id.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CompraInventario"
+              example:
+                - id: 1d92ff74-9b70-4cb1-b57f-33de75784649
+                  version: 1
+                  numeroFactura: DEMO-001
+                  proveedor: Proveedor ficticio
+                  fecha: "2026-10-19"
+                  insumoId: 7f81edc9-cdbc-48f2-8c6a-52b9301117ac
+                  cantidad: 10
+                  costoUnitario: 15
+                  estado: pagada
+                  ivaIncluido: false
+                  subtotal: 150
+                  impuesto: 18
+                  total: 168
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      tags:
+        - admin
+      operationId: guardarCompraInventarioGestion
+      summary: Registrar compras
+      description: >-
+        Solo ADMIN. Compras y repuestos de órdenes comparten las existencias de insumos. Las compras no se
+        sobrescriben: intentarlo con la versión actual devuelve 400 DATOS_INVALIDOS. UUID generado por el
+        cliente. Un reenvío con el mismo id, version=0 y datos de creación idénticos devuelve el registro sin
+        repetir sus efectos. Reutilizar el id con otros datos y version=0 devuelve 409 VERSION_CAMBIADA. Una
+        versión distinta de la actual devuelve 409 VERSION_CAMBIADA.
+      security:
+        - bearerAuth: []
+      x-historias:
+        - HU-ADM-13
+      x-requisitos:
+        - RF-ADM-004
+        - RF-ADM-016
+      x-autorizacion:
+        roles:
+          - ADMIN
+        nivel: 2
+        condiciones: >-
+          Solo ADMIN. Compras y repuestos de órdenes comparten las existencias de insumos. Las compras no se
+          sobrescriben: intentarlo con la versión actual devuelve 400 DATOS_INVALIDOS.
+      responses:
+        "200":
+          description: Registro plano creado, actualizado o recuperado por reenvío.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompraInventario"
+              example:
+                id: 1d92ff74-9b70-4cb1-b57f-33de75784649
+                version: 1
+                numeroFactura: DEMO-001
+                proveedor: Proveedor ficticio
+                fecha: "2026-10-19"
+                insumoId: 7f81edc9-cdbc-48f2-8c6a-52b9301117ac
+                cantidad: 10
+                costoUnitario: 15
+                estado: pagada
+                ivaIncluido: false
+                subtotal: 150
+                impuesto: 18
+                total: 168
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompraInventarioPeticion"
+            example:
+              id: 1d92ff74-9b70-4cb1-b57f-33de75784649
+              version: 0
+              datos:
+                numeroFactura: DEMO-001
+                proveedor: Proveedor ficticio
+                fecha: "2026-10-19"
+                insumoId: 7f81edc9-cdbc-48f2-8c6a-52b9301117ac
+                cantidad: 10
+                costoUnitario: 15
+                estado: pagada
+                ivaIncluido: false
+  /api/v1/gestion/movimientos:
+    get:
+      tags:
+        - admin
+      operationId: listarMovimientoInventarioGestion
+      summary: Consultar movimientos de inventario
+      description: >-
+        Solo ADMIN. Lista todos los movimientos manuales por creado_en e id, sin filtros ni paginación; la web
+        relaciona por insumoId y ordena por fecha. Los movimientos son inmutables: intentar modificarlos con la
+        versión actual devuelve 400 DATOS_INVALIDOS. Salida o merma sin existencias suficientes devuelve 409
+        STOCK_INSUFICIENTE. Movimiento, stock y auditoría se escriben en una transacción, con bloqueos
+        compartidos con compras y repuestos.
+      security:
+        - bearerAuth: []
+      x-historias:
+        - HU-ADM-13
+      x-requisitos:
+        - RF-ADM-004
+        - RF-ADM-016
+      x-autorizacion:
+        roles:
+          - ADMIN
+        nivel: 2
+        condiciones: >-
+          Solo ADMIN. Lista todos los movimientos manuales por creado_en e id, sin filtros ni paginación; la web
+          relaciona por insumoId y ordena por fecha. Los movimientos son inmutables: intentar modificarlos con
+          la versión actual devuelve 400 DATOS_INVALIDOS. Salida o merma sin existencias suficientes devuelve
+          409 STOCK_INSUFICIENTE. Movimiento, stock y auditoría se escriben en una transacción, con bloqueos
+          compartidos con compras y repuestos.
+      responses:
+        "200":
+          description: Lista completa, ordenada por creación e id.
           content:
             application/json:
               schema:
@@ -8095,42 +8425,31 @@ paths:
                 items:
                   $ref: "#/components/schemas/MovimientoInventario"
               example:
-                - id: 1
-                  productoId: 1
-                  tipo: ENTRADA
-                  cantidad: 1
-                  motivo: Registrado por error
-                  fechaHora: 2026-10-02T14:30:00-06:00
-                  responsable:
-                    id: 7
-                    nombre: María López
-                  stockResultante: 0
-        "400":
-          $ref: "#/components/responses/BadRequest"
+                - id: d10b41f7-370a-4c02-a254-f653b39c069f
+                  version: 1
+                  insumoId: 7f81edc9-cdbc-48f2-8c6a-52b9301117ac
+                  tipo: salida
+                  cantidad: 2
+                  motivo: Entrega a un área
+                  fecha: "2026-10-19T15:00:00Z"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
-        "404":
-          $ref: "#/components/responses/NotFound"
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            $ref: "#/components/schemas/Id"
-          example: 1
     post:
       tags:
         - admin
-      operationId: registrarMovimientoInventarioAdmin
-      summary: Registrar entrada o salida
+      operationId: guardarMovimientoInventarioGestion
+      summary: Registrar movimientos de inventario
       description: >-
-        HU-ADM-13
-
-
-        Cantidad>0 y motivo obligatorio. SALIDA que supera stock=409; bloquear producto y registrar responsable.
-        Solo movimientos manuales: otros módulos no modifican stock.
+        Solo ADMIN. Lista todos los movimientos manuales por creado_en e id, sin filtros ni paginación; la web
+        relaciona por insumoId y ordena por fecha. Los movimientos son inmutables: intentar modificarlos con la
+        versión actual devuelve 400 DATOS_INVALIDOS. Salida o merma sin existencias suficientes devuelve 409
+        STOCK_INSUFICIENTE. Movimiento, stock y auditoría se escriben en una transacción, con bloqueos
+        compartidos con compras y repuestos. UUID generado por el cliente. Un reenvío con el mismo id, version=0
+        y datos de creación idénticos devuelve el registro sin repetir sus efectos. Reutilizar el id con otros
+        datos y version=0 devuelve 409 VERSION_CAMBIADA. Una versión distinta de la actual devuelve 409
+        VERSION_CAMBIADA.
       security:
         - bearerAuth: []
       x-historias:
@@ -8142,43 +8461,35 @@ paths:
         roles:
           - ADMIN
         nivel: 2
-        condiciones: "Cantidad>0 y motivo obligatorio. SALIDA que supera stock=409; bloquear producto y registrar
-          responsable. Solo movimientos manuales: otros módulos no modifican stock."
+        condiciones: >-
+          Solo ADMIN. Lista todos los movimientos manuales por creado_en e id, sin filtros ni paginación; la web
+          relaciona por insumoId y ordena por fecha. Los movimientos son inmutables: intentar modificarlos con
+          la versión actual devuelve 400 DATOS_INVALIDOS. Salida o merma sin existencias suficientes devuelve
+          409 STOCK_INSUFICIENTE. Movimiento, stock y auditoría se escriben en una transacción, con bloqueos
+          compartidos con compras y repuestos.
       responses:
-        "201":
-          description: Registrar entrada o salida.
+        "200":
+          description: Registro plano creado, actualizado o recuperado por reenvío.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/MovimientoInventario"
               example:
-                id: 1
-                productoId: 1
-                tipo: ENTRADA
-                cantidad: 1
-                motivo: Registrado por error
-                fechaHora: 2026-10-02T14:30:00-06:00
-                responsable:
-                  id: 7
-                  nombre: María López
-                stockResultante: 0
+                id: d10b41f7-370a-4c02-a254-f653b39c069f
+                version: 1
+                insumoId: 7f81edc9-cdbc-48f2-8c6a-52b9301117ac
+                tipo: salida
+                cantidad: 2
+                motivo: Entrega a un área
+                fecha: "2026-10-19T15:00:00Z"
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
-        "404":
-          $ref: "#/components/responses/NotFound"
         "409":
           $ref: "#/components/responses/Conflict"
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            $ref: "#/components/schemas/Id"
-          example: 1
       requestBody:
         required: true
         content:
@@ -8186,9 +8497,13 @@ paths:
             schema:
               $ref: "#/components/schemas/MovimientoInventarioPeticion"
             example:
-              tipo: ENTRADA
-              cantidad: 10
-              motivo: Reposición de prueba
+              id: d10b41f7-370a-4c02-a254-f653b39c069f
+              version: 0
+              datos:
+                insumoId: 7f81edc9-cdbc-48f2-8c6a-52b9301117ac
+                tipo: salida
+                cantidad: 2
+                motivo: Entrega a un área
 
   /api/v1/publico/reservas/intento:
     get:
@@ -8298,11 +8613,19 @@ components:
       in: header
       name: X-Canal-Clave
       description: Clave del canal; el servidor la compara con su hash.
-    stripeFirma:
+    recurrenteId:
       type: apiKey
       in: header
-      name: Stripe-Signature
-      description: Firma del webhook de Stripe.
+      name: svix-id
+    recurrenteTimestamp:
+      type: apiKey
+      in: header
+      name: svix-timestamp
+    recurrenteFirma:
+      type: apiKey
+      in: header
+      name: svix-signature
+      description: Firma del webhook de Recurrente.
 
   parameters:
     BookingIdempotencyKey:
@@ -8511,7 +8834,8 @@ components:
       enum: [PENDIENTE, APROBADO, FALLIDO, REEMBOLSADO]
     MetodoPago:
       type: string
-      enum: [STRIPE, CANAL, EFECTIVO, TARJETA, OTRO]
+      description: RECURRENTE para pagos en línea nuevos; STRIPE solo para pagos históricos, sin reinterpretarlos.
+      enum: [RECURRENTE, STRIPE, CANAL, EFECTIVO, TARJETA, OTRO]
     CanalOrigen:
       type: string
       description: Canal de origen de la reserva; se asigna al crearla y no se edita.
@@ -8840,6 +9164,114 @@ components:
             tipoHabitacion:
               $ref: '#/components/schemas/TipoHabitacionPublico'
         - $ref: '#/components/schemas/CotizacionEstadia'
+    OfertaPublica:
+      type: object
+      description: Contenido público del catálogo, más precio, tipo e indicador calculados por API.
+      additionalProperties: true
+      not:
+        required: [pendingFeatures]
+      required: [slug, name, type, floor, price, capacity, beds, size, image, gallery, description, features, preferences, apiTypeId, bookable]
+      properties:
+        slug:
+          type: string
+          description: Identificador comercial usado al reservar por oferta.
+        name:
+          type: string
+        type:
+          type: string
+          description: Nombre comercial de la categoría; no sustituye apiTypeId.
+        floor:
+          type: integer
+        price:
+          $ref: '#/components/schemas/Monto'
+        capacity:
+          type: integer
+          minimum: 1
+        beds:
+          type: string
+        size:
+          type: number
+          description: Superficie en metros cuadrados.
+        image:
+          type: string
+          description: Ruta relativa o URL de imagen; puede ser ilustrativa.
+        gallery:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+        features:
+          type: array
+          items:
+            type: string
+        preferences:
+          type: array
+          items:
+            type: string
+        apiTypeId:
+          $ref: '#/components/schemas/Id'
+        bookable:
+          type: boolean
+          description: Elegibilidad general; consultar disponibilidad antes de reservar.
+        illustrativePhotos:
+          type: boolean
+        verifiedFeatures:
+          type: array
+          items:
+            type: string
+        inventoryNote:
+          type: string
+    OpcionOfertaDisponible:
+      type: object
+      description: Cotización de una oferta, distinta de la cotización tarifaria por tipo.
+      required: [ofertaSlug, inventarioCompartido, tipoHabitacion, noches, total, desglose]
+      properties:
+        ofertaSlug:
+          type: string
+        inventarioCompartido:
+          type: string
+          pattern: '^tipo-[0-9]+$'
+          description: Identifica el inventario común del tipo; no representa una cantidad.
+        tipoHabitacion:
+          type: object
+          required: [id, nombre, descripcion, capacidad, precioBaseNoche, fotos]
+          properties:
+            id:
+              $ref: '#/components/schemas/Id'
+            nombre:
+              type: string
+              description: Nombre comercial de la oferta.
+            descripcion:
+              type: string
+            capacidad:
+              type: integer
+              minimum: 1
+            precioBaseNoche:
+              $ref: '#/components/schemas/Monto'
+            fotos:
+              type: array
+              items:
+                type: string
+              description: Imagen principal de la oferta; admite ruta relativa.
+        noches:
+          type: integer
+          minimum: 1
+          maximum: 30
+        total:
+          $ref: '#/components/schemas/Monto'
+        desglose:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/PrecioNoche'
+              - type: object
+                properties:
+                  temporada:
+                    type: 'null'
+                  finDeSemana:
+                    const: false
+            description: Precio fijo de la oferta; temporada=null y finDeSemana=false incluso viernes/sábado.
     ReservaWebPeticion:
       type: object
       required: [tipoHabitacionId, entrada, salida, numeroHuespedes, huesped]
@@ -8855,6 +9287,22 @@ components:
           minimum: 1
         huesped:
           $ref: '#/components/schemas/HuespedDatos'
+        horaEstimadaLlegada:
+          $ref: "#/components/schemas/HoraEstimadaLlegada"
+    HoraEstimadaLlegada:
+      type:
+        - string
+        - "null"
+      pattern: ^(?:[01][0-9]|2[0-3]):[0-5][0-9]$
+      minLength: 5
+      maxLength: 5
+      description: >-
+        Hora local de America/Guatemala, HH:mm (00:00–23:59), independiente del check-in. En entrada, opcional y
+        nullable: omitida/null = sin indicar. En detalle de Recepción, null si no se indicó o la reserva es
+        histórica. Sin valor por defecto ni relleno histórico. Etiqueta web: Hora estimada de llegada.
+      examples:
+        - "18:30"
+        - null
     ReservaWebCreada:
       type: object
       required: [codigo, estado, tipoHabitacion, entrada, salida, noches, numeroHuespedes, total, pagoVenceEn]
@@ -8886,9 +9334,12 @@ components:
         urlPago:
           type: string
           format: uri
-          description: Página de Recurrente Checkout.
+          description: URL alojada devuelta por Recurrente; el API la publica como urlPago, no checkout_url.
         expiraEn:
-          $ref: '#/components/schemas/FechaHora'
+          description: Vencimiento ISO 8601. En pago de saldo puede ser null si el proveedor no lo informa.
+          anyOf:
+            - $ref: '#/components/schemas/FechaHora'
+            - type: 'null'
     EstadoCheckout:
       type: string
       enum: [SIN_CHECKOUT, ABIERTO, PROCESANDO, PAGADO, VENCIDO, NO_VERIFICADO]
@@ -8911,7 +9362,7 @@ components:
       required: [estadoPago, estadoCheckout, accionPago, puedeReintentar, urlPago, expiraEn]
       properties:
         estadoPago:
-          description: Registro local; null si aún no hay intento para el saldo actual.
+          description: Registro local; null si aún no hay intento para el saldo actual. No reinterpreta pagos STRIPE históricos.
           oneOf:
             - $ref: '#/components/schemas/EstadoPago'
             - type: 'null'
@@ -8932,6 +9383,7 @@ components:
             - type: 'null'
           description: Expiración de sesión limitada por la ventana de pago; null si no aplica o no se conoce.
     EstadoReservaPublico:
+      description: Estado público del último pago RECURRENTE; no reinterpreta pagos STRIPE históricos.
       allOf:
         - $ref: '#/components/schemas/ProcesoPago'
         - type: object
@@ -8945,25 +9397,63 @@ components:
               $ref: '#/components/schemas/FechaHora'
 
     # ------------------------------------------------------------------
-    # Stripe y canal
+    # Recurrente y canal
     # ------------------------------------------------------------------
-    EventoStripe:
+    EventoRecurrente:
       type: object
-      description: Evento de Stripe tal como lo envía Stripe (solo se listan los campos usados).
-      required: [id, type, data]
+      description: |
+        Cuerpo original firmado por Svix. Se usa event_type; si falta o es null,
+        se admite type como alternativa. El id del cuerpo no identifica el envío:
+        la idempotencia usa svix-id. Solo intent.succeeded y checkout.expired
+        requieren checkout.id; otros tipos no vacíos se ignoran con 200.
+        El estado y el importe del cuerpo no acreditan un pago: se consulta Recurrente.
       properties:
-        id:
-          type: string
+        event_type:
+          type: [string, 'null']
+          minLength: 1
+          pattern: '\S'
+          examples: [intent.succeeded, checkout.expired]
         type:
-          type: string
-          examples: [checkout.session.completed, checkout.session.expired]
-        data:
+          type: [string, 'null']
+          description: Tipo alternativo únicamente si event_type falta o es null.
+        checkout:
           type: object
-          required: [object]
           properties:
-            object:
-              type: object
-              additionalProperties: true
+            id:
+              type: string
+              minLength: 1
+              pattern: '\S'
+          additionalProperties: true
+      anyOf:
+        - required: [event_type]
+          properties:
+            event_type:
+              type: string
+        - required: [type]
+          properties:
+            event_type:
+              type: 'null'
+            type:
+              type: string
+              minLength: 1
+              pattern: '\S'
+      if:
+        anyOf:
+          - required: [event_type]
+            properties:
+              event_type:
+                enum: [intent.succeeded, checkout.expired]
+          - required: [type]
+            properties:
+              event_type:
+                type: 'null'
+              type:
+                enum: [intent.succeeded, checkout.expired]
+      then:
+        required: [checkout]
+        properties:
+          checkout:
+            required: [id]
       additionalProperties: true
     ReservaCanalPeticion:
       type: object
@@ -9111,6 +9601,7 @@ components:
         - saldoPendiente
         - creadaEn
         - historial
+        - horaEstimadaLlegada
       properties:
         codigo:
           $ref: '#/components/schemas/CodigoReserva'
@@ -9157,6 +9648,8 @@ components:
           description: Cambios de estado, del más antiguo al más reciente.
           items:
             $ref: '#/components/schemas/HistorialEstado'
+        horaEstimadaLlegada:
+          $ref: "#/components/schemas/HoraEstimadaLlegada"
     RegistroHuespedRespuesta:
       type: object
       required: [yaExistia, huesped]
@@ -9282,7 +9775,7 @@ components:
           type: string
           enum: [REEMBOLSO_TOTAL, SIN_REEMBOLSO, SIN_PAGOS]
         montoReembolso:
-          description: Monto que se reembolsaría por Stripe; 0.00 si no hay reembolso.
+          description: Monto que se reembolsaría por Recurrente; 0.00 si no hay reembolso.
           allOf:
             - $ref: '#/components/schemas/Monto'
     CancelarReservaPeticion:
@@ -10477,7 +10970,7 @@ components:
       examples:
         - id: 1
           fechaHora: 2026-10-08T15:40:00Z
-          metodo: STRIPE
+          metodo: RECURRENTE
           monto: 50
           estado: APROBADO
     PagoCuentaRecepcion:
@@ -10513,11 +11006,11 @@ components:
       examples:
         - id: 1
           fechaHora: 2026-10-08T15:40:00Z
-          metodo: STRIPE
+          metodo: RECURRENTE
           monto: 50
           estado: APROBADO
           referencia: Pago de prueba
-          responsable: STRIPE
+          responsable: RECURRENTE
     CuentaHuesped:
       type: object
       additionalProperties: false
@@ -10566,7 +11059,7 @@ components:
           items:
             $ref: "#/components/schemas/PagoCuentaHuesped"
       description: Consulta en cualquier estado. Saldo=cargos VIGENTE−pagos APROBADO, puede ser negativo. No muestra
-        referencias internas de Stripe ni responsables de pagos.
+        referencias internas de la pasarela ni responsables de pagos.
       examples:
         - codigoReserva: VS-ABC123
           estadoReserva: EN_ESTADIA
@@ -10604,7 +11097,7 @@ components:
               estado: APROBADO
             - id: 1
               fechaHora: 2026-10-08T15:40:00Z
-              metodo: STRIPE
+              metodo: RECURRENTE
               monto: 50
               estado: APROBADO
     CuentaRecepcion:
@@ -10695,14 +11188,14 @@ components:
               monto: 1800
               estado: APROBADO
               referencia: Pago de prueba
-              responsable: STRIPE
+              responsable: RECURRENTE
             - id: 1
               fechaHora: 2026-10-08T15:40:00Z
-              metodo: STRIPE
+              metodo: RECURRENTE
               monto: 50
               estado: APROBADO
               referencia: Pago de prueba
-              responsable: STRIPE
+              responsable: RECURRENTE
     AgregarCargoPeticion:
       type: object
       additionalProperties: false
@@ -10919,7 +11412,7 @@ components:
         monto:
           $ref: "#/components/schemas/Monto"
       examples:
-        - metodo: STRIPE
+        - metodo: RECURRENTE
           monto: 50
     FacturaDetalle:
       type: object
@@ -11007,7 +11500,7 @@ components:
           pagos:
             - metodo: CANAL
               monto: 1800
-            - metodo: STRIPE
+            - metodo: RECURRENTE
               monto: 50
           total: 1850
           leyendaIva: IVA incluido
@@ -11073,7 +11566,7 @@ components:
             pagos:
               - metodo: CANAL
                 monto: 1800
-              - metodo: STRIPE
+              - metodo: RECURRENTE
                 monto: 50
             total: 1850
             leyendaIva: IVA incluido
@@ -12313,168 +12806,399 @@ components:
             horaFin: 06:00
             estado: ACTIVO
           fecha: 2026-10-15
-    ProductoInventarioPeticion:
+    InsumoDatos:
       type: object
-      additionalProperties: false
+      additionalProperties: true
       required:
         - nombre
         - categoria
-        - unidadMedida
+        - unidad
+        - stock
         - stockMinimo
+        - costoUnitario
       properties:
         nombre:
           type: string
           minLength: 1
+          maxLength: 150
+          description: No admite texto compuesto únicamente de espacios.
         categoria:
           type: string
           minLength: 1
-        unidadMedida:
+          maxLength: 100
+          description: No admite texto compuesto únicamente de espacios.
+        unidad:
           type: string
           minLength: 1
+          maxLength: 30
+          description: No admite texto compuesto únicamente de espacios.
+        stock:
+          oneOf:
+            - type: number
+              minimum: 0
+              maximum: 99999999
+            - type: string
+              description: Representación decimal aceptada por compatibilidad; se aplican los mismos límites numéricos.
         stockMinimo:
-          type: number
-          minimum: 0
-      examples:
-        - nombre: Jabón
-          categoria: Amenidades
-          unidadMedida: Unidad
-          stockMinimo: 5
-    EditarProductoInventarioPeticion:
+          oneOf:
+            - type: number
+              minimum: 0
+              maximum: 99999999
+            - type: string
+              description: Representación decimal aceptada por compatibilidad; se aplican los mismos límites numéricos.
+        costoUnitario:
+          oneOf:
+            - type: number
+              minimum: 0
+              maximum: 99999999
+            - type: string
+              description: Representación decimal aceptada por compatibilidad; se aplican los mismos límites numéricos.
+      description: >-
+        Stock inicial no negativo indicado al crear. Al actualizar no puede cambiar el stock directamente. No se
+        exige nombre único ni existe desactivación. Los campos adicionales, como vencimiento, se conservan sin
+        validación específica.
+    MovimientoInventarioDatos:
       type: object
-      additionalProperties: false
-      required: []
-      properties:
-        nombre:
-          type: string
-          minLength: 1
-        categoria:
-          type: string
-          minLength: 1
-        unidadMedida:
-          type: string
-          minLength: 1
-        stockMinimo:
-          type: number
-          minimum: 0
-      minProperties: 1
-      examples:
-        - nombre: Villa Serena
-          categoria: Amenidades
-          unidadMedida: Unidad
-          stockMinimo: 0
-    ProductoInventario:
-      type: object
-      additionalProperties: false
+      additionalProperties: true
       required:
-        - id
-        - nombre
-        - categoria
-        - unidadMedida
-        - stockMinimo
-        - stockActual
-        - stockBajo
+        - insumoId
+        - tipo
+        - cantidad
+        - motivo
+      properties:
+        insumoId:
+          type: string
+          format: uuid
+        tipo:
+          type: string
+          enum:
+            - entrada
+            - salida
+            - merma
+        cantidad:
+          oneOf:
+            - type: number
+              exclusiveMinimum: 0
+              maximum: 99999999
+            - type: string
+              description: Representación decimal aceptada por compatibilidad; se aplican los mismos límites numéricos.
+        motivo:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: No admite texto compuesto únicamente de espacios.
+      description: >-
+        Entrada suma; salida y merma restan. Se conservan los campos adicionales y los valores originales, excepto
+        id/version internos y fecha, que fija el servidor.
+    CompraInventarioDatos:
+      type: object
+      additionalProperties: true
+      required:
+        - numeroFactura
+        - proveedor
+        - fecha
+        - insumoId
+        - cantidad
+        - costoUnitario
         - estado
       properties:
+        numeroFactura:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: No admite texto compuesto únicamente de espacios.
+        proveedor:
+          type: string
+          minLength: 1
+          maxLength: 150
+          description: No admite texto compuesto únicamente de espacios.
+        fecha:
+          type: string
+          format: date
+        insumoId:
+          type: string
+          format: uuid
+        cantidad:
+          oneOf:
+            - type: number
+              exclusiveMinimum: 0
+              maximum: 99999999
+            - type: string
+              description: Representación decimal aceptada por compatibilidad; se aplican los mismos límites numéricos.
+        costoUnitario:
+          oneOf:
+            - type: number
+              minimum: 0
+              maximum: 99999999
+            - type: string
+              description: Representación decimal aceptada por compatibilidad; se aplican los mismos límites numéricos.
+        estado:
+          type: string
+          enum:
+            - pagada
+            - pendiente
+        ivaIncluido:
+          type: boolean
+      description: >-
+        Registrar la compra aumenta stock tanto pagada como pendiente. Calcula subtotal, impuesto del 12 % y
+        total; ivaIncluido=true extrae el impuesto del importe. No actualiza el costoUnitario del insumo. La
+        compra no se sobrescribe.
+    InsumoPeticion:
+      type: object
+      additionalProperties: true
+      required:
+        - id
+        - datos
+      properties:
         id:
-          $ref: "#/components/schemas/Id"
+          type: string
+          format: uuid
+        version:
+          type: integer
+          minimum: 0
+          default: 0
+          description: 0 para crear o reenviar la creación; en insumos, la versión actual para actualizar.
+        datos:
+          $ref: "#/components/schemas/InsumoDatos"
+      description: >-
+        La web envía id, version y datos. version omitida toma 0. datos serializado no puede superar 64000
+        caracteres. id/version dentro de datos se ignoran.
+    Insumo:
+      type: object
+      additionalProperties: true
+      required:
+        - nombre
+        - categoria
+        - unidad
+        - stock
+        - stockMinimo
+        - costoUnitario
+        - id
+        - version
+      properties:
         nombre:
           type: string
           minLength: 1
+          maxLength: 150
+          description: No admite texto compuesto únicamente de espacios.
         categoria:
           type: string
           minLength: 1
-        unidadMedida:
+          maxLength: 100
+          description: No admite texto compuesto únicamente de espacios.
+        unidad:
           type: string
           minLength: 1
+          maxLength: 30
+          description: No admite texto compuesto únicamente de espacios.
+        stock:
+          description: Existencias actuales; compras y entradas pueden acumular más que el máximo permitido por movimiento.
+          oneOf:
+            - type: number
+              minimum: 0
+            - type: string
+              description: Representación decimal no negativa conservada por compatibilidad.
         stockMinimo:
-          type: number
-          minimum: 0
-        stockActual:
-          type: number
-          minimum: 0
-        stockBajo:
-          type: boolean
-        estado:
-          $ref: "#/components/schemas/EstadoCatalogo"
-      description: Nuevo stock=0. stockBajo cuando stockActual<=stockMinimo.
+          oneOf:
+            - type: number
+              minimum: 0
+              maximum: 99999999
+            - type: string
+              description: Representación decimal aceptada por compatibilidad; se aplican los mismos límites numéricos.
+        costoUnitario:
+          oneOf:
+            - type: number
+              minimum: 0
+              maximum: 99999999
+            - type: string
+              description: Representación decimal aceptada por compatibilidad; se aplican los mismos límites numéricos.
+        id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+          minimum: 1
       examples:
-        - id: 1
-          nombre: Villa Serena
-          categoria: Amenidades
-          unidadMedida: Unidad
-          stockMinimo: 0
-          stockActual: 0
-          stockBajo: false
-          estado: ACTIVO
+        - id: 7f81edc9-cdbc-48f2-8c6a-52b9301117ac
+          version: 1
+          nombre: Foco LED
+          categoria: Mantenimiento
+          unidad: Unidad
+          stock: 10
+          stockMinimo: 2
+          costoUnitario: 15
     MovimientoInventarioPeticion:
       type: object
-      additionalProperties: false
-      required:
-        - tipo
-        - cantidad
-        - motivo
-      properties:
-        tipo:
-          type: string
-          enum:
-            - ENTRADA
-            - SALIDA
-        cantidad:
-          type: number
-          exclusiveMinimum: 0
-        motivo:
-          type: string
-          minLength: 1
-      examples:
-        - tipo: ENTRADA
-          cantidad: 10
-          motivo: Reposición de prueba
-    MovimientoInventario:
-      type: object
-      additionalProperties: false
+      additionalProperties: true
       required:
         - id
-        - productoId
+        - datos
+      properties:
+        id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+          minimum: 0
+          default: 0
+          description: 0 para crear o reenviar la creación; en insumos, la versión actual para actualizar.
+        datos:
+          $ref: "#/components/schemas/MovimientoInventarioDatos"
+      description: >-
+        La web envía id, version y datos. version omitida toma 0. datos serializado no puede superar 64000
+        caracteres. id/version dentro de datos se ignoran.
+    MovimientoInventario:
+      type: object
+      additionalProperties: true
+      required:
+        - insumoId
         - tipo
         - cantidad
         - motivo
-        - fechaHora
-        - responsable
-        - stockResultante
+        - id
+        - version
+        - fecha
       properties:
-        id:
-          $ref: "#/components/schemas/Id"
-        productoId:
-          $ref: "#/components/schemas/Id"
+        insumoId:
+          type: string
+          format: uuid
         tipo:
           type: string
           enum:
-            - ENTRADA
-            - SALIDA
+            - entrada
+            - salida
+            - merma
         cantidad:
-          type: number
-          exclusiveMinimum: 0
+          oneOf:
+            - type: number
+              exclusiveMinimum: 0
+              maximum: 99999999
+            - type: string
+              description: Representación decimal aceptada por compatibilidad; se aplican los mismos límites numéricos.
         motivo:
           type: string
           minLength: 1
-        fechaHora:
+          maxLength: 500
+          description: No admite texto compuesto únicamente de espacios.
+        id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+          minimum: 1
+        fecha:
           $ref: "#/components/schemas/FechaHora"
-        responsable:
-          $ref: "#/components/schemas/ResponsableEmpleado"
-        stockResultante:
-          type: number
-          minimum: 0
+      description: >-
+        Respuesta plana. No incluye responsable ni stockResultante generados por el servidor; el empleado queda
+        registrado en auditoría. GET lista solo movimientos manuales, no compras ni consumos de repuestos.
       examples:
-        - id: 1
-          productoId: 1
-          tipo: ENTRADA
-          cantidad: 1
-          motivo: Registrado por error
-          fechaHora: 2026-10-02T14:30:00-06:00
-          responsable:
-            id: 7
-            nombre: María López
-          stockResultante: 0
+        - id: d10b41f7-370a-4c02-a254-f653b39c069f
+          version: 1
+          insumoId: 7f81edc9-cdbc-48f2-8c6a-52b9301117ac
+          tipo: salida
+          cantidad: 2
+          motivo: Entrega a un área
+          fecha: "2026-10-19T15:00:00Z"
+    CompraInventarioPeticion:
+      type: object
+      additionalProperties: true
+      required:
+        - id
+        - datos
+      properties:
+        id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+          minimum: 0
+          default: 0
+          description: 0 para crear o reenviar la creación; en insumos, la versión actual para actualizar.
+        datos:
+          $ref: "#/components/schemas/CompraInventarioDatos"
+      description: >-
+        La web envía id, version y datos. version omitida toma 0. datos serializado no puede superar 64000
+        caracteres. id/version dentro de datos se ignoran.
+    CompraInventario:
+      type: object
+      additionalProperties: true
+      required:
+        - numeroFactura
+        - proveedor
+        - fecha
+        - insumoId
+        - cantidad
+        - costoUnitario
+        - estado
+        - id
+        - version
+        - subtotal
+        - impuesto
+        - total
+      properties:
+        numeroFactura:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: No admite texto compuesto únicamente de espacios.
+        proveedor:
+          type: string
+          minLength: 1
+          maxLength: 150
+          description: No admite texto compuesto únicamente de espacios.
+        fecha:
+          type: string
+          format: date
+        insumoId:
+          type: string
+          format: uuid
+        cantidad:
+          oneOf:
+            - type: number
+              exclusiveMinimum: 0
+              maximum: 99999999
+            - type: string
+              description: Representación decimal aceptada por compatibilidad; se aplican los mismos límites numéricos.
+        costoUnitario:
+          oneOf:
+            - type: number
+              minimum: 0
+              maximum: 99999999
+            - type: string
+              description: Representación decimal aceptada por compatibilidad; se aplican los mismos límites numéricos.
+        estado:
+          type: string
+          enum:
+            - pagada
+            - pendiente
+        ivaIncluido:
+          type: boolean
+        id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+          minimum: 1
+        subtotal:
+          type: number
+        impuesto:
+          type: number
+        total:
+          type: number
+      examples:
+        - id: 1d92ff74-9b70-4cb1-b57f-33de75784649
+          version: 1
+          numeroFactura: DEMO-001
+          proveedor: Proveedor ficticio
+          fecha: "2026-10-19"
+          insumoId: 7f81edc9-cdbc-48f2-8c6a-52b9301117ac
+          cantidad: 10
+          costoUnitario: 15
+          estado: pagada
+          ivaIncluido: false
+          subtotal: 150
+          impuesto: 18
+          total: 168
     HabitacionEvento:
       type: object
       additionalProperties: false
@@ -12917,20 +13641,43 @@ x-permisos:
       - RF-RES-001
       - RF-TAR-004
     origen: PARTE_1_CONSERVADA
+  GET /api/v1/publico/ofertas:
+    roles: []
+    nivel: 1
+    historias: [HU-HUE-02, HU-HUE-04]
+    condiciones: Catálogo público; bookable no garantiza disponibilidad por fecha. Sin notas editoriales internas.
+    origen: RECONCILIADO_API_WEB_DOCS_23
+  GET /api/v1/publico/ofertas/disponibilidad:
+    roles: []
+    nivel: 1
+    historias: [HU-HUE-03, HU-HUE-04]
+    condiciones: Fechas y huéspedes válidos, cupo y habitación elegible; ofertas pueden compartir inventario.
+    origen: RECONCILIADO_API_WEB_DOCS_23
   POST /api/v1/publico/reservas:
     roles: []
     nivel: 1
-    condiciones: |
+    condiciones: >
       HU-HUE-05 · RF-RES-008, RF-HUE-001, RF-PAG-007, RF-RES-010. Revalida la
+
       disponibilidad antes de crear. Si ya existe un huésped con ese correo, la
+
       reserva se asocia a ese perfil sin cambiar sus datos. La reserva nace
+
       `PENDIENTE_PAGO`, canal `DIRECTO_WEB`, con precio fijo y cuenta `ABIERTA`
+
       con el cargo por alojamiento. Si no se paga en 30 minutos se cancela sola.
       La web conserva Idempotency-Key antes de enviar. El comprobante corresponde al correo
       y borrador enviados. Reserva, prueba consumida y respuesta se guardan atómicamente.
       Repetir la misma clave y datos devuelve la respuesta inicial sin duplicar; cambiar
       los datos produce BOOKING_REQUEST_CONFLICT. Para intentos nuevos, el replay exige
       también prueba vigente del mismo correo y borrador. Los históricos conservan su replay.
+
+
+
+      Hora estimada de llegada opcional, local de America/Guatemala, HH:mm entre 00:00 y 23:59. Omitida o null
+      significa sin indicar; no tiene valor por defecto ni modifica el horario de check-in. Vacío, segundos o
+      zona horaria devuelven 400 DATOS_INVALIDOS. Cambiar la hora con la misma Idempotency-Key devuelve 409
+      BOOKING_REQUEST_CONFLICT; omitirla y enviar null son equivalentes para los reenvíos.
     historias:
       - HU-HUE-05
     requisitos:
@@ -12941,6 +13688,26 @@ x-permisos:
       - RF-RES-010
       - RF-RES-016
     origen: PARTE_1_CONSERVADA
+  POST /api/v1/publico/ofertas/{slug}/reservas:
+    roles: []
+    nivel: 1
+    condiciones: >-
+      Mismos permisos y hora opcional que la reserva pública por tipo. La oferta debe existir y corresponder al
+      tipo y capacidad solicitados. Hora estimada de llegada opcional, local de America/Guatemala, HH:mm entre
+      00:00 y 23:59. Omitida o null significa sin indicar; no tiene valor por defecto ni modifica el horario de
+      check-in. Vacío, segundos o zona horaria devuelven 400 DATOS_INVALIDOS. Cambiar la hora con la misma
+      Idempotency-Key devuelve 409 BOOKING_REQUEST_CONFLICT; omitirla y enviar null son equivalentes para los
+      reenvíos.
+    historias:
+      - HU-HUE-05
+    requisitos:
+      - RF-HUE-001
+      - RF-PAG-007
+      - RF-RES-003
+      - RF-RES-008
+      - RF-RES-010
+      - RF-RES-016
+    origen: RECONCILIADO_API_57_DOCS_22
   POST /api/v1/publico/reservas/{codigo}/pago:
     roles: []
     nivel: 1
@@ -12948,8 +13715,8 @@ x-permisos:
       HU-HUE-06 · RF-PAG-003, RF-PAG-012. Crea **una** sesión de Recurrente
       Checkout por el 100 % del total, o devuelve la misma si sigue abierta.
       El pago queda `PENDIENTE`. Recurrente regresa (pagado o cancelado) a
-      `{WEB_URL}/reserva/resultado?codigo={codigo}`. El pago se confirma solo
-      por el webhook, nunca por la redirección.
+      `{WEB_URL}/reserva/resultado?codigo={codigo}`. El pago se verifica en el backend por webhook o conciliación del job de vencimiento,
+      nunca por la redirección.
       Revalida plazo y estado aunque una consulta previa permitiera la acción.
       Si el checkout está pagado pendiente de registro o payment_in_progress, responde
       409 PAGO_EN_VERIFICACION sin crear otro. Si la pasarela falla, responde 502
@@ -12977,7 +13744,7 @@ x-permisos:
       nunca reserva confirmada. La consulta no acredita pagos ni crea sesiones.
       accionPago distingue INICIAR, CONTINUAR, ESPERAR, REINTENTAR y NINGUNA.
       puedeReintentar es true únicamente para REINTENTAR; ya no significa simplemente
-      PENDIENTE_PAGO. No se ofrecen acciones de cobro fuera de plazo. Un fallo de pasarela
+      PENDIENTE_PAGO. No se ofrecen acciones de cobro fuera de plazo. Un fallo de pasarela con la reserva aún PENDIENTE_PAGO
       devuelve NO_VERIFICADO/ESPERAR y puedeReintentar=false. urlPago solo se devuelve para
       CONTINUAR; expiraEn limita esa sesión y pagoVenceEn limita la reserva.
       Web y app deben usar accionPago y volver a consultar mientras sea ESPERAR.
@@ -12990,17 +13757,16 @@ x-permisos:
       - RF-PAG-012
       - RF-RES-009
     origen: PARTE_1_CONSERVADA
-  POST /api/v1/pagos/stripe/webhook:
+  POST /api/v1/pagos/recurrente/webhook:
     roles:
-      - STRIPE
+      - RECURRENTE
     nivel: 1
     condiciones: |
-      HU-HUE-06 · RF-PAG-004. Verifica la firma con `STRIPE_WEBHOOK_SECRET` y es
-      idempotente por el id del evento. Solo procesa 2 eventos:
-      `checkout.session.completed` (pago `APROBADO`; la reserva pasa a
-      `CONFIRMADA` y se envía el correo) y `checkout.session.expired` (pago
-      `FALLIDO`). Cualquier otro evento se responde 200 y se ignora. El BFF
-      bloquea esta ruta; Stripe CLI la llama directo.
+      Verifica Svix con RECURRENTE_WEBHOOK_SECRET, tolerancia de cinco minutos e
+      idempotencia por svix-id. intent.succeeded confirma la reserva solo después
+      de consultar el checkout y conciliar monto y GTQ. checkout.expired marca
+      FALLIDO solo si la consulta confirma expired. El job local aplica el plazo
+      de 30 minutos. Otros eventos válidos se ignoran con 200.
     historias:
       - HU-HUE-06
       - HU-HUE-16
@@ -13194,8 +13960,9 @@ x-permisos:
       HU-REC-05 (criterio 4) · RF-PAG-009. Rol `RECEPCION`. Dice qué pasará con
       el dinero, sin cambiar nada: `REEMBOLSO_TOTAL` si faltan 48 horas o más
       para las 15:00 del día de llegada (America/Guatemala) y hubo pago con
-      Stripe; `SIN_REEMBOLSO` si faltan menos; `SIN_PAGOS` si la reserva no
-      tiene pagos. Responde 409 si la reserva no se puede cancelar.
+      Recurrente; `SIN_REEMBOLSO` si faltan menos; `SIN_PAGOS` si la reserva no
+      tiene pagos. Incluye pagos históricos al calcular la vista previa; no ejecuta reembolsos.
+      Responde 409 si la reserva no se puede cancelar.
     historias:
       - HU-REC-05
     requisitos:
@@ -13211,8 +13978,9 @@ x-permisos:
       HU-REC-05, HU-CM-02 (criterio 5) · RF-RES-005, RF-PAG-009. Rol
       `RECEPCION`. Solo `CONFIRMADA` y nunca de canal externo. Motivo
       obligatorio ("No se presentó" para quien no llega). Si corresponde, pide el
-      reembolso total a Stripe (pago `REEMBOLSADO`); si Stripe lo rechaza, **no**
-      cancela y responde 409 `REEMBOLSO_RECHAZADO`. Al cancelar: reserva
+      reembolso total a Recurrente (pago `REEMBOLSADO`); si Recurrente lo rechaza, **no**
+      cancela y responde 409 `REEMBOLSO_RECHAZADO`. Un pago histórico que requiere reembolso
+      responde 409 `PAGO_LEGADO_REQUIERE_CONCILIACION` sin cancelar ni enviarlo a Recurrente. Al cancelar: reserva
       `CANCELADA`, cuenta `CERRADA`, habitación liberada e historial con el
       motivo. No se envía correo.
     historias:
@@ -13620,8 +14388,8 @@ x-permisos:
         - HUESPED
       regla: Solo registros propios; un registro ajeno responde 404.
     condiciones: Solo EN_ESTADIA en ventana 00:00–12:00 de salida y sin EN_CAMINO. Saldo positivo completo; si es
-      0 devuelve 204 sin crear sesión. No acepta monto ni tarjeta. Retorno villaserena://; solo el webhook
-      acredita el pago. Se reutiliza el checkout abierto; PROCESANDO o PAGADO pendiente de registro produce 409 PAGO_EN_VERIFICACION sin otro checkout.
+      0 devuelve 204 sin crear sesión. No acepta monto ni tarjeta. Retorno a APP_URL_RETORNO con codigo; el retorno no acredita el pago.
+      Reutiliza la sesión abierta. Si está pagada o en proceso devuelve 409 PAGO_EN_VERIFICACION.
     historias:
       - HU-HUE-16
     requisitos:
@@ -14633,88 +15401,113 @@ x-permisos:
       - RF-ADM-009
       - RF-ADM-010
     origen: PROPUESTA_NUEVA
-  GET /api/v1/admin/inventario/productos:
+  GET /api/v1/gestion/insumos:
     roles:
       - ADMIN
+      - MANTENIMIENTO_LIMPIEZA
     nivel: 2
+    condiciones: >-
+      GET permite ADMIN o MANTENIMIENTO_LIMPIEZA con área MANTENIMIENTO o AMBAS; POST solo ADMIN. No hay filtros
+      de servidor: la web calcula stock bajo y filtra en memoria. POST permite crear o actualizar con la versión
+      actual, enviando todos los datos requeridos.
     historias:
       - HU-ADM-13
     requisitos:
       - RF-ADM-004
       - RF-ADM-016
-    origen: PROPUESTA_NUEVA
-  POST /api/v1/admin/inventario/productos:
+    origen: RECONCILIADO_API_WEB_DOCS_21
+  POST /api/v1/gestion/insumos:
     roles:
       - ADMIN
     nivel: 2
-    condiciones: Nombre único; stock inicial cero. Stock nunca se edita en catálogo.
+    condiciones: >-
+      GET permite ADMIN o MANTENIMIENTO_LIMPIEZA con área MANTENIMIENTO o AMBAS; POST solo ADMIN. No hay filtros
+      de servidor: la web calcula stock bajo y filtra en memoria. POST permite crear o actualizar con la versión
+      actual, enviando todos los datos requeridos.
     historias:
       - HU-ADM-13
     requisitos:
       - RF-ADM-004
       - RF-ADM-016
-    origen: PROPUESTA_NUEVA
-  PATCH /api/v1/admin/inventario/productos/{id}:
+    origen: RECONCILIADO_API_WEB_DOCS_21
+  GET /api/v1/gestion/compras:
     roles:
       - ADMIN
     nivel: 2
+    condiciones: >-
+      Solo ADMIN. Compras y repuestos de órdenes comparten las existencias de insumos. Las compras no se
+      sobrescriben: intentarlo con la versión actual devuelve 400 DATOS_INVALIDOS.
     historias:
       - HU-ADM-13
     requisitos:
       - RF-ADM-004
       - RF-ADM-016
-    origen: PROPUESTA_NUEVA
-  POST /api/v1/admin/inventario/productos/{id}/desactivar:
+    origen: RECONCILIADO_API_WEB_DOCS_21
+  POST /api/v1/gestion/compras:
     roles:
       - ADMIN
     nivel: 2
+    condiciones: >-
+      Solo ADMIN. Compras y repuestos de órdenes comparten las existencias de insumos. Las compras no se
+      sobrescriben: intentarlo con la versión actual devuelve 400 DATOS_INVALIDOS.
     historias:
       - HU-ADM-13
     requisitos:
       - RF-ADM-004
       - RF-ADM-016
-    origen: PROPUESTA_NUEVA
-  GET /api/v1/admin/inventario/productos/{id}/movimientos:
+    origen: RECONCILIADO_API_WEB_DOCS_21
+  GET /api/v1/gestion/movimientos:
     roles:
       - ADMIN
     nivel: 2
-    condiciones: Historial por fecha con tipo, cantidad, motivo y responsable.
+    condiciones: >-
+      Solo ADMIN. Lista todos los movimientos manuales por creado_en e id, sin filtros ni paginación; la web
+      relaciona por insumoId y ordena por fecha. Los movimientos son inmutables: intentar modificarlos con la
+      versión actual devuelve 400 DATOS_INVALIDOS. Salida o merma sin existencias suficientes devuelve 409
+      STOCK_INSUFICIENTE. Movimiento, stock y auditoría se escriben en una transacción, con bloqueos compartidos
+      con compras y repuestos.
     historias:
       - HU-ADM-13
     requisitos:
       - RF-ADM-004
       - RF-ADM-016
-    origen: PROPUESTA_NUEVA
-  POST /api/v1/admin/inventario/productos/{id}/movimientos:
+    origen: RECONCILIADO_API_WEB_DOCS_21
+  POST /api/v1/gestion/movimientos:
     roles:
       - ADMIN
     nivel: 2
-    condiciones: "Cantidad>0 y motivo obligatorio. SALIDA que supera stock=409; bloquear producto y registrar
-      responsable. Solo movimientos manuales: otros módulos no modifican stock."
+    condiciones: >-
+      Solo ADMIN. Lista todos los movimientos manuales por creado_en e id, sin filtros ni paginación; la web
+      relaciona por insumoId y ordena por fecha. Los movimientos son inmutables: intentar modificarlos con la
+      versión actual devuelve 400 DATOS_INVALIDOS. Salida o merma sin existencias suficientes devuelve 409
+      STOCK_INSUFICIENTE. Movimiento, stock y auditoría se escriben en una transacción, con bloqueos compartidos
+      con compras y repuestos.
     historias:
       - HU-ADM-13
     requisitos:
       - RF-ADM-004
       - RF-ADM-016
-    origen: PROPUESTA_NUEVA
+    origen: RECONCILIADO_API_WEB_DOCS_21
 x-integraciones:
-  webhookStripe:
-    ruta: /api/v1/pagos/stripe/webhook
+  webhookRecurrente:
+    ruta: /api/v1/pagos/recurrente/webhook
     eventos:
-      - checkout.session.completed
-      - checkout.session.expired
+      - intent.succeeded
+      - checkout.expired
     reglas:
       - Distinguir pago de reserva inicial y pago de saldo por metadata/identificador almacenado de la sesión.
-      - Idempotencia por id del evento. Nunca confiar en el retorno del navegador para aprobar un pago.
+      - Firma Svix sobre cuerpo original, tolerancia de cinco minutos e idempotencia por svix-id.
+      - Consultar el checkout y conciliar monto y GTQ; nunca confiar en el retorno del navegador para aprobar un pago.
       - En saldo, registrar APROBADO sin emitir factura ni finalizar reserva; eso ocurre solo en check-out.
-    revision: Extensión funcional del mismo webhook para saldo; confirmar con Pablo. No cambia su forma de
-      petición/respuesta.
+    revision: >-
+      Reconciliado con API #54/PR #61 (414220894184143f6416693d67b8ffbb7df37698);
+      el saldo usa el mismo webhook. La factura se emite al finalizar el check-out, no al pagar.
   efectosAutomaticos:
     - "Correo de confirmación en CONFIRMADA, OTP al solicitar y factura al emitir: Outbox, sin endpoints de
       envío manual."
     - Cargo único de pedido ENTREGADO; sin endpoint para generar cargo manual de Room Service.
     - Factura dentro de check-out, sin endpoint independiente de emisión.
-    - Cancelación de reserva web a los 30 minutos según estado de Stripe, sin endpoint de no-show.
+    - Cancelación de reserva web a los 30 minutos según estado de Recurrente, sin endpoint de no-show.
     - Check-out cancela solicitudes PENDIENTE/EN_PROCESO y pedidos NUEVO/EN_PREPARACION, motivo Estadía
       finalizada; bloquea EN_CAMINO.
   pendientesDeRevision:

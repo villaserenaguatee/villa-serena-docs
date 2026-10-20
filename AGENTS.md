@@ -1,5 +1,18 @@
 # AGENTS.md — Villa Serena Docs
 
+## Ponytail
+
+Para trabajar en este repositorio, usa Ponytail en modo `full` por defecto y lee
+[su skill principal](.agents/skills/ponytail/SKILL.md) antes de actuar. Si la persona
+lo desactiva o cambia el nivel, respeta esa elección durante la sesión.
+
+Ponytail complementa estos acuerdos: prevalecen las instrucciones de la persona,
+las reglas específicas del proyecto y la comunicación en español, también en las
+revisiones y auditorías. No elimina capas, interfaces o controles acordados por
+reducir código. Las skills de revisión y auditoría producen informes; no autorizan
+cambios adicionales. La [guía local](.agents/README.md) explica su uso, procedencia
+y diferencias respecto al plugin personal.
+
 ## Trabajo con el equipo
 
 La comunicación es en español, clara y breve. La persona dirige la sesión; el agente analiza, implementa y verifica el alcance autorizado. Kimberly decide prioridades, alcance y aceptación de producto; Alex facilita la resolución de dudas y bloqueos; las decisiones técnicas se coordinan con el equipo de desarrollo.

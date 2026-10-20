@@ -119,13 +119,14 @@ Recordatorio del rol: el **Cliente** reserva en la web pública **sin iniciar se
 **Criterios de aceptación**
 1. Se piden nombre completo, correo, teléfono, nacionalidad, tipo de documento (DPI o pasaporte) y número de documento del huésped principal: los mismos datos que en Recepción (HU-REC-01) y en el canal (HU-CM-01).
 2. El huésped se identifica por su correo: si ya existe un huésped con ese correo, la reserva se asocia a ese perfil sin cambiar sus datos.
-3. Todos los campos son obligatorios y el correo debe tener un formato válido; si falta o está mal un dato, se señala el campo y no se continúa.
+3. Se validan los datos obligatorios y el formato del correo; si falta o está mal un dato obligatorio, se señala el campo y no se continúa. La hora estimada de llegada es opcional.
 4. Antes de continuar al pago se muestra un resumen: tipo de habitación, fechas, número de noches, huéspedes y total.
 5. Antes de crear la reserva se **vuelve a validar la disponibilidad**; si ya no hay, se avisa y la reserva no se crea.
 6. La reserva se crea en estado `Pendiente de pago`, con canal de origen "Directo web" y un código único no secuencial (ej. `VS-7K2M9Q`). El precio queda fijo en ese momento.
 7. Mientras está `Pendiente de pago`, la reserva ocupa cupo en la disponibilidad para evitar sobreventa.
 8. Junto con la reserva se crea su cuenta `Abierta` con el cargo por alojamiento.
 9. El cliente no puede cambiar la reserva después de crearla. Si se equivocó y ya pagó, debe pedir a Recepción que la cancele; si no ha pagado, la reserva se cancela sola a los 30 minutos (HU-HUE-06).
+10. Al reservar por tipo o por oferta puede indicar **Hora estimada de llegada**, opcional, en formato `HH:mm` (`00:00`–`23:59`), hora local `America/Guatemala`. Omitida o `null` significa sin indicar; no hay valor por defecto ni relleno histórico. No cambia el horario ni las reglas de check-in. Vacío, segundos o zona horaria se rechazan. Recepción la consulta en el detalle autorizado; no se publica en el estado de la reserva.
 
 **Depende de:** HU-HUE-04
 **Reglas relacionadas:** RN-PAG-009, RN-RES-001, RN-RES-002, RN-RES-009, RN-RES-010, RN-RES-011, RN-RES-018, RN-RES-019, RN-TAR-007 (documento 10)
