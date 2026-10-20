@@ -50,15 +50,15 @@ test('genera tipos desde docs y detecta cambios sin escribir YAML en el consumid
 // Regression checks for the payment block reconciled with API #54.
 const contract = load(readFileSync(new URL('../openapi.yaml', import.meta.url), 'utf8'));
 const definitions = contract.components.schemas;
-test('Recurrente replaces only the Stripe webhook operation outside the inventory reconciliation', () => {
+test('Recurrente sustituye la operación de webhook de Stripe en las rutas de pagos', () => {
   const root = fileURLToPath(new URL('../', import.meta.url));
   // Fixed pre-migration baseline: HEAD already contains Recurrente after committing.
   // CI fetches history so this object exists in both branch and PR merge checkouts.
   const previousRevision = 'f30ff74fe939d467728c51c31d7aca157b3be34e';
   const previous = load(execFileSync('git', ['-C', root, 'show', `${previousRevision}:openapi.yaml`], { encoding: 'utf8' }));
-  const withoutInventory = document => ({ paths: Object.fromEntries(Object.entries(document.paths)
-    .filter(([path]) => !path.startsWith('/api/v1/admin/inventario/') && !['insumos', 'compras', 'movimientos'].some(name => path === `/api/v1/gestion/${name}`))) });
-  assert.deepEqual(operationDifferences(withoutInventory(previous), withoutInventory(contract)), {
+  const payments = document => ({ paths: Object.fromEntries(Object.entries(document.paths)
+    .filter(([path]) => path.startsWith('/api/v1/pagos/'))) });
+  assert.deepEqual(operationDifferences(payments(previous), payments(contract)), {
     missing: ['POST /api/v1/pagos/stripe/webhook'],
     extra: ['POST /api/v1/pagos/recurrente/webhook'],
   });
@@ -67,10 +67,12 @@ test('Recurrente replaces only the Stripe webhook operation outside the inventor
   assert.deepEqual(definitions.HuespedAdicionalDatos, previous.components.schemas.HuespedAdicionalDatos);
 });
 
-test('inventario sustituye las operaciones propuestas y conserva las demás operaciones de la base', () => {
+test('inventario sustituye las operaciones propuestas por las consumidas en gestion', () => {
   const root = fileURLToPath(new URL('../', import.meta.url));
   const previous = load(execFileSync('git', ['-C', root, 'show', 'b7d957385a78a932c433e4cd11bd9575c51665ab:openapi.yaml'], { encoding: 'utf8' }));
-  assert.deepEqual(operationDifferences(previous, contract), {
+  const inventory = document => ({ paths: Object.fromEntries(Object.entries(document.paths)
+    .filter(([path]) => path.startsWith('/api/v1/admin/inventario/') || ['insumos', 'compras', 'movimientos'].some(name => path === `/api/v1/gestion/${name}`))) });
+  assert.deepEqual(operationDifferences(inventory(previous), inventory(contract)), {
     missing: [
       'GET /api/v1/admin/inventario/productos',
       'GET /api/v1/admin/inventario/productos/{id}/movimientos',
@@ -81,9 +83,59 @@ test('inventario sustituye las operaciones propuestas y conserva las demás oper
     ],
     extra: ['GET', 'POST'].flatMap(method => ['compras', 'insumos', 'movimientos'].map(name => `${method} /api/v1/gestion/${name}`)),
   });
-  for (const [path, item] of Object.entries(contract.paths)) {
-    if (path.startsWith('/api/v1/gestion/')) continue;
-    assert.deepEqual(item, previous.paths[path], path);
+});
+
+test('hora estimada de llegada es opcional y nullable, con minutos locales estrictos y sin valor por defecto', () => {
+  const hora = definitions.HoraEstimadaLlegada;
+  assert.deepEqual(hora.type, ['string', 'null']);
+  assert.equal(hora.default, undefined);
+  assert.ok(!definitions.ReservaWebPeticion.required.includes('horaEstimadaLlegada'));
+  assert.ok(definitions.ReservaDetalle.required.includes('horaEstimadaLlegada'));
+  for (const name of ['ReservaWebPeticion', 'ReservaDetalle']) {
+    assert.equal(definitions[name].properties.horaEstimadaLlegada.$ref, '#/components/schemas/HoraEstimadaLlegada');
+  }
+  const valid = new RegExp(hora.pattern);
+  assert.equal(hora.minLength, 5);
+  assert.equal(hora.maxLength, 5);
+  for (const value of ['00:00', '09:05', '18:30', '23:59']) assert.ok(valid.test(value), value);
+  for (const value of ['', '9:05', '24:00', '18:60', '18:30:00', '18:30Z', '18:30-06:00', ' 18:30']) assert.ok(!valid.test(value), value);
+  assert.match(hora.description, /America\/Guatemala/);
+  assert.match(hora.description, /Sin valor por defecto ni relleno histórico/);
+});
+
+test('ambas reservas públicas aceptan hora y conservan privacidad, permisos y reenvíos', () => {
+  const root = fileURLToPath(new URL('../', import.meta.url));
+  const previous = load(execFileSync('git', ['-C', root, 'show', '827cafcb98932ca93a81575bec6e26736663bcfe:openapi.yaml'], { encoding: 'utf8' }));
+  assert.deepEqual(operationDifferences(previous, contract), { missing: [], extra: ['POST /api/v1/publico/ofertas/{slug}/reservas'] });
+  for (const path of ['/api/v1/publico/reservas', '/api/v1/publico/ofertas/{slug}/reservas']) {
+    const op = contract.paths[path].post;
+    assert.deepEqual(op.security, []);
+    assert.equal(op.requestBody.content['application/json'].schema.$ref, '#/components/schemas/ReservaWebPeticion');
+    assert.equal(op.requestBody.content['application/json'].example.horaEstimadaLlegada, '18:30');
+    assert.match(op.description, /BOOKING_REQUEST_CONFLICT/);
+    assert.match(op.description, /omitirla y enviar null son equivalentes/);
+    assert.ok(op.responses['201']);
+    assert.ok(op.responses['400']);
+    assert.ok(op.responses['409']);
+    assert.equal(op.parameters.find(p => p.name === 'Idempotency-Key').required, true);
+  }
+  for (const name of ['EstadoReservaPublico', 'ReservaWebCreada', 'ReservaResumen', 'ReservaCalendario']) {
+    assert.deepEqual(definitions[name], previous.components.schemas[name], name);
+  }
+  for (const [path, item] of Object.entries(previous.paths)) {
+    for (const [method, operation] of Object.entries(item)) {
+      assert.deepEqual(contract.paths[path][method].security, operation.security, `${method} ${path}`);
+    }
+  }
+  const example = contract.paths['/api/v1/reservas/{codigo}'].get.responses['200'].content['application/json'].example;
+  assert.equal(example.horaEstimadaLlegada, '18:30');
+  for (const item of Object.values(contract.paths)) for (const op of Object.values(item)) {
+    for (const response of Object.values(op.responses ?? {})) {
+      const media = response.content?.['application/json'];
+      if (media?.schema?.$ref === '#/components/schemas/ReservaDetalle') {
+        assert.ok(Object.hasOwn(media.example, 'horaEstimadaLlegada'));
+      }
+    }
   }
 });
 

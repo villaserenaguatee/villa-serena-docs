@@ -101,6 +101,19 @@ Después de integrar en docs, los consumidores actualizan su revisión fijada y 
 
 ## Diferencias conocidas por reconciliar
 
+### Hora estimada de llegada (docs #22)
+
+[API #57](https://github.com/villaserenaguatee/villa-serena-api/issues/57) y [PR #66, integrada en `dev`](https://github.com/villaserenaguatee/villa-serena-api/pull/66), revisión `01dc12eb004e4a2cc6fd43d4274933e0e9ae50d1`, implementan `horaEstimadaLlegada`. El canónico incorpora ese campo en `ReservaWebPeticion` para POST `/api/v1/publico/reservas` y POST `/api/v1/publico/ofertas/{slug}/reservas`; esta última ruta se declara aquí porque no estaba en la base.
+
+- Entrada opcional y nullable: `"18:30"`, omitida o `null`. Solo `HH:mm` entre `00:00` y `23:59`, hora local `America/Guatemala`; no es un instante UTC y no admite segundos, zona ni cadena vacía. Formato inválido: 400 `DATOS_INVALIDOS`.
+- Salida en `ReservaDetalle` autorizado para Recepción, consultado en GET `/api/v1/reservas/{codigo}`: `"18:30"` o `null`. Los demás endpoints de Recepción que reutilizan ese DTO conservan la misma forma. No se agrega a `EstadoReservaPublico`, `ReservaWebCreada`, listados ni DTO de la app; no se amplían permisos.
+- Sin valor por defecto ni relleno histórico, e independiente del check-in. Cambiar la hora con la misma `Idempotency-Key` devuelve 409 `BOOKING_REQUEST_CONFLICT`; omitida y `null` conservan la misma huella y los reenvíos históricos.
+- La hora opcional no sustituye la verificación de correo existente. Ambas creaciones documentan `Idempotency-Key`, `X-Booking-Draft` y `X-Booking-Email-Verification`; la reconciliación completa del flujo de correo sigue pendiente en el inventario de diferencias de abajo.
+
+**Adopción:** [web #67](https://github.com/villaserenaguatee/villa-serena-web/issues/67) debe generar sus tipos desde el SHA completo de docs integrado, conectar el campo opcional en ambos flujos de reserva y mostrarlo en el detalle de Recepción con la etiqueta **Hora estimada de llegada**, sin inventar una hora cuando sea `null`. API debe adoptar la misma revisión en [API #58](https://github.com/villaserenaguatee/villa-serena-api/issues/58). La app no envía reservas públicas ni consume el detalle exclusivo de Recepción; no requiere una nueva pantalla o campo por esta actualización. Al actualizar sus tipos, conserva sus DTO y permisos actuales. No se ejecutaron las suites de consumidores desde docs.
+
+### Inventario inicial de otras diferencias
+
 Este es un inventario inicial obtenido del [código de API en 9396c82](https://github.com/villaserenaguatee/villa-serena-api/tree/9396c82/src/main/java/com/villaserena/api), no una auditoría exhaustiva ni una lista de cambios ya aprobados. Las próximas issues de docs deben precisar cada actualización.
 
 | Área | Evidencia en el API | Diferencia con la base del contrato |
