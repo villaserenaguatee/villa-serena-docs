@@ -2,6 +2,8 @@
 
 Instrucciones para configurar y encender el ecosistema local de desarrollo (Docker Compose con PostgreSQL, Mailpit, MinIO, Prometheus y Grafana; API Spring Boot, Web Next.js y App Expo).
 
+Para el flujo actual de web y API, prepara Docker, API y web. La app se retoma según el [roadmap por versiones](../01-metodologia/roadmap-versiones.md); no hace falta instalar Expo para trabajar solo en web o API. Esta guía no fija una fecha de entrega.
+
 ---
 
 ## 1. Qué instalar (una sola vez)
@@ -9,18 +11,17 @@ Instrucciones para configurar y encender el ecosistema local de desarrollo (Dock
 | Programa | Quién lo necesita | Cómo comprobar que funciona |
 |---|---|---|
 | **Git** | Todos | `git --version` |
-| **Docker Desktop** en Windows/macOS; Docker Engine con Compose o Docker Desktop en Linux | Todos | `docker --version` y `docker ps` sin error |
+| **Docker Desktop** en Windows/macOS; Docker Engine con Compose o Docker Desktop en Linux | Quien ejecute servicios locales o pruebas que usen contenedores | `docker --version` y `docker ps` sin error |
 | **Visual Studio Code** u otro editor | Todos | — |
-| Tu **herramienta de IA** (Claude Code, Codex, Copilot o Cursor) | Todos | — |
-| **JDK 21** (por ejemplo, Eclipse Temurin 21) | Josué, Hugo y Pablo (API) | `java -version` muestra 21 |
-| **Node.js 22 LTS** y **pnpm** (`npm install -g pnpm`) | Alex, Kim (web) y Carlos (app) | `node -v` y `pnpm -v` |
-| **Expo Go de SDK 54** en un teléfono Android. Se descarga desde **expo.dev/go**, **no** desde la Play Store | Carlos | La app abre |
-| Cuenta de **Expo** y **EAS CLI** (`npm install -g eas-cli`) | Carlos | `eas --version` |
+| **JDK 21** (por ejemplo, Eclipse Temurin 21) | Quien ejecute el API | `java -version` muestra 21 |
+| **Node.js 24** y **pnpm 12** | Quien trabaje en web o compruebe el contrato de docs | `node -v` muestra 24 y `pnpm -v` muestra 12 |
+| **Expo Go de SDK 54** en un teléfono Android, desde **expo.dev/go** | Solo quien pruebe la app | La app abre |
+| Cuenta de **Expo** y **EAS CLI** | Solo quien genere el development build de la app | `eas --version` |
 | **DBeaver** (opcional), para ver la base de datos | Quien quiera | — |
 
 No hace falta instalar Maven: el API trae su propio Maven (`mvnw`).
 
-**Cuentas:** no hay que crear cuentas para PostgreSQL, Mailpit, MinIO ni Grafana; sus usuarios y contraseñas los inventas tú en el `.env`. Solo harán falta cuentas de **Stripe** en modo prueba (para los pagos, más adelante) y de **Expo** (Carlos).
+**Cuentas:** PostgreSQL, Mailpit, MinIO y Grafana se configuran localmente. Para probar pagos se usa **Recurrente Sandbox**, con claves privadas en el API; consulta la sección 4.2. Expo solo se necesita para el trabajo de la app.
 
 ---
 
@@ -40,7 +41,7 @@ Los comandos de Git, pnpm, Expo y Docker Compose son comunes. Las variantes de M
 | Probar el API | `mvnw.cmd test` | `./mvnw.cmd test` | `./mvnw test` |
 | Copiar el entorno de ejemplo | `copy .env.example .env` | `Copy-Item .env.example .env` | `cp .env.example .env` |
 
-El perfil `local`, cuando esté configurado, se selecciona añadiendo `-Dspring-boot.run.profiles=local`. En macOS/Linux, si el wrapper no tiene permiso de ejecución, `chmod +x mvnw` lo habilita. Los ejemplos con `<...>` son marcadores que se sustituyen antes de ejecutarlos; no son comandos para copiar literalmente.
+Los datos ficticios del API se habilitan con `SPRING_PROFILES_ACTIVE=demo` en su `.env` (sección 2.3). En macOS/Linux, si el wrapper no tiene permiso de ejecución, `chmod +x mvnw` lo habilita. Los ejemplos con `<...>` son marcadores que se sustituyen antes de ejecutarlos; no son comandos para copiar literalmente.
 
 ---
 
@@ -50,21 +51,23 @@ El perfil `local`, cuando esté configurado, se selecciona añadiendo `-Dspring-
 
 Cada integrante obtiene los repositorios necesarios desde GitHub en su ubicación habitual de trabajo. La documentación no fija rutas locales ni prescribe cómo crear carpetas. Git utiliza los mismos comandos en Windows, macOS y Linux.
 
-| Quién | Repositorios |
+Reparto registrado por frentes: web/móvil, Kimberly y Alexander; backend, Pablo, Carlos y Hugo; documentación/infraestructura, Josué. Cada frente acuerda su distribución interna; esta guía indica herramientas por tarea, sin asignar trabajo individual.
+
+| Para trabajar en | Repositorios |
 |---|---|
-| Todos | `villa-serena-infra` (los servicios de Docker) |
-| Josué, Hugo y Pablo | `villa-serena-api` |
-| Alex y Kim | `villa-serena-web` (y `villa-serena-api` para probar de punta a punta) |
-| Carlos | `villa-serena-movil` (y `villa-serena-api` para probar de punta a punta) |
-| Quien edite documentación | `villa-serena-docs` |
+| Servicios locales | `villa-serena-infra` |
+| Backend | `villa-serena-api` y `villa-serena-infra` |
+| Web conectada | `villa-serena-web` y un API accesible; si corre en tu equipo, también API e infra |
+| App conectada | `villa-serena-movil` y un API accesible |
+| Documentación o comprobación del contrato | `villa-serena-docs`; los consumidores usan la revisión fijada en su `api-contract.json` |
 
 ### 2.2 Crear tu `.env`
 
-**Qué es:** un archivo de texto con la **configuración privada de tu computadora** (contraseñas, claves y direcciones). Cada línea tiene un nombre y un valor, por ejemplo `POSTGRES_PASSWORD=VillaSerena2026`. Docker, Spring, Next.js y Expo lo leen al arrancar, así las contraseñas no se escriben en el código. Está en `.gitignore`: **nunca se sube a GitHub**. Lo que sí se sube es su plantilla, `.env.example`.
+**Qué es:** un archivo de texto con la **configuración privada de tu computadora** (contraseñas, claves y direcciones). Cada repositorio usa su propia plantilla `.env.example`: infra y API usan `.env`; web puede usar `.env.local`. El API importa su `.env` como propiedades de Spring. Estos archivos privados no se suben a GitHub.
 
 **Cómo crearlo** (en cada repositorio que tenga `.env.example`):
 
-1. La plantilla `.env.example` se copia a `.env` desde el repositorio; la sección 1.1 muestra el comando de cada terminal.
+1. Copia `.env.example` desde cada repositorio; la sección 1.1 muestra el comando. En web usa `.env.local` como destino y evita valores contradictorios en otros archivos de entorno.
 2. Abre `.env` con tu editor y sustituye cada `<TU_...>` por tu valor. **Los símbolos `<` y `>` no van:** se sustituye todo.
    ```env
    # Antes
@@ -72,17 +75,19 @@ Cada integrante obtiene los repositorios necesarios desde GitHub en su ubicació
    # Después
    MINIO_ROOT_PASSWORD=VillaSerena2026
    ```
-3. Reglas para los valores:
+3. Para las contraseñas locales de infra:
    - Sin espacios alrededor del `=` y sin comillas.
    - Solo letras, números y, si quieres, `!`, `-` o `_`. **Evita `#`, `$` y `"`**.
    - Las contraseñas de MinIO deben tener **al menos 8 caracteres**.
    - Como todo es local y de prueba, las contraseñas **las inventas tú**.
-4. Los valores que deben ser **iguales para todos** (la contraseña de PostgreSQL que también usa el API, y los hashes de los usuarios de prueba y de las claves de los canales) se comparten **por mensaje privado** entre el equipo.
+4. Los valores deben coincidir **entre los servicios que conectas**: `DB_PASSWORD` del API con `POSTGRES_PASSWORD` de infra; credenciales y buckets de MinIO entre API e infra; claves del canal simulado con sus hashes del API. Cada entorno local puede tener valores distintos. Para un API compartido, el equipo acuerda sus accesos por un canal privado.
 5. **Nunca subas el `.env` ni pegues su contenido en un chat de IA.** Si la IA necesita saber qué variables hay, muéstrale el `.env.example`.
 
-### 2.4 Valores del `.env` del API para los datos de prueba
+### 2.3 Configurar el API y sus datos de prueba
 
-Las migraciones de Flyway cargan empleados de prueba y dos canales. Sus contraseñas y claves **no están en el código**: Flyway las toma de tres valores de tu `.env` de `villa-serena-api`. Cada quien los genera en su computadora (con Docker abierto). **No los pegues en ningún chat de IA.**
+Completa `DB_URL`, `DB_USER` y `DB_PASSWORD` para tu PostgreSQL, `JWT_SECRET` y las credenciales de MinIO según el `.env.example` del API. `JWT_SECRET` debe contener una clave Base64 de al menos 32 bytes; la plantilla indica cómo generarla.
+
+Para cargar hotel, habitaciones, tarifas, menú, empleados y canales ficticios, activa `SPRING_PROFILES_ACTIVE=demo`. Flyway carga `db/demo/V6__datos_iniciales.sql` además del esquema y exige los tres hashes siguientes. Sin ese perfil no se cargan datos ficticios nuevos. No actives `demo` en producción.
 
 **1. Contraseña de los empleados de prueba.** El equipo acuerda **por mensaje privado** una contraseña de demostración (por ejemplo `VillaSerena2026`). Genera su hash BCrypt:
 
@@ -96,7 +101,7 @@ La respuesta empieza con `:$2y$10$...`. Copia todo **sin los dos puntos del inic
 DEMO_PASSWORD_HASH=$2y$10$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
-Con esa contraseña entran todos los empleados de prueba (sus correos están en la migración V6). El hash contiene `$`: en el `.env` del API está bien así (la regla de evitar `$` es para el `.env` de Docker).
+Con esa contraseña entran los empleados de prueba (sus correos están en `db/demo/V6__datos_iniciales.sql`). El hash contiene `$`: en el `.env` del API está bien así (la regla de evitar `$` es para el `.env` de Docker).
 
 **2. Claves de los dos canales.** Inventa una clave para cada canal (por ejemplo `ClaveBookingDemo2026` y `ClaveExpediaDemo2026`) y genera su SHA-256:
 
@@ -114,9 +119,37 @@ CANAL2_KEY_HASH=<64 caracteres del segundo>
 
 Las claves **en texto** (`ClaveBookingDemo2026`, etc.) van en el `.env` de `villa-serena-web`, para el canal simulado (variables `CANAL_..._CLAVE`).
 
-**Importante:** Flyway usa estos valores **la primera vez** que crea la base. Si los cambias después, borra la base y vuelve a empezar (`docker compose -f docker-compose.dev.yml down -v` en `villa-serena-infra`).
+**Importante:** cambiar esos hashes en `.env` no modifica los registros ya insertados. Conserva la base de trabajo y coordina cualquier cambio de credenciales; no es necesario borrar sus datos para seguir esta guía.
 
-### 2.3 Encender los servicios por primera vez
+Para recibir los correos en Mailpit, deja una sola definición de cada variable de correo en el `.env` del API. La plantilla publicada contiene también un bloque SMTP al final; no dejes que reemplace estos valores locales:
+
+```env
+MAIL_HOST=localhost
+MAIL_PORT=1025
+MAIL_USER=
+MAIL_PASSWORD=
+MAIL_AUTH=false
+MAIL_STARTTLS=false
+MAIL_FROM=Hotel Villa Serena <no-responder@villaserena.test>
+```
+
+### 2.4 Conectar la web al API local
+
+En el `.env.local` de web, ajusta el destino de su plantilla al API que vas a usar. Para uno en tu computadora con los puertos habituales:
+
+```env
+API_URL=http://localhost:8080
+VILLA_SERENA_BFF_MODE=api
+STAFF_AUTH_MODE=spring
+GUEST_AUTH_MODE=spring
+NEXT_PUBLIC_WS_URL=ws://localhost:8080/ws
+```
+
+En el API, `WEB_URL` y `CORS_ORIGENES` deben corresponder a la web, normalmente `http://localhost:3000`. Si el API es compartido, usa su dirección acordada. Reinicia web al cambiar su entorno. Los modos de demostración de web no prueban la conexión con Spring.
+
+Antes del primer arranque de web, instala sus dependencias desde `villa-serena-web` con `pnpm install --frozen-lockfile`.
+
+### 2.5 Encender los servicios por primera vez
 
 Con Docker disponible (Desktop en Windows/macOS o daemon en Linux), desde `villa-serena-infra`:
 
@@ -132,13 +165,13 @@ La primera vez **descarga las imágenes** (puede tardar varios minutos y necesit
 
 | Servicio | Para qué sirve | Dirección en tu computadora |
 |---|---|---|
-| **PostgreSQL** | La base de datos | Puerto 5432 (la usa el API) |
+| **PostgreSQL 17** | La base de datos | Puerto 5432 (la usa el API) |
 | **Mailpit** | Atrapa los correos de prueba (códigos, confirmaciones y facturas) para verlos sin enviarlos de verdad | http://localhost:8025 |
 | **MinIO** | Guarda archivos (fotos y PDF de facturas). Funciona igual que Cloudflare R2, que se usará después en el servidor | Consola: http://localhost:9001 |
 | **Prometheus** | Recoge las métricas del API | http://localhost:9090 |
 | **Grafana** | Muestra el tablero del API | http://localhost:3001 |
 
-**Imagen de MinIO:** las imágenes oficiales de MinIO ya no están en Docker Hub. Se usa el fork `pgsty/minio`, compatible con S3 (aprobado por el equipo).
+**Imagen de MinIO:** el Compose publicado usa `pgsty/minio` y `pgsty/mc`; consulta su configuración vigente en `villa-serena-infra`.
 
 ---
 
@@ -155,12 +188,13 @@ La primera vez **descarga las imágenes** (puede tardar varios minutos y necesit
 
 | Parte | Carpeta | Comando | Dirección |
 |---|---|---|---|
-| API (Spring) | `villa-serena-api` | Maven Wrapper según la terminal (sección 1.1), con `spring-boot:run` | http://localhost:8080/swagger-ui.html |
+| API (Spring) | `villa-serena-api` | Maven Wrapper según la terminal (sección 1.1), con `spring-boot:run` y `.env` configurado | http://localhost:8080/swagger-ui.html |
 | Web (Next.js) | `villa-serena-web` | `pnpm dev` | http://localhost:3000 |
 | App (Expo) | `villa-serena-movil` | `npx expo start` y escanear el código QR con Expo Go | En el teléfono |
-| Stripe (más adelante) | Cualquiera | `stripe listen --forward-to localhost:8080/<ruta-del-webhook>` | — |
 
-El API debe estar encendido para que funcionen la web y la app. La app necesita que el teléfono y la computadora estén en la **misma red Wi-Fi**.
+El API debe estar encendido para que funcionen la web y la app conectadas. Para usarlo desde el teléfono en la red local, sigue la sección 4.1.
+
+Comprueba `http://localhost:8080/actuator/health` y el acceso del personal desde `http://localhost:3000/panel/login`. Para Spring utiliza los empleados y la contraseña del entorno de demostración del API, no las cuentas del BFF de prueba del README de web. El recorrido funcional completo se verifica en la issue #13.
 
 ---
 
@@ -197,7 +231,7 @@ EXPO_PUBLIC_API_URL=http://192.168.1.50:8080
 | Para probar… | Qué usar | Comando en `villa-serena-movil` |
 |---|---|---|
 | Todo menos las notificaciones push | **Expo Go de SDK 54** (desde expo.dev/go) | `npx expo start` y escanear el código QR |
-| Las notificaciones push | El **development build** (el APK que generó Carlos con EAS) instalado en el teléfono | `npx expo start --dev-client` y escanear el código QR |
+| Las notificaciones push | El **development build** generado por el frente móvil e instalado en el teléfono | `npx expo start --dev-client` y escanear el código QR |
 
 Si el código QR no conecta, prueba `npx expo start --tunnel` (más lento; el API sigue usando la IP local).
 
@@ -208,6 +242,14 @@ npx expo start -c
 ```
 
 **Notificaciones push:** necesitan Internet en el teléfono y el development build; en Expo Go no funcionan. Solo llegan con la reserva `EN_ESTADIA`.
+
+---
+
+### 4.2 Probar pagos con Recurrente
+
+Configura las claves de Sandbox `RECURRENTE_PUBLIC_KEY`, `RECURRENTE_SECRET_KEY` y `RECURRENTE_WEBHOOK_SECRET` únicamente en el entorno del API. Para recibir avisos del proveedor, registra una URL accesible que termine en `/api/v1/pagos/recurrente/webhook`; un `localhost` del equipo no es accesible para Recurrente. El equipo puede acordar un túnel temporal al API.
+
+La vuelta del navegador no confirma el pago. Sigue el [ADR-017](../03-arquitectura/adr/ADR-017-pasarela-recurrente.md), el [contrato vigente](../03-arquitectura/contrato-api.md) y el README del API para la configuración y comprobación del webhook. La [guía de Stripe CLI](stripe-cli.md) queda como referencia histórica para el proveedor anterior, no como paso de arranque actual. La adaptación de pagos de web se sigue en [web #61](https://github.com/villaserenaguatee/villa-serena-web/issues/61); consulta su estado publicado antes de probar el recorrido.
 
 ---
 
@@ -238,11 +280,11 @@ Una rama personal puede actualizarse mediante rebase sobre `origin/develop` cuan
 
 Los cambios de migraciones requieren comprobar el arranque del API con Flyway. Los cambios del contrato se registran en issues de docs y modifican `villa-serena-docs/openapi.yaml`, la fuente de verdad. API, web y app consumen un commit fijo de docs sin mantener copias YAML locales; web y app regeneran sus tipos con la herramienta de docs. Consulta la [guía del contrato](../03-arquitectura/contrato-api.md).
 
-Los perfiles `local`, `dev` y `prod` distinguen los entornos y aprovechan la configuración existente. Cuando el perfil `local` esté configurado, el API puede arrancar con el Maven Wrapper de la terminal (sección 1.1) y `spring-boot:run -Dspring-boot.run.profiles=local`. Los pasos de instalación y arranque siguen siendo ejemplos operativos para la persona, adaptables a su sistema.
+Para el arranque publicado del API usa su configuración existente y activa `demo` cuando necesites cargar datos ficticios. No es necesario crear perfiles nuevos. Los pasos de instalación y arranque se adaptan a la terminal de cada persona.
 
 Para las pruebas desde frontend, el equipo puede acordar un Cloudflare Tunnel temporal hacia el API. Mantiene autenticación, expone solo lo necesario y se cierra al terminar. Los servicios de administración de Docker y las credenciales permanecen fuera de esa exposición.
 
-Cómo subir tu trabajo y abrir el pull request: `15 - Prompts de IA/00 - Como usar los prompts.md`, sección 3.
+Cómo subir tu trabajo y abrir el pull request: [CONTRIBUTING.md](../CONTRIBUTING.md). Las asignaciones y fechas de `historico/` e `historial-prompts/` son referencias históricas; no sustituyen el reparto del equipo ni el roadmap vigente.
 
 ---
 
