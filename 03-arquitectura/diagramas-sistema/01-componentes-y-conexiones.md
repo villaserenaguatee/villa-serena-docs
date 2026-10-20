@@ -33,7 +33,6 @@ flowchart LR
   subgraph docker[Servicios previstos en Docker local]
     DB[(PostgreSQL 17)]
     M[Mailpit · SMTP de prueba]
-    F[MinIO · fotos y PDF]
     PR[Prometheus]
     G[Grafana]
     PR --> G
@@ -44,7 +43,7 @@ flowchart LR
   H -->|HTTP + JWT · SecureStore| S
   H -.->|WS directo · JWT| WS
   S --> DB
-  S --> F
+  S --> F[R2 remoto en dev · S3 en prod]
   N --> DB
   N --> M
   N --> X[Expo Push → FCM → teléfono]
@@ -54,6 +53,8 @@ flowchart LR
   CH[Canal externo simulado] -->|Canal + clave| S
   PR -->|Lee Actuator / Micrometer| S
 ```
+
+Almacenamiento actualizado por [ADR-007](../adr/ADR-007-almacenamiento-r2-s3.md); los demás componentes del diagrama conservan su alcance de plan.
 
 ## Reglas y límites
 

@@ -50,7 +50,7 @@ Para evitar el agotamiento y la parálisis por exceso de alcance, el desarrollo 
      * Notificación de estado del pedido (`En preparación` $\rightarrow$ `En camino` $\rightarrow$ `Entregado`).
   3. **Mantenimiento y Pisos:**
      * Módulo de limpieza para el personal (habitaciones por limpiar, en limpieza, limpias).
-     * Reporte de incidencias y averías con fotografía subida a almacenamiento de objetos (MinIO / S3).
+     * Reporte de incidencias y averías con fotografía subida a almacenamiento de objetos (R2 en dev / S3 en producción).
   4. **Recepción Visual:**
      * Vista de calendario interactivo tipo Gantt para supervisión rápida de ocupación.
 

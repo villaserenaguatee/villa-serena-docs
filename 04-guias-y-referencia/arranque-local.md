@@ -1,6 +1,6 @@
 # Guía de Arranque del Entorno Local
 
-Instrucciones para configurar y encender el ecosistema local de desarrollo (Docker Compose con PostgreSQL, Mailpit, MinIO, Prometheus y Grafana; API Spring Boot, Web Next.js y App Expo).
+Instrucciones para configurar y encender el ecosistema local de desarrollo (Docker Compose con PostgreSQL, Mailpit, Prometheus y Grafana; R2 remoto para archivos en dev; API Spring Boot, Web Next.js y App Expo).
 
 Para el flujo actual de web y API, prepara Docker, API y web. La app se retoma según el [roadmap por versiones](../01-metodologia/roadmap-versiones.md); no hace falta instalar Expo para trabajar solo en web o API. Esta guía no fija una fecha de entrega.
 
@@ -21,7 +21,7 @@ Para el flujo actual de web y API, prepara Docker, API y web. La app se retoma s
 
 No hace falta instalar Maven: el API trae su propio Maven (`mvnw`).
 
-**Cuentas:** PostgreSQL, Mailpit, MinIO y Grafana se configuran localmente. Para probar pagos se usa **Recurrente Sandbox**, con claves privadas en el API; consulta la sección 4.2. Expo solo se necesita para el trabajo de la app.
+**Cuentas:** PostgreSQL, Mailpit y Grafana se configuran localmente; los archivos de `dev` usan una cuenta R2 remota según [ADR-007](../03-arquitectura/adr/ADR-007-almacenamiento-r2-s3.md). Para probar pagos se usa **Recurrente Sandbox**, con claves privadas en el API; consulta la sección 4.2. Expo solo se necesita para el trabajo de la app.
 
 ---
 
@@ -41,7 +41,7 @@ Los comandos de Git, pnpm, Expo y Docker Compose son comunes. Las variantes de M
 | Probar el API | `mvnw.cmd test` | `./mvnw.cmd test` | `./mvnw test` |
 | Copiar el entorno de ejemplo | `copy .env.example .env` | `Copy-Item .env.example .env` | `cp .env.example .env` |
 
-Los datos ficticios del API se habilitan con `SPRING_PROFILES_ACTIVE=demo` en su `.env` (sección 2.3). En macOS/Linux, si el wrapper no tiene permiso de ejecución, `chmod +x mvnw` lo habilita. Los ejemplos con `<...>` son marcadores que se sustituyen antes de ejecutarlos; no son comandos para copiar literalmente.
+El API tiene perfiles `local`, `dev` y `prod`; `demo` se retira. Los fixtures se cargan manualmente, después del esquema (sección 2.3). En macOS/Linux, si el wrapper no tiene permiso de ejecución, `chmod +x mvnw` lo habilita. Los ejemplos con `<...>` son marcadores que se sustituyen antes de ejecutarlos; no son comandos para copiar literalmente.
 
 ---
 
@@ -63,75 +63,23 @@ Reparto registrado por frentes: web/móvil, Kimberly y Alexander; backend, Pablo
 
 ### 2.2 Crear tu `.env`
 
-**Qué es:** un archivo de texto con la **configuración privada de tu computadora** (contraseñas, claves y direcciones). Cada repositorio usa su propia plantilla `.env.example`: infra y API usan `.env`; web puede usar `.env.local`. El API importa su `.env` como propiedades de Spring. Estos archivos privados no se suben a GitHub.
+**Qué es:** un archivo de texto con la **configuración privada de tu computadora** (contraseñas, claves y direcciones). API usa `.env.local.example` o `.env.dev.example` para `.env.local` o `.env.dev`; infra conserva `.env.example` para su Compose auxiliar y web usa `.env.local`. El API importa solo el archivo de su perfil como propiedades de Spring. Estos archivos privados no se suben a GitHub.
 
-**Cómo crearlo** (en cada repositorio que tenga `.env.example`):
+**Cómo crearlo:**
 
-1. Copia `.env.example` desde cada repositorio; la sección 1.1 muestra el comando. En web usa `.env.local` como destino y evita valores contradictorios en otros archivos de entorno.
-2. Abre `.env` con tu editor y sustituye cada `<TU_...>` por tu valor. **Los símbolos `<` y `>` no van:** se sustituye todo.
-   ```env
-   # Antes
-   MINIO_ROOT_PASSWORD=<TU_CONTRASENA_MINIO>
-   # Después
-   MINIO_ROOT_PASSWORD=VillaSerena2026
-   ```
-3. Para las contraseñas locales de infra:
-   - Sin espacios alrededor del `=` y sin comillas.
-   - Solo letras, números y, si quieres, `!`, `-` o `_`. **Evita `#`, `$` y `"`**.
-   - Las contraseñas de MinIO deben tener **al menos 8 caracteres**.
-   - Como todo es local y de prueba, las contraseñas **las inventas tú**.
-4. Los valores deben coincidir **entre los servicios que conectas**: `DB_PASSWORD` del API con `POSTGRES_PASSWORD` de infra; credenciales y buckets de MinIO entre API e infra; claves del canal simulado con sus hashes del API. Cada entorno local puede tener valores distintos. Para un API compartido, el equipo acuerda sus accesos por un canal privado.
-5. **Nunca subas el `.env` ni pegues su contenido en un chat de IA.** Si la IA necesita saber qué variables hay, muéstrale el `.env.example`.
+1. Desde API, elige `local` mínimo o `dev` con integraciones y copia su plantilla a `.env.local` o `.env.dev`.
+2. Completa las variables de [ENTORNOS del API](https://github.com/villaserenaguatee/villa-serena-api/blob/dev/docs/ENTORNOS.md). Como mínimo, los comandos Compose necesitan `DB_PASSWORD` y `JWT_SECRET`; dev añade la contraseña de Grafana. El API puede arrancar sin R2, pero para usar archivos debes configurarlo.
+3. Los archivos se leen como propiedades: usa `CLAVE=valor`, sin `source`, sin expansiones de shell ni comillas. Genera contraseñas locales aleatorias; no copies secretos de producción.
+4. Si usas el Compose auxiliar de infra en lugar del de API, haz coincidir su contraseña/usuario con la configuración de conexión del API y evita ejecutar ambos sobre los mismos puertos.
+5. Nunca subas los archivos privados ni pegues secretos en chats. Las credenciales R2 del API se limitan al bucket de desarrollo y son distintas del token administrativo y del backend de Terraform.
 
 ### 2.3 Configurar el API y sus datos de prueba
 
-Completa `DB_URL`, `DB_USER` y `DB_PASSWORD` para tu PostgreSQL, `JWT_SECRET` y las credenciales de MinIO según el `.env.example` del API. `JWT_SECRET` debe contener una clave Base64 de al menos 32 bytes; la plantilla indica cómo generarla.
+Sigue el [checklist de entornos del API](https://github.com/villaserenaguatee/villa-serena-api/blob/dev/docs/ENTORNOS.md) y el [procedimiento R2/S3 de infra](https://github.com/villaserenaguatee/villa-serena-infra/blob/main/docs/ALMACENAMIENTO.md). `local` mínimo no requiere nube; las pruebas locales de archivos se hacen con `dev`, directamente contra R2.
 
-Para cargar hotel, habitaciones, tarifas, menú, empleados y canales ficticios, activa `SPRING_PROFILES_ACTIVE=demo`. Flyway carga `db/demo/V6__datos_iniciales.sql` además del esquema y exige los tres hashes siguientes. Sin ese perfil no se cargan datos ficticios nuevos. No actives `demo` en producción.
+Flyway aplica solo el esquema. Ningún perfil carga hotel, catálogos o empleados ficticios automáticamente. El script `scripts/demo/load-data.sql` del API se ejecuta explícitamente después del arranque contra una instancia local con tablas de negocio vacías; consulta su [procedimiento de carga](https://github.com/villaserenaguatee/villa-serena-api/blob/dev/README.md#carga-local-explícita). Sus hashes se pasan al proceso de `psql`, no a Flyway. No ejecutes fixtures en producción.
 
-**1. Contraseña de los empleados de prueba.** El equipo acuerda **por mensaje privado** una contraseña de demostración (por ejemplo `VillaSerena2026`). Genera su hash BCrypt:
-
-```bat
-docker run --rm httpd:2.4-alpine htpasswd -nbBC 10 "" VillaSerena2026
-```
-
-La respuesta empieza con `:$2y$10$...`. Copia todo **sin los dos puntos del inicio**:
-
-```env
-DEMO_PASSWORD_HASH=$2y$10$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-```
-
-Con esa contraseña entran los empleados de prueba (sus correos están en `db/demo/V6__datos_iniciales.sql`). El hash contiene `$`: en el `.env` del API está bien así (la regla de evitar `$` es para el `.env` de Docker).
-
-**2. Claves de los dos canales.** Inventa una clave para cada canal (por ejemplo `ClaveBookingDemo2026` y `ClaveExpediaDemo2026`) y genera su SHA-256:
-
-```bat
-docker run --rm alpine sh -c "printf %s ClaveBookingDemo2026 | sha256sum"
-docker run --rm alpine sh -c "printf %s ClaveExpediaDemo2026 | sha256sum"
-```
-
-Cada uno responde 64 caracteres seguidos de un guion. Copia solo los 64 caracteres:
-
-```env
-CANAL1_KEY_HASH=<64 caracteres del primero>
-CANAL2_KEY_HASH=<64 caracteres del segundo>
-```
-
-Las claves **en texto** (`ClaveBookingDemo2026`, etc.) van en el `.env` de `villa-serena-web`, para el canal simulado (variables `CANAL_..._CLAVE`).
-
-**Importante:** cambiar esos hashes en `.env` no modifica los registros ya insertados. Conserva la base de trabajo y coordina cualquier cambio de credenciales; no es necesario borrar sus datos para seguir esta guía.
-
-Para recibir los correos en Mailpit, deja una sola definición de cada variable de correo en el `.env` del API. La plantilla publicada contiene también un bloque SMTP al final; no dejes que reemplace estos valores locales:
-
-```env
-MAIL_HOST=localhost
-MAIL_PORT=1025
-MAIL_USER=
-MAIL_PASSWORD=
-MAIL_AUTH=false
-MAIL_STARTTLS=false
-MAIL_FROM=Hotel Villa Serena <no-responder@villaserena.test>
-```
+El bootstrap del primer administrador está deshabilitado por defecto. Si lo necesitas, habilítalo explícitamente y sigue el checklist del API: solo crea el primer ADMIN, exige cambio de contraseña y no sustituye credenciales existentes. Si vas a cargar fixtures sobre tablas vacías, deja el bootstrap apagado.
 
 ### 2.4 Conectar la web al API local
 
@@ -151,52 +99,35 @@ Antes del primer arranque de web, instala sus dependencias desde `villa-serena-w
 
 ### 2.5 Encender los servicios por primera vez
 
-Con Docker disponible (Desktop en Windows/macOS o daemon en Linux), desde `villa-serena-infra`:
+Con Docker disponible, elige los comandos de [ENTORNOS del API](https://github.com/villaserenaguatee/villa-serena-api/blob/dev/docs/ENTORNOS.md). Desde `villa-serena-api`, para dev con el API en Docker:
 
-```bat
-docker compose -f docker-compose.dev.yml up -d
+```bash
+docker compose --env-file .env.dev -f compose.dev.yml up -d --build --wait
 ```
 
-La primera vez **descarga las imágenes** (puede tardar varios minutos y necesita buena conexión a Internet). Después, comprueba que funcionan las direcciones de la sección 3.
+Para ejecutar el API con Maven, arranca solo las dependencias según esa misma guía y utiliza `-Dspring-boot.run.profiles=dev`. No arranques al mismo tiempo el API de Docker y Maven sobre el mismo puerto. El Compose auxiliar de infra sigue disponible para dependencias; no incluye un servidor de objetos.
 
----
+## 3. Servicios de desarrollo
 
-## 3. Qué servicios corren en Docker
-
-| Servicio | Para qué sirve | Dirección en tu computadora |
+| Servicio | Dónde corre | Dirección |
 |---|---|---|
-| **PostgreSQL 17** | La base de datos | Puerto 5432 (la usa el API) |
-| **Mailpit** | Atrapa los correos de prueba (códigos, confirmaciones y facturas) para verlos sin enviarlos de verdad | http://localhost:8025 |
-| **MinIO** | Guarda archivos (fotos y PDF de facturas). Funciona igual que Cloudflare R2, que se usará después en el servidor | Consola: http://localhost:9001 |
-| **Prometheus** | Recoge las métricas del API | http://localhost:9090 |
-| **Grafana** | Muestra el tablero del API | http://localhost:3001 |
+| PostgreSQL 17 | Docker | `localhost:5432` |
+| Mailpit | Docker | `http://localhost:8025`; SMTP `localhost:1025` |
+| Prometheus | Docker | `http://localhost:9090` |
+| Grafana | Docker | `http://localhost:3001` |
+| Cloudflare R2 | Remoto | Endpoint y dominio configurados mediante infra |
 
-**Imagen de MinIO:** el Compose publicado usa `pgsty/minio` y `pgsty/mc`; consulta su configuración vigente en `villa-serena-infra`.
-
----
+MinIO se retira. R2 necesita Internet y credenciales válidas para probar archivos. Las pruebas automatizadas habituales no requieren R2 ni S3 y no usan MinIO.
 
 ## 4. Cada día: encender el proyecto
 
-1. Comprueba que Docker está disponible con `docker info`: Docker Desktop en Windows/macOS o Docker Engine/Desktop en Linux.
-2. Enciende los servicios, dentro de `villa-serena-infra`:
-   ```bat
-   docker compose -f docker-compose.dev.yml up -d
-   docker compose -f docker-compose.dev.yml ps -a
-   ```
-   Todos deben decir `running`, menos `minio-init`, que dice `exited (0)`. Es normal: solo crea los buckets y termina. Tus datos se conservan de un día a otro.
-3. Enciende lo que vayas a usar, cada uno en **su propia ventana de terminal**:
+1. Comprueba Docker con `docker info`.
+2. Levanta el perfil elegido del API siguiendo su checklist y comprueba `http://localhost:8080/actuator/health`.
+3. En web ejecuta `pnpm dev`; en la app, cuando corresponda, `npx expo start`.
+4. Accede a `http://localhost:3000/panel/login` con el administrador operativo o los usuarios ficticios que hayas cargado deliberadamente. Un API saludable puede tener todas las tablas de negocio vacías.
+5. Cuando trabajes con archivos remotos, ejecuta la comprobación explícita de R2/S3 indicada en infra; `UP` no certifica acceso al bucket.
 
-| Parte | Carpeta | Comando | Dirección |
-|---|---|---|---|
-| API (Spring) | `villa-serena-api` | Maven Wrapper según la terminal (sección 1.1), con `spring-boot:run` y `.env` configurado | http://localhost:8080/swagger-ui.html |
-| Web (Next.js) | `villa-serena-web` | `pnpm dev` | http://localhost:3000 |
-| App (Expo) | `villa-serena-movil` | `npx expo start` y escanear el código QR con Expo Go | En el teléfono |
-
-El API debe estar encendido para que funcionen la web y la app conectadas. Para usarlo desde el teléfono en la red local, sigue la sección 4.1.
-
-Comprueba `http://localhost:8080/actuator/health` y el acceso del personal desde `http://localhost:3000/panel/login`. Para Spring utiliza los empleados y la contraseña del entorno de demostración del API, no las cuentas del BFF de prueba del README de web. El recorrido funcional completo se verifica en la issue #13.
-
----
+El recorrido funcional completo se verifica en la issue #13. Para usar el API desde el teléfono, sigue la sección 4.1.
 
 ### 4.1 Probar la app en el teléfono
 
@@ -280,7 +211,7 @@ Una rama personal puede actualizarse mediante rebase sobre `origin/develop` cuan
 
 Los cambios de migraciones requieren comprobar el arranque del API con Flyway. Los cambios del contrato se registran en issues de docs y modifican `villa-serena-docs/openapi.yaml`, la fuente de verdad. API, web y app consumen un commit fijo de docs sin mantener copias YAML locales; web y app regeneran sus tipos con la herramienta de docs. Consulta la [guía del contrato](../03-arquitectura/contrato-api.md).
 
-Para el arranque publicado del API usa su configuración existente y activa `demo` cuando necesites cargar datos ficticios. No es necesario crear perfiles nuevos. Los pasos de instalación y arranque se adaptan a la terminal de cada persona.
+Para el arranque del API elige `local` o `dev` según su guía. Los fixtures se cargan manualmente; no actives el perfil retirado `demo`. Los pasos de instalación y arranque se adaptan a la terminal de cada persona.
 
 Para las pruebas desde frontend, el equipo puede acordar un Cloudflare Tunnel temporal hacia el API. Mantiene autenticación, expone solo lo necesario y se cierra al terminar. Los servicios de administración de Docker y las credenciales permanecen fuera de esa exposición.
 
@@ -296,10 +227,11 @@ Cómo subir tu trabajo y abrir el pull request: [CONTRIBUTING.md](../CONTRIBUTIN
    docker compose -f docker-compose.dev.yml down
    ```
    Esto **no borra** los datos. En equipos con Docker Desktop, cerrarlo también detiene sus servicios.
-3. **Solo si quieres empezar de cero** (borra la base de datos y los archivos de MinIO):
+3. **Solo si decides borrar los datos locales** (PostgreSQL y demás volúmenes del proyecto, después de respaldarlos):
    ```bat
    docker compose -f docker-compose.dev.yml down -v
    ```
+   Esto no borra objetos remotos de R2/S3. Para los stacks propios del API usa sus comandos de parada con el archivo y proyecto correspondientes.
 
 ---
 

@@ -1,5 +1,7 @@
 # Tecnologías y Arquitectura del Sistema
 
+> Almacenamiento actualizado por [ADR-007](adr/ADR-007-almacenamiento-r2-s3.md): R2 en `dev`, S3 en `prod` y `local` mínimo sin nube. Los comandos y variables vigentes están en [ENTORNOS del API](https://github.com/villaserenaguatee/villa-serena-api/blob/dev/docs/ENTORNOS.md); los diseños de despliegue y backups de otras secciones no acreditan aprovisionamiento.
+
 Este documento describe la arquitectura global, topología de servicios, patrón BFF, seguridad (JWT y CORS) y stack tecnológico oficial para el ecosistema de **Villa Serena**.
 
 ---
@@ -55,8 +57,8 @@ Confirmadas por el catedrático. No se sustituyen.
 | AD-04 | **La app llama directamente a Spring** (API y WebSocket) con su propio JWT guardado en `expo-secure-store`, **sin pasar por el BFF** | La app no usa cookies de navegador; HU-HUE-11 |
 | AD-05 | **CORS** en Spring permite solo los orígenes propios (en el hito, `http://localhost:3000`) | Obligatorio |
 | AD-06 | **PostgreSQL 17** con migraciones **Flyway** y **Spring Data JPA**. Las reglas que nunca deben romperse también son **restricciones de la base de datos** (sección 5) | Doble protección |
-| AD-07 | **Hito en local con Docker Compose:** PostgreSQL, Mailpit, MinIO, Prometheus y Grafana en contenedores; el API, la web y la app se ejecutan en la computadora de cada integrante | D-22; ALC-TRA-10 |
-| AD-08 | **Después del hito:** una sola **VPS** con Docker Compose detrás de **Cloudflare** (DNS, proxy, SSL, WAF y **Tunnel**: la VPS no abre puertos). Los archivos pasan de MinIO a **Cloudflare R2** sin cambiar código (API compatible con S3) | D-12; ALC-TRA-06 |
+| AD-07 | **Almacenamiento por entorno:** `local` mínimo sin nube; `dev` con R2 remoto y servicios auxiliares Docker; `prod` con S3. Ver [ADR-007](adr/ADR-007-almacenamiento-r2-s3.md) | D-22; ALC-TRA-10 |
+| AD-08 | **Después del hito:** una sola **VPS** con Docker Compose detrás de **Cloudflare** (DNS, proxy, SSL, WAF y **Tunnel**: la VPS no abre puertos). Los archivos usan **R2 remoto en dev** y **Amazon S3 en producción**, mediante el adaptador S3 configurable; ver [ADR-007](adr/ADR-007-almacenamiento-r2-s3.md) | D-12; ALC-TRA-06 |
 | AD-09 | **Tiempo real con WebSocket + STOMP**, **solo para 4 eventos**: nuevo pedido, cambio de estado del pedido, nueva solicitud y cambio de estado de habitación | D-21; documento 07, sección 12 |
 | AD-10 | **Notificaciones push** con **Expo Push Service sobre FCM**, enviadas por Spring, **solo** para pedido `ENTREGADO` y solicitud `ATENDIDA` | ALC-APP-10; HU-HUE-17 |
 | AD-11 | **App con React Native + Expo SDK 54** (Expo Router). Expo Go de SDK 54 (desde expo.dev/go) para pruebas rápidas; **development build** para probar push; **APK con EAS Build** | Decisión del 1 de octubre: se queda en SDK 54 |
@@ -66,7 +68,7 @@ Confirmadas por el catedrático. No se sustituyen.
 | AD-15 | **Grafana en local:** Spring Actuator + Micrometer → **Prometheus** → **Grafana**, con un tablero de estado del API, peticiones, errores HTTP, CPU y RAM. Logs centralizados (Loki) y alertas son **Nivel 2** | ALC-TRA-09 y ALC-TRA-09b |
 | AD-16 | **5 repositorios en `villaserenaguate`:** `villa-serena-docs`, `villa-serena-infra`, `villa-serena-api`, `villa-serena-web` y `villa-serena-movil`. El contrato canónico vive en `villa-serena-docs/openapi.yaml`; API lo implementa y los frontends generan tipos directamente desde docs, sin copias YAML locales | Separación obligatoria; un contrato de referencia |
 | AD-17 | **Pasarela Recurrente (reemplaza a Stripe):** cobro en Quetzales (GTQ) mediante Checkout alojado de Recurrente y webhooks con firma criptográfica (ver [ADR-017](adr/ADR-017-pasarela-recurrente.md)) | Moneda local (GTQ), pasarela guatemalteca; HU-HUE-06 |
-| AD-18 | **Datos iniciales con Flyway:** canales y sus claves (con hash), catálogo de artículos con su máximo, datos del hotel y fiscales, serie y número inicial de la factura, y usuarios de prueba de cada rol con **dos Administradores**. El **primer Administrador** también se puede crear al arrancar con variables de entorno | Índice de HU, sección 5; V-04, V-06 |
+| AD-18 | **Flyway solo versiona el esquema.** Los fixtures locales se cargan explícitamente después del arranque. El primer administrador se crea únicamente con bootstrap habilitado, sin generar administradores adicionales | Índice de HU, sección 5; V-04, V-06 |
 | AD-19 | **Zona horaria America/Guatemala:** las fechas se guardan en UTC y se convierten a esta zona para mostrar y para calcular "hoy", la regla de 48 horas, la ventana del check-out y el check-in | Necesario para las reglas de fecha de las historias |
 
 ---
@@ -87,7 +89,7 @@ APP ANDROID (huésped)
 api — Spring Boot
   ├──► PostgreSQL 17 ........ datos            (Docker)
   ├──► Mailpit .............. correos de prueba (Docker)
-  ├──► MinIO ................ fotos y PDF       (Docker)
+  ├──► Cloudflare R2 ........ fotos y PDF       (remoto; perfil dev)
   ├──► Expo Push → FCM ...... notificaciones push
   └──◄ Recurrente ........... avisos de pago por webhook accesible desde el proveedor
 
@@ -106,7 +108,7 @@ Grafana (Docker) ─────muestra──────────► Prometh
  ┌───────────────▼──────────────── VPS · Docker Compose ────────────────────┐
  │  web (Next.js) · api (Spring) · postgres · cloudflared · monitoreo        │
  └───────────────────────────────────────────────────────────────────────────┘
-   Archivos y backups: Cloudflare R2 · Correo: Resend · Pagos: Recurrente · Push: Expo/FCM
+   Archivos: Amazon S3 (assets públicos por CloudFront) · Backups: configuración independiente · Correo: Resend · Pagos: Recurrente · Push: Expo/FCM
 ```
 
 ---
@@ -128,7 +130,7 @@ Grafana (Docker) ─────muestra──────────► Prometh
 | **Spring Mail** + **Thymeleaf** | 3 correos: código OTP, confirmación de reserva y factura. En local, **Mailpit**; después, **Resend** |
 | **Cliente HTTP de Recurrente** | Checkout alojado, verificación del webhook y reembolso total; conserva registros históricos del proveedor anterior |
 | **OpenPDF** | PDF de la factura |
-| **AWS SDK S3** | Archivos en **MinIO** (local) o **Cloudflare R2** (después), con URL firmadas para los privados |
+| **AWS SDK S3** | Archivos en **Cloudflare R2** (dev) o **Amazon S3** (prod), con credenciales por entorno y URL firmadas para los privados |
 | **RestClient** de Spring | Envío de push a Expo Push API |
 | **springdoc-openapi** | OpenAPI generado y Swagger UI para contrastar la implementación; los tipos TypeScript se generan desde el contrato canónico de docs |
 | **Actuator** + **Micrometer (Prometheus)** | Salud y métricas para Grafana |
@@ -174,13 +176,13 @@ Grafana (Docker) ─────muestra──────────► Prometh
 | **PostgreSQL 17** (contenedor, volumen persistente) | Base de datos única |
 | **Extensión `btree_gist`** | Restricción `EXCLUDE` contra reservas traslapadas en una misma habitación |
 | **Flyway** | Migraciones y datos iniciales (ejecutados por Spring al arrancar) |
-| **MinIO** (local) / **Cloudflare R2** (después) | Bucket **público**: fotos del hotel, tipos de habitación, menú y amenidades. Bucket **privado**: PDF de facturas y fotos de incidencias |
+| **Cloudflare R2** (dev) / **Amazon S3** (prod) | Bucket **público**: fotos del hotel, tipos de habitación, menú y amenidades. Bucket **privado**: PDF de facturas y fotos de incidencias |
 
 ### 4.5 Entorno, monitoreo y calidad
 
 | Tecnología | Uso | Cuándo |
 |---|---|---|
-| **Docker + Docker Compose** | Contenedores locales: `postgres`, `mailpit`, `minio`, `prometheus`, `grafana` | Hito |
+| **Docker + Docker Compose** | Contenedores locales: `postgres`, `mailpit`, `prometheus`, `grafana` | Hito |
 | **Grafana** + **Prometheus** | Tablero mínimo del API (ALC-TRA-09) | Hito |
 | **Recurrente Sandbox** | Probar el checkout con webhook accesible mediante una URL acordada; ver la guía de arranque | Desarrollo y demo |
 | **Loki** + alerta por caída o consumo alto | ALC-TRA-09b | Nivel 2 |
@@ -339,14 +341,14 @@ Las carpetas fuera del hito son una referencia para después; no hay que impleme
 
 | Paso | Comando o detalle |
 |---|---|
-| Servicios | `docker compose -f docker-compose.dev.yml up -d` desde `villa-serena-infra` (PostgreSQL, Mailpit, MinIO, Prometheus y Grafana) |
-| Backend | `./mvnw spring-boot:run` en `villa-serena-api` (Flyway crea el esquema; el perfil `demo` carga los datos ficticios) |
+| Servicios | `docker compose -f docker-compose.dev.yml up -d` desde `villa-serena-infra` (PostgreSQL, Mailpit, Prometheus y Grafana; R2 remoto para archivos en dev) |
+| Backend | `./mvnw spring-boot:run -Dspring-boot.run.profiles=dev` en `villa-serena-api`; Flyway crea solo el esquema, fixtures manuales posteriores |
 | Web | `pnpm dev` en `villa-serena-web` (`http://localhost:3000`) |
 | App | `npx expo start` en `villa-serena-movil` (Expo Go de SDK 54) o el development build para probar push |
 | Recurrente | Sandbox y webhook `/api/v1/pagos/recurrente/webhook` accesible por el proveedor; ver [arranque local](../04-guias-y-referencia/arranque-local.md#42-probar-pagos-con-recurrente) |
 | Correos | Se ven en la interfaz web de Mailpit |
 | Monitoreo | Tablero de Grafana con estado del API, peticiones, errores HTTP, CPU y RAM |
-| Secretos | Un `.env` local (claves de Recurrente Sandbox, clave de firma del JWT, credenciales de MinIO, claves del canal simulado), **fuera de Git** |
+| Secretos | Archivos `.env.local` o `.env.dev` del API (Recurrente Sandbox, JWT, credenciales R2 de dev y claves de canal), **fuera de Git** |
 
 **Para la demostración:** la app en el teléfono debe llegar al API de la computadora (misma red Wi-Fi y la IP local de la computadora). El push necesita el development build y conexión a Internet.
 
@@ -362,7 +364,7 @@ Se planifica después de validar el MVP según el [roadmap](../01-metodologia/ro
 | **Equivalentes en AWS** | EC2 `t3.medium` o Lightsail de 4 GB |
 | **Sistema** | Ubuntu 24.04 LTS, Docker Engine + Compose, usuario sin root, firewall que bloquea todo lo entrante excepto SSH |
 | **Contenedores** | `web`, `api`, `postgres` (volumen persistente), `cloudflared` y monitoreo |
-| **Archivos** | Cloudflare R2 (mismo código que MinIO) |
+| **Archivos** | Amazon S3; públicos por CloudFront/OAC y privados con URLs firmadas |
 | **Correo** | Resend |
 | **App** | APK con EAS Build apuntando a `https://api.<dominio>` |
 | **Backups** | `pg_dump` diario comprimido → Cloudflare R2, 7 días de retención; restauración probada |
@@ -472,10 +474,10 @@ ALC-TRA-07. Se configura después del hito.
 | Recurrente | Sandbox, sin cobros reales | No estima tarifas de producción | Desarrollo y demo |
 | Expo (EAS) + Firebase (FCM) | Free | $0 | Hito |
 | GitHub | Free | $0 | Hito |
-| Mailpit, MinIO, Prometheus, Grafana (Docker local) | Software libre | $0 | Hito |
+| Mailpit, Prometheus, Grafana (Docker local) | Software libre | $0 | Desarrollo |
 | **VPS** (pagada o AWS) | Por confirmar | Según proveedor | Después |
 | **Dominio** | Anual | ~$10–15 al año | Después |
-| Cloudflare (DNS, proxy, WAF, Tunnel, R2) | Free | $0 | Después |
+| Cloudflare y almacenamiento R2/S3/CloudFront | Según servicios y consumo | Consultar proveedor | Según entorno |
 | Resend | Free | $0 | Después |
 
 ---

@@ -10,7 +10,7 @@ sequenceDiagram
   participant S as API check-out
   participant D as PostgreSQL
   participant F as Facturación / PDF
-  participant M as MinIO privado
+  participant M as R2 dev / S3 prod · privado
   participant O as Outbox / correo
   U->>S: Confirmar salida, NIT/CF y nombre
   S->>D: Revalidar dueño/rol, estadía, pedidos y saldo

@@ -17,4 +17,4 @@ Este directorio almacenará los Registros de Decisiones de Arquitectura (*Archit
 | **AD-04** | Aplicación Móvil: React Native con Expo SDK 54 | `villa-serena-movil` |
 | [**ADR-017**](ADR-017-pasarela-recurrente.md) | **Pasarela de Pagos Recurrente (reemplaza a Stripe):** cobro en Quetzales (GTQ) y webhooks | Pagos |
 | **AD-06** | Comunicación Bidireccional: WebSockets sobre STOMP con tickets efímeros | Tiempo Real |
-| **AD-07** | Almacenamiento de Objetos: Compatible con S3 (MinIO en local / Cloudflare R2 en producción) | Archivos |
+| [**AD-07**](ADR-007-almacenamiento-r2-s3.md) | Almacenamiento de objetos: R2 remoto en dev, S3 en producción y adaptador mínimo en local; se retira MinIO | Archivos |

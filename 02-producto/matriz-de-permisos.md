@@ -245,7 +245,7 @@ Solo los **4 eventos** del documento 07 (sección 12). Spring autoriza cada susc
 
 La web se conecta con un ticket de 60 segundos obtenido a través del BFF. La app se conecta con su propio JWT de huésped, sin pasar por el BFF.
 
-### 7.5 Archivos (Cloudflare R2; en local, MinIO)
+### 7.5 Archivos (R2 en dev / Amazon S3 en producción)
 
 | Contenido | Acceso |
 |---|---|
