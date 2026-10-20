@@ -1,5 +1,7 @@
 # 00 — Cómo usar los prompts
 
+> **Referencia histórica.** Las instrucciones, fechas, responsables y rutas que siguen pertenecen al plan anterior. Para trabajo actual usa las issues vigentes, [CONTRIBUTING.md](../../CONTRIBUTING.md), el [roadmap](../../01-metodologia/roadmap-versiones.md) y la [guía de arranque](../arranque-local.md).
+
 > **Para qué sirve:** guía paso a paso para que cada integrante use su prompt con la IA, aunque no tenga experiencia con estas tecnologías.
 > **Basado en:** 13 — Plan de Trabajo y 14 — Tecnologías y Arquitectura.
 > **Comandos de ejemplo:** Git usa los mismos comandos en Windows, macOS y Linux. La guía 16, sección 1.1, indica las variantes de Maven Wrapper y archivos de entorno. El agente adapta los ejemplos a la terminal de la persona.

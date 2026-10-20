@@ -11,7 +11,7 @@ Este documento define el perímetro funcional del PMS Villa Serena: qué compone
 3. [Decisiones generales](#3-decisiones-generales)
 4. [Flujo principal del sistema](#4-flujo-principal-del-sistema)
 5. [Alcance del sistema](#5-alcance-del-sistema)
-6. [Después del 10 de octubre](#6-después-del-10-de-octubre)
+6. [Infraestructura posterior al MVP](#6-infraestructura-posterior-al-mvp)
 7. [Fuera de alcance](#7-fuera-de-alcance)
 8. [Resumen](#8-resumen)
 9. [Pendientes](#9-pendientes)
@@ -34,12 +34,12 @@ Los **IDs de alcance** (ej. `ALC-PUB-03`) son estables y todos los documentos lo
 
 | Nivel | Significado |
 |---|---|
-| **Nivel 1** | Obligatorio para el **10 de octubre**, funcionando en local. Es la demostración mínima del sistema |
-| **Nivel 2** | Se construye **solo si da tiempo** después de terminar todo el Nivel 1 |
-| **Después** | Va **después del 10 de octubre** y antes de la entrega final (infraestructura) |
+| **Nivel 1** | Capacidades base del producto. Su distribución entre MVP y versiones posteriores se consulta en el roadmap |
+| **Nivel 2** | Capacidades opcionales, planificadas después del flujo principal según el roadmap |
+| **Después** | Infraestructura posterior a la validación del MVP; sin fecha nueva fijada en este documento |
 | **Descartado** | Fuera del alcance actual. Queda como trabajo futuro (Fase 2) |
 
-**Regla:** nadie empieza una funcionalidad de Nivel 2 mientras quede algo de Nivel 1 sin terminar en su frente de trabajo.
+La entrega se organiza por el [roadmap vigente](../01-metodologia/roadmap-versiones.md): `v0.1.0` valida reserva, pago, check-in, cuenta, check-out y factura; `v0.2.0` incorpora operación y móvil; `v0.3.0` agrupa capacidades complementarias. Los niveles del catálogo no obligan a entregar todas sus funciones en el MVP. Las confirmaciones académicas se registran en [#11](https://github.com/villaserenaguatee/villa-serena-docs/issues/11).
 
 ---
 
@@ -52,14 +52,14 @@ Los **IDs de alcance** (ej. `ALC-PUB-03`) son estables y todos los documentos lo
 | D-01 | **Un solo hotel** | El sistema administra únicamente Villa Serena. No es multi-propiedad |
 | D-02 | **Moneda única: quetzales (GTQ)** | Todos los precios, cargos, pagos y reportes en Q |
 | D-03 | **Idioma: español** | Toda la interfaz (web y app) en español |
-| D-04 | **Pagos con Stripe en modo prueba** | Flujo completo (pago + confirmación por webhook) sin dinero real, en la web y en la app |
+| D-04 | **Pagos con Recurrente en Sandbox** | Checkout alojado en GTQ, sin dinero real; el backend verifica el pago por webhook o conciliación, nunca por la vuelta del navegador. Véase el [contrato vigente](../03-arquitectura/contrato-api.md) |
 | D-05 | **Channel Manager simulado** | Solo se **reciben** reservas de un canal simulado a través de una API. La conexión real con Booking o Expedia es Fase 2 |
 | D-06 | **Personal en web, huésped en app** | Recepción, Room Service, Mantenimiento/Limpieza y Administrador usan la **web privada**. La **app Android** es exclusiva del huésped |
 | D-07 | **Reserva sin cuenta** | El cliente reserva en la web pública sin crear cuenta ni contraseña |
 | D-08 | **Acceso del huésped por código al correo (OTP)** | Solo en la **app**: correo + código de 6 dígitos, sin contraseña |
 | D-10 | **App Android con React Native + Expo** | TypeScript, Expo SDK 54. Expo Go sirve para pruebas rápidas; las notificaciones push se prueban con un *development build*, porque Expo Go no las recibe. Se entrega como APK (EAS Build). Ver documento 14 |
-| D-11 | **Tecnologías obligatorias del catedrático** | Spring Boot con Spring Security + JWT, Next.js + React como BFF, PostgreSQL, Stripe, Cloudflare, Grafana y API REST con CORS. Ver documento 14 |
-| D-12 | **Todo en una VPS** | Web, backend y base de datos en una VPS con Docker detrás de Cloudflare. **Se hace después del 10 de octubre** |
+| D-11 | **Base técnica y validación académica** | Spring Boot con Spring Security + JWT, Next.js + React como BFF, PostgreSQL, Cloudflare, Grafana y API REST con CORS. La pasarela vigente es Recurrente ([ADR-017](../03-arquitectura/adr/ADR-017-pasarela-recurrente.md)); el plan académico inicial mencionaba Stripe. La confirmación del catedrático se registra en #11, sin darla por obtenida |
+| D-12 | **Todo en una VPS** | Web, backend y base de datos en una VPS con Docker detrás de Cloudflare. Se planifica después de validar el MVP, sin fijar aquí una nueva fecha |
 | D-13 | **Facturación simulada con impresión** | Facturas con serie, correlativo, NIT y total con "IVA incluido" (sin desglose de impuestos), marcadas como **factura de demostración** (sin certificación ante la SAT), impresas en térmica de 80 mm u hoja carta |
 
 ### 3.2 Decisiones de simplificación
@@ -68,21 +68,21 @@ Los **IDs de alcance** (ej. `ALC-PUB-03`) son estables y todos los documentos lo
 |---|---|---|
 | D-14 | **Pago único, sin abonos** | Cada pago liquida el **saldo completo**. En la web se paga el **100 % al reservar**. En Recepción se cobra **todo en el check-out** (alojamiento y consumos) |
 | D-15 | **No se modifican reservas** | Ni el huésped ni Recepción modifican una reserva. Para cambiar algo, **Recepción la cancela y crea una nueva** |
-| D-16 | **Cancelación de todo o nada** | Solo **Recepción** cancela (a pedido del huésped), y solo reservas `Confirmada` que no vengan de un canal externo; las `Pendiente de pago` se cancelan solas a los 30 minutos. Con **48 horas o más** antes de las **15:00 del día de llegada**: reembolso **total** por Stripe (si pagó en línea). Con menos de 48 horas o si no llega: **no hay reembolso** (si no llega, Recepción cancela la reserva con el motivo "No se presentó"; no existe el estado `No-show`). No se calculan penalidades |
+| D-16 | **Cancelación de todo o nada** | Solo **Recepción** cancela (a pedido del huésped), y solo reservas `Confirmada` que no vengan de un canal externo; las `Pendiente de pago` se cancelan solas a los 30 minutos. Con **48 horas o más** antes de las **15:00 del día de llegada**: reembolso **total** por Recurrente para pagos nuevos (si pagó en línea); los pagos históricos de Stripe conservan su proveedor y requieren conciliación con él. Con menos de 48 horas o si no llega: **no hay reembolso** (si no llega, Recepción cancela la reserva con el motivo "No se presentó"; no existe el estado `No-show`). No se calculan penalidades |
 | D-17 | **Sin cambio de habitación durante la estadía** | La habitación se asigna o cambia **solo antes del check-in**. Si hay un daño con el huésped dentro, se atiende con el huésped alojado |
 | D-18 | **Facturación mínima** | Solo se factura **en el check-out**. Se emite, se imprime (80 mm o carta) y se envía en PDF por correo. **Sin anulación de facturas ni marca "COPIA"**. Los datos fiscales van en la configuración del hotel; la **serie fija** y su número inicial se cargan en los datos iniciales y no se editan |
 | D-19 | **Mantenimiento de 3 pasos** | Reportar daño → el técnico lo toma (**En proceso**) → **Resuelta**. Sin asignación del Administrador ni reasignaciones en el flujo mínimo de incidencias. Las órdenes operativas existentes sí registran repuestos compartidos con inventario (docs #21) |
 | D-20 | **Inventario compartido con compras y repuestos** | Se conserva el flujo actual de API y web (docs #21): movimientos manuales, compras y repuestos de órdenes modifican las mismas existencias. Room Service, limpieza y solicitudes no descuentan automáticamente. El menú conserva **Disponible** o **Agotado** |
 | D-21 | **Tiempo real solo para 4 eventos** | Nuevo pedido, cambio de estado del pedido, nueva solicitud y cambio de estado de habitación. No se crea una arquitectura de eventos para todas las entidades |
-| D-22 | **Hito del 10 de octubre en local** | Todo el Nivel 1 funcionando en local con Docker. VPS, Cloudflare, CI/CD y backups van **después** |
+| D-22 | **Entregas incrementales desde el entorno local** | El flujo MVP se valida en local según el roadmap; operación, móvil y funciones complementarias se incorporan en sus versiones. La fecha original del 10 de octubre de 2026 es histórica y no fija la entrega actual |
 
 ---
 
 ## 4. Flujo principal del sistema
 
-Es la columna vertebral del sistema. **Toda funcionalidad de Nivel 1 existe para que este flujo funcione de principio a fin.**
+Es la visión completa del producto. El MVP cubre reserva, pago, check-in, cuenta, check-out y factura; los pasos de app y operación en vivo corresponden a versiones posteriores según el roadmap.
 
-1. **Reservar (web pública):** el cliente busca fechas, elige un tipo de habitación, ve el precio (tarifa dinámica), ingresa sus datos y **paga el 100 % con Stripe**. Recibe un correo con su **código de reserva** y el **enlace de la app**.
+1. **Reservar (web pública):** el cliente busca fechas, elige un tipo de habitación, ve el precio (tarifa dinámica), ingresa sus datos y **paga el 100 % con Recurrente**. Recibe un correo con su **código de reserva** y el **enlace de la app**.
    - Recepción también puede crear reservas (se pagan en el check-out), y el **canal simulado** puede enviarlas por la API.
 2. **Check-in (Recepción):** busca la reserva ("Llegan hoy"), asigna una habitación **libre y limpia** y hace el check-in.
 3. **Estadía (app):** el huésped entra con su **correo + código**, ve su estadía, **pide room service** (se carga a su cuenta), **solicita limpieza o artículos** y recibe **notificaciones push**.
@@ -104,7 +104,7 @@ La columna **Nivel** indica la prioridad (sección 2).
 | ALC-PUB-03 | Búsqueda de disponibilidad por fechas y número de huéspedes | 1 |
 | ALC-PUB-04 | Reserva sin cuenta: datos del huésped principal y resumen antes de pagar | 1 |
 | ALC-PUB-05 | Precio total con la tarifa vigente (precio base + temporada + fin de semana) | 1 |
-| ALC-PUB-06 | Pago del **100 %** con Stripe (modo prueba), confirmado por webhook | 1 |
+| ALC-PUB-06 | Pago del **100 %** con Recurrente (Sandbox), verificado por el backend | 1 |
 | ALC-PUB-07 | Correo de confirmación con código de reserva y enlace de descarga de la app | 1 |
 
 ### B. Web privada — Recepción
@@ -161,7 +161,7 @@ La columna **Nivel** indica la prioridad (sección 2).
 | ALC-APP-05 | Solicitar limpieza y artículos (toallas, almohadas, etc.), sin inventario | 1 |
 | ALC-APP-06 | Directorio de amenidades y datos del Wi-Fi | 2 |
 | ALC-APP-07 | Ver mi cuenta: consumos, pagos y saldo | 1 |
-| ALC-APP-08 | Pagar el saldo (Stripe), indicar NIT o Consumidor Final, hacer el check-out digital y ver la **pantalla final con la factura** | 1 |
+| ALC-APP-08 | Pagar el saldo (Recurrente), indicar NIT o Consumidor Final, hacer el check-out digital y ver la **pantalla final con la factura** | 1 |
 | ALC-APP-10 | **Notificaciones push** (Spring → Expo Push → FCM): **pedido entregado** y **solicitud atendida** | 1 |
 
 **Efectos del check-out** (desde la app o desde Recepción):
@@ -210,9 +210,9 @@ La columna **Nivel** indica la prioridad (sección 2).
 
 ---
 
-## 6. Después del 10 de octubre
+## 6. Infraestructura posterior al MVP
 
-Se hacen después del hito y antes de la entrega final.
+Se planifica después de validar el MVP. Los workflows de revisión y pruebas pueden usarse durante el desarrollo; el despliegue y los backups se coordinan según el roadmap, sin reutilizar fechas vencidas.
 
 | ID | Funcionalidad |
 |---|---|
@@ -285,7 +285,11 @@ ALC-MYL-10 (repuestos de mantenimiento) deja de estar excluido: docs #21 conserv
 | G. Mantenimiento/Limpieza | 5 | 0 |
 | H. Transversal | 7 | 1 |
 | **Total** | **58** | **6** |
-| **Después del 10 de octubre** | **3** | |
+| **Infraestructura posterior al MVP** | **3** | |
 | **Fuera de alcance** | **17** | |
 
-El alcance tiene **58 funcionalidades obligatorias para el 10 de octubre**, 6 opcionales (Nivel 2) y 3 para después.
+El catálogo de referencia conserva **58 funcionalidades de Nivel 1**, 6 opcionales (Nivel 2) y 3 de infraestructura posterior. Este conteo no exige implementar todas en `v0.1.0`; las versiones se organizan con el roadmap y las confirmaciones de #11.
+
+## 9. Pendientes
+
+Las confirmaciones del catedrático sobre alcance, turnos, inventario, supuestos y demostración de impresión se registran en [#11](https://github.com/villaserenaguatee/villa-serena-docs/issues/11). Este documento no las da por obtenidas. La ejecución del flujo MVP y sus evidencias se siguen en [#13](https://github.com/villaserenaguatee/villa-serena-docs/issues/13).

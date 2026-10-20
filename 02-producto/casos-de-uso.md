@@ -31,7 +31,7 @@ Los IDs UC-09 y UC-12 no se utilizan.
 |---|---|
 | Actores | Principal y secundarios (documento 02) |
 | Historias | Historias que cubre |
-| Nivel | 1 (obligatorio para el 10 de octubre) o 2 (si da tiempo) |
+| Nivel | 1 (capacidades base) o 2 (opcionales); las entregas siguen el [roadmap](../01-metodologia/roadmap-versiones.md) |
 | Precondiciones | Qué debe ser cierto antes de empezar |
 | Estados (07) | Transiciones del documento 07 que ocurren en el caso |
 | Reglas (10) | Reglas del documento 10 de las historias que cubre el caso |
