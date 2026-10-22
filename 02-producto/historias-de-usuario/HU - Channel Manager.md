@@ -1,5 +1,7 @@
 # HU — Channel Manager
 
+> Reconciliación 22/10/2026: [decisiones posteriores, estado implementado y límites del contrato](../reconciliacion-frontend-20261022.md). Los estados «Pendiente» anteriores no certifican implementación; portal web y Android coexisten. No se reintroducen campos retirados del MVP.
+
 > **Rol:** Canal externo (actor no humano, por API), Administrador (`ADMIN`, canal simulado) y Recepción (`RECEPCION`, ve el canal de origen)
 > **Plataforma:** API y Web privada
 > **Prefijo:** `HU-CM`
@@ -22,7 +24,7 @@
 - **Para** que la reserva hecha en mi plataforma quede registrada en Villa Serena
 
 **Criterios de aceptación**
-1. La API recibe: identificador externo, tipo de habitación, fecha de entrada y de salida, número de huéspedes, datos del huésped principal y monto total en quetzales. Los datos del huésped son los mismos 6 de Recepción y de la web, todos obligatorios: nombre completo, correo, teléfono, nacionalidad, tipo de documento (DPI o pasaporte) y número de documento. Si ya existe un huésped con ese correo, la reserva se asocia a ese perfil sin cambiar sus datos.
+1. La API recibe: identificador externo, tipo de habitación, fecha de entrada y de salida, número de huéspedes, datos del huésped principal y monto total en quetzales. Los datos del huésped son los datos vigentes de Recepción y de la web, con obligatoriedad según el contrato: nombre completo, correo, teléfono y DPI para el formulario MVP; nacionalidad opcional en el contrato y documentos anteriores conservados para lectura histórica. Si ya existe un huésped con ese correo, la reserva se asocia a ese perfil sin cambiar sus datos.
 2. Cada petición incluye el canal y su clave; el sistema compara la clave con la guardada con hash. Si el canal no existe o la clave es incorrecta, responde `401` y no crea nada.
 3. Si faltan datos o no cumplen las reglas (estadía de 1 a 30 noches, sin fechas pasadas ni a más de 365 días, huéspedes dentro de la capacidad del tipo, tipo activo), responde `400` indicando el problema.
 4. Valida la disponibilidad con las mismas reglas que la web pública; si no hay, responde `409` con un mensaje claro.
@@ -77,7 +79,7 @@
 
 **Criterios de aceptación**
 1. Existe una pantalla en el panel del Administrador; otros roles no la ven y reciben "Acceso denegado" si intentan entrar.
-2. Se elige el canal (Booking o Expedia), el tipo de habitación, las fechas, el número de huéspedes, los 6 datos del huésped (HU-CM-01) y el monto, o se generan todos los datos de prueba al azar con un identificador externo nuevo.
+2. Se elige el canal (Booking o Expedia), el tipo de habitación, las fechas, el número de huéspedes, los datos del huésped según contrato (HU-CM-01) y el monto, o se generan todos los datos de prueba al azar con un identificador externo nuevo.
 3. La reserva se envía **a través de la API real** (HU-CM-01), con la clave del canal elegido.
 4. Se muestra la respuesta de la API: código HTTP, resultado (aceptada o rechazada), motivo y, si se creó, el código de reserva.
 5. Si la API rechaza la reserva (sin disponibilidad o datos inválidos), se muestra el motivo y no se crea nada.

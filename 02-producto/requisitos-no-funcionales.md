@@ -16,7 +16,7 @@ Este documento define los requisitos de calidad, seguridad, rendimiento y manten
 | **RNF-SEC-006** | Sesión Segura en Navegador | En la web privada, los JWT solo residen en cookies seguras `httpOnly` gestionadas por el BFF (Next.js). |
 | **RNF-SEC-007** | Política CORS Estricta | CORS restringido exclusivamente a los dominios y orígenes autorizados del ecosistema. |
 | **RNF-SEC-008** | Cifrado de Credenciales | Contraseñas, códigos OTP y tokens de canales externos almacenados siempre con algoritmos de hashing seguros (BCrypt / SHA-256). |
-| **RNF-SEC-009** | Cumplimiento PCI Básico | El sistema nunca recibe, procesa ni almacena datos de tarjetas de crédito; todo el flujo se delega a Stripe Checkout y los webhooks validan la firma criptográfica. |
+| **RNF-SEC-009** | Cumplimiento PCI Básico | El sistema nunca recibe, procesa ni almacena datos de tarjetas de crédito; todo el flujo se delega a Recurrente Checkout y los webhooks validan la firma criptográfica. |
 | **RNF-SEC-010** | Acceso a Archivos Privados | Facturas en PDF y fotos de incidencias se sirven mediante URLs prefirmadas de corta duración. |
 | **RNF-SEC-011** | Gestión de Secretos | Ningún secreto se versiona en Git; se inyectan mediante variables de entorno locales (`.env`) o GitHub Secrets en CI/CD. |
 
