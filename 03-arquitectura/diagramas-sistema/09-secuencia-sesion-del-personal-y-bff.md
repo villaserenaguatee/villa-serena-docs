@@ -1,5 +1,7 @@
 # 09 — Secuencia: sesión del personal y BFF
 
+> Reconciliación 22/10/2026: [flujos y decisiones actuales](../../02-producto/reconciliacion-frontend-20261022.md). El nombre histórico del archivo se conserva. El portal web complementa Android; el retorno no confirma pagos y subir documentos no realiza check-in.
+
 **Vista:** Secuencia · **Alcance del plan:** Hito.
 
 La cookie vive en el navegador; los tokens del personal permanecen fuera de JavaScript del navegador.
@@ -50,7 +52,7 @@ sequenceDiagram
 
 - JWT: 15 minutos; refresh rotativo: 7 días. Cinco fallos bloquean quince minutos.
 - Mientras la contraseña sea temporal, cambiarla es obligatorio antes de operar.
-- Un empleado inactivo no inicia ni renueva; un acceso ya emitido puede durar hasta vencer.
+- Un empleado inactivo no inicia ni renueva. La política anterior permitía conservar el acceso hasta vencer el JWT; es un antecedente histórico. El API inspeccionado comprueba la vigencia del empleado en cada petición. La reconciliación de esta política sigue pendiente en API #78, según RN-PER-014, sin debilitar los controles implementados.
 
 ## Referencias
 

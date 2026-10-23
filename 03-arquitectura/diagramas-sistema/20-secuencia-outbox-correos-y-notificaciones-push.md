@@ -1,5 +1,7 @@
 # 20 — Secuencia: Outbox, correos y notificaciones push
 
+> Reconciliación 22/10/2026: [flujos y decisiones actuales](../../02-producto/reconciliacion-frontend-20261022.md). El nombre histórico del archivo se conserva. El portal web complementa Android; el retorno no confirma pagos y subir documentos no realiza check-in.
+
 **Vista:** Secuencia · **Alcance del plan:** Hito.
 
 Persistir un cambio y enviar un aviso son momentos diferentes.
@@ -16,7 +18,7 @@ sequenceDiagram
   S->>D: Transacción: cambio + historial + aviso PENDIENTE
   S->>D: Commit del negocio
   J->>D: Tomar avisos cuyo intento ya corresponde
-  alt Correo OTP, confirmación o factura
+  alt Correo del subconjunto representado: OTP, confirmación o factura
     J->>M: Renderizar plantilla y enviar
     M-->>J: Resultado de envío
   else Push de entrega o atención
@@ -41,7 +43,7 @@ sequenceDiagram
 
 ## Reglas y límites
 
-- Tres correos: OTP, confirmación y factura. Dos push: pedido entregado y solicitud atendida.
+- El diagrama representa el subconjunto OTP de acceso, confirmación y factura, no un inventario exhaustivo: también existen verificación previa del correo y recuperación del personal, con sus integraciones y diferencias contractuales descritas en la [guía del contrato](../contrato-api.md). No se deduce envío real por una plantilla. Dos push del flujo de estadía: pedido entregado y solicitud atendida.
 - Push exige EN_ESTADIA y permiso del teléfono; no incluye nombres, datos personales ni montos.
 - Development build para push; la vista local Mailpit sirve para comprobar correo. Este atlas no ejecuta esas pruebas.
 

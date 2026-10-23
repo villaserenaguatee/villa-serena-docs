@@ -1,5 +1,7 @@
 # 08 — Secuencia: Recepción, asignación y check-in
 
+> Reconciliación 22/10/2026: [flujos y decisiones actuales](../../02-producto/reconciliacion-frontend-20261022.md). El nombre histórico del archivo se conserva. El portal web complementa Android; el retorno no confirma pagos y subir documentos no realiza check-in.
+
 **Vista:** Secuencia · **Alcance del plan:** Hito.
 
 Crear desde Recepción confirma sin cobrar por adelantado; asignar no es hacer check-in.
@@ -12,7 +14,7 @@ sequenceDiagram
   participant D as PostgreSQL
   participant O as Outbox / tiempo real
   opt Nueva reserva de Recepción
-    R->>B: Principal con seis datos y disponibilidad
+    R->>B: Principal con datos MVP y obligatoriedad del contrato de Recepción, más disponibilidad
     B->>S: Crear reserva con tarifa del servidor
     S->>D: Revalidar cupo, CONFIRMADA + cuenta + cargo alojamiento
     S->>O: Encolar confirmación, pago pendiente hasta check-out
@@ -26,7 +28,7 @@ sequenceDiagram
   S->>D: Mismo tipo, activa, sin traslape, no fuera de servicio
   S->>D: Guardar asignación y responsable
   opt Huéspedes adicionales
-    R->>B: Registrar nombre, documento y nacionalidad
+    R->>B: Registrar datos MVP y DPI; nacionalidad opcional
     B->>S: Validar CONFIRMADA o EN_ESTADIA y límite del grupo
     S->>D: Guardar adicionales sin acceso a la app
   end
