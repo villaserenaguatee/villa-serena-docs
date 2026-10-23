@@ -52,6 +52,7 @@ villa-serena-docs/
 
 ### [04 · Guías y Referencia Operativa](04-guias-y-referencia/)
 * **[Guía de Arranque Local](04-guias-y-referencia/arranque-local.md):** Pasos para levantar el ecosistema completo con Docker Compose.
+* **[Despliegue en Vercel y AWS, Modelo de Datos y Diagnóstico Operativo](04-guias-y-referencia/despliegue-y-modelo-datos.md):** Topología real en Vercel + AWS (`api.villaserenaguate.org`), sincronización de `api-contract.json`, catálogo de migraciones Flyway (`V1`–`V29`), perfiles de Spring y checklist de diagnóstico ante `503`.
 * **[Pagos con Recurrente](04-guias-y-referencia/arranque-local.md#42-probar-pagos-con-recurrente):** Configuración local de Sandbox y webhook. La [guía de Stripe CLI](04-guias-y-referencia/stripe-cli.md) se conserva como referencia histórica.
 * **[Diseño de Integración con Canales](04-guias-y-referencia/integracion-canales.md):** Simulación de ingesta de reservas externas.
 

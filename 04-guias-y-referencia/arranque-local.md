@@ -37,11 +37,11 @@ Los comandos de Git, pnpm, Expo y Docker Compose son comunes. Las variantes de M
 
 | Operación, desde el repositorio | Windows — cmd | Windows — PowerShell | macOS y Linux |
 |---|---|---|---|
-| Arrancar el API | `mvnw.cmd spring-boot:run` | `./mvnw.cmd spring-boot:run` | `./mvnw spring-boot:run` |
+| Arrancar el API (perfil `local`) | `mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local` | `./mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local` | `./mvnw spring-boot:run -Dspring-boot.run.profiles=local` |
 | Probar el API | `mvnw.cmd test` | `./mvnw.cmd test` | `./mvnw test` |
 | Copiar el entorno de ejemplo | `copy .env.example .env` | `Copy-Item .env.example .env` | `cp .env.example .env` |
 
-Los datos ficticios del API se habilitan con `SPRING_PROFILES_ACTIVE=demo` en su `.env` (sección 2.3). En macOS/Linux, si el wrapper no tiene permiso de ejecución, `chmod +x mvnw` lo habilita. Los ejemplos con `<...>` son marcadores que se sustituyen antes de ejecutarlos; no son comandos para copiar literalmente.
+Los perfiles vigentes del API son `local`, `dev` y `prod` (el antiguo perfil `demo` fue retirado; consulta [despliegue y modelo de datos](despliegue-y-modelo-datos.md#4-perfiles-de-spring-retiro-de-demo-y-separación-entre-esquema-bootstrap-y-fixtures)). En macOS/Linux, si el wrapper no tiene permiso de ejecución, `chmod +x mvnw` lo habilita. Los ejemplos con `<...>` son marcadores que se sustituyen antes de ejecutarlos; no son comandos para copiar literalmente.
 
 ---
 
@@ -80,48 +80,43 @@ Reparto registrado por frentes: web/móvil, Kimberly y Alexander; backend, Pablo
    - Solo letras, números y, si quieres, `!`, `-` o `_`. **Evita `#`, `$` y `"`**.
    - Las contraseñas de MinIO deben tener **al menos 8 caracteres**.
    - Como todo es local y de prueba, las contraseñas **las inventas tú**.
-4. Los valores deben coincidir **entre los servicios que conectas**: `DB_PASSWORD` del API con `POSTGRES_PASSWORD` de infra; credenciales y buckets de MinIO entre API e infra; claves del canal simulado con sus hashes del API. Cada entorno local puede tener valores distintos. Para un API compartido, el equipo acuerda sus accesos por un canal privado.
+4. Los valores deben coincidir **entre los servicios que conectas**: `DB_PASSWORD` del API con `POSTGRES_PASSWORD` de infra; credenciales y buckets de almacenamiento S3/MinIO entre API e infra; claves del canal simulado con sus hashes cuando cargues fixtures de prueba. Cada entorno local puede tener valores distintos. Para un API compartido, el equipo acuerda sus accesos por un canal privado.
 5. **Nunca subas el `.env` ni pegues su contenido en un chat de IA.** Si la IA necesita saber qué variables hay, muéstrale el `.env.example`.
 
-### 2.3 Configurar el API y sus datos de prueba
+### 2.3 Configurar el API, el primer ADMIN y los datos de prueba (`load-data.sql`)
 
-Completa `DB_URL`, `DB_USER` y `DB_PASSWORD` para tu PostgreSQL, `JWT_SECRET` y las credenciales de MinIO según el `.env.example` del API. `JWT_SECRET` debe contener una clave Base64 de al menos 32 bytes; la plantilla indica cómo generarla.
+Completa `DB_URL`, `DB_USER` y `DB_PASSWORD` para tu PostgreSQL, `JWT_SECRET` y las variables de almacenamiento S3 según el `.env.example` del API (`local` usa MinIO local; `dev` puede usar R2/S3 compatible; `prod` usa AWS S3 + CloudFront). `JWT_SECRET` debe contener una clave Base64 de al menos 32 bytes; la plantilla indica cómo generarla.
 
-Para cargar hotel, habitaciones, tarifas, menú, empleados y canales ficticios, activa `SPRING_PROFILES_ACTIVE=demo`. Flyway carga `db/demo/V6__datos_iniciales.sql` además del esquema y exige los tres hashes siguientes. Sin ese perfil no se cargan datos ficticios nuevos. No actives `demo` en producción.
+Flyway ejecuta únicamente las migraciones de esquema en `src/main/resources/db/migration` (`V6` permanece reservado sin sembrar datos demo automáticamente). Para poblar usuarios o catálogos tienes dos mecanismos independientes:
 
-**1. Contraseña de los empleados de prueba.** El equipo acuerda **por mensaje privado** una contraseña de demostración (por ejemplo `VillaSerena2026`). Genera su hash BCrypt:
+**1. Primer usuario `ADMIN` por bootstrap (opcional en el arranque):**
+Si configuras `BOOTSTRAP_ADMIN_ENABLED=true` junto con `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_FULL_NAME` y `BOOTSTRAP_ADMIN_PASSWORD` (o `BOOTSTRAP_ADMIN_PASSWORD_HASH`), `BootstrapAdminStartupInitializer` crea o actualiza ese administrador al arrancar el API.
 
-```bat
-docker run --rm httpd:2.4-alpine htpasswd -nbBC 10 "" VillaSerena2026
-```
+**2. Carga explícita de datos ficticios locales (`scripts/demo/load-data.sql`):**
+Cuando quieras cargar el hotel, los tipos de habitación, las habitaciones, las tarifas, el menú, los empleados de cada rol y los canales externos en tu PostgreSQL local, genera primero los tres hashes siguientes y ejecuta `scripts/demo/load-data.sql` con `psql`:
 
-La respuesta empieza con `:$2y$10$...`. Copia todo **sin los dos puntos del inicio**:
+- **Hash BCrypt para los empleados de prueba** (por ejemplo para `VillaSerena2026`):
+  ```bat
+  docker run --rm httpd:2.4-alpine htpasswd -nbBC 10 "" VillaSerena2026
+  ```
+  Copia el hash `$2y$10$...` resultante (sin los dos puntos iniciales).
+- **Hashes SHA-256 de las dos claves de canal** (por ejemplo `ClaveBookingDemo2026` y `ClaveExpediaDemo2026`):
+  ```bat
+  docker run --rm alpine sh -c "printf %s ClaveBookingDemo2026 | sha256sum"
+  docker run --rm alpine sh -c "printf %s ClaveExpediaDemo2026 | sha256sum"
+  ```
+- **Ejecución del script sobre PostgreSQL local:**
+  ```bash
+  psql "$DB_URL" \
+    -v demo_password_hash='$2y$10$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' \
+    -v canal1_key_hash='<64_caracteres_sha256_canal_1>' \
+    -v canal2_key_hash='<64_caracteres_sha256_canal_2>' \
+    -f scripts/demo/load-data.sql
+  ```
 
-```env
-DEMO_PASSWORD_HASH=$2y$10$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-```
+Las claves **en texto** (`ClaveBookingDemo2026`, etc.) van en el `.env.local` de `villa-serena-web` para el canal simulado (variables `CANAL_..._CLAVE`). No ejecutes `scripts/demo/load-data.sql` sobre entornos compartidos o de producción.
 
-Con esa contraseña entran los empleados de prueba (sus correos están en `db/demo/V6__datos_iniciales.sql`). El hash contiene `$`: en el `.env` del API está bien así (la regla de evitar `$` es para el `.env` de Docker).
-
-**2. Claves de los dos canales.** Inventa una clave para cada canal (por ejemplo `ClaveBookingDemo2026` y `ClaveExpediaDemo2026`) y genera su SHA-256:
-
-```bat
-docker run --rm alpine sh -c "printf %s ClaveBookingDemo2026 | sha256sum"
-docker run --rm alpine sh -c "printf %s ClaveExpediaDemo2026 | sha256sum"
-```
-
-Cada uno responde 64 caracteres seguidos de un guion. Copia solo los 64 caracteres:
-
-```env
-CANAL1_KEY_HASH=<64 caracteres del primero>
-CANAL2_KEY_HASH=<64 caracteres del segundo>
-```
-
-Las claves **en texto** (`ClaveBookingDemo2026`, etc.) van en el `.env` de `villa-serena-web`, para el canal simulado (variables `CANAL_..._CLAVE`).
-
-**Importante:** cambiar esos hashes en `.env` no modifica los registros ya insertados. Conserva la base de trabajo y coordina cualquier cambio de credenciales; no es necesario borrar sus datos para seguir esta guía.
-
-Para recibir los correos en Mailpit, deja una sola definición de cada variable de correo en el `.env` del API. La plantilla publicada contiene también un bloque SMTP al final; no dejes que reemplace estos valores locales:
+Para recibir los correos en Mailpit, deja una sola definición de cada variable de correo en el `.env` del API:
 
 ```env
 MAIL_HOST=localhost

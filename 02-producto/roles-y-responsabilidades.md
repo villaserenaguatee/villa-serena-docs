@@ -26,7 +26,7 @@ Define **quién usa el sistema**, **desde dónde**, **cómo entra** y **de qué 
 
 | Rol | Código | Dónde trabaja | Cómo entra | Quién crea la cuenta |
 |---|---|---|---|---|
-| Administrador | `ADMIN` | Web privada | Correo + contraseña | El primero, al arrancar el sistema (variables de entorno); los de prueba, en los datos iniciales |
+| Administrador | `ADMIN` | Web privada | Correo + contraseña | El primero, mediante bootstrap controlado por entorno (`BOOTSTRAP_ADMIN_ENABLED`); los adicionales, desde el panel de Administración o el script explícito de prueba local |
 | Recepcionista | `RECEPCION` | Web privada | Correo + contraseña | Administrador |
 | Room Service | `ROOM_SERVICE` | Web privada | Correo + contraseña | Administrador |
 | Mantenimiento/Limpieza | `MANTENIMIENTO_LIMPIEZA` | Web privada (pensada para el teléfono del empleado) | Correo + contraseña | Administrador |
@@ -34,7 +34,7 @@ Define **quién usa el sistema**, **desde dónde**, **cómo entra** y **de qué 
 
 > El **código** del rol se guarda en la base de datos y va en el JWT. Se escribe igual en todo el proyecto.
 
-**Datos iniciales (Flyway):** un usuario de prueba de cada rol y **dos Administradores**, para no perder el acceso si uno olvida su contraseña (V-04).
+**Inicialización y datos de prueba:** las migraciones de Flyway (`src/main/resources/db/migration`, con `V6` reservada sin datos demo) solo crean y evolucionan el esquema. El primer `ADMIN` en un entorno nuevo se crea con `BOOTSTRAP_ADMIN_ENABLED=true` (`BootstrapAdminStartupInitializer`), y el conjunto de usuarios y catálogos de demostración local se carga de forma explícita con `scripts/demo/load-data.sql` (ver [despliegue y modelo de datos](../04-guias-y-referencia/despliegue-y-modelo-datos.md#4-perfiles-de-spring-retiro-de-demo-y-separación-entre-esquema-bootstrap-y-fixtures)).
 
 ---
 
