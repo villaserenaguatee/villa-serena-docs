@@ -1,5 +1,7 @@
 # HU — Cliente y Huésped
 
+> Reconciliación 22/10/2026: [decisiones posteriores, estado implementado y límites del contrato](../reconciliacion-frontend-20261022.md). Los estados «Pendiente» anteriores no certifican implementación; portal web y Android coexisten. No se reintroducen campos retirados del MVP.
+
 > **Rol:** Cliente/Huésped (`HUESPED`)
 > **Plataforma:** Web pública y App Android
 > **Prefijo:** `HU-HUE`
@@ -98,7 +100,7 @@ Recordatorio del rol: el **Cliente** reserva en la web pública **sin iniciar se
 2. El precio de cada noche es: precio base del tipo × (1 + % de la temporada vigente) × (1 + % de fin de semana si la noche es viernes o sábado), redondeado a 2 decimales. El total es la suma de las noches.
 3. Se muestra el desglose por noche, indicando qué noches llevan ajuste de temporada o de fin de semana.
 4. El precio se calcula en el servidor; el navegador solo lo muestra.
-5. Stripe cobra el total que quedó fijo al crear la reserva (HU-HUE-05).
+5. Recurrente cobra el total que quedó fijo al crear la reserva (HU-HUE-05).
 
 **Depende de:** HU-HUE-03, HU-ADM-03, HU-ADM-06
 **Reglas relacionadas:** RN-TAR-001, RN-TAR-002, RN-TAR-005, RN-TAR-006, RN-TAR-007, RN-TAR-008, RN-TAR-009 (documento 10)
@@ -117,7 +119,7 @@ Recordatorio del rol: el **Cliente** reserva en la web pública **sin iniciar se
 - **Para** asegurar mi hospedaje sin crear una cuenta ni llamar por teléfono
 
 **Criterios de aceptación**
-1. Se piden nombre completo, correo, teléfono, nacionalidad, tipo de documento (DPI o pasaporte) y número de documento del huésped principal: los mismos datos que en Recepción (HU-REC-01) y en el canal (HU-CM-01).
+1. Se piden nombre completo, correo, teléfono y DPI para el formulario MVP; nacionalidad opcional en el contrato y documentos anteriores conservados para lectura histórica del huésped principal: los mismos datos que en Recepción (HU-REC-01) y en el canal (HU-CM-01).
 2. El huésped se identifica por su correo: si ya existe un huésped con ese correo, la reserva se asocia a ese perfil sin cambiar sus datos.
 3. Se validan los datos obligatorios y el formato del correo; si falta o está mal un dato obligatorio, se señala el campo y no se continúa. La hora estimada de llegada es opcional.
 4. Antes de continuar al pago se muestra un resumen: tipo de habitación, fechas, número de noches, huéspedes y total.
@@ -125,7 +127,7 @@ Recordatorio del rol: el **Cliente** reserva en la web pública **sin iniciar se
 6. La reserva se crea en estado `Pendiente de pago`, con canal de origen "Directo web" y un código único no secuencial (ej. `VS-7K2M9Q`). El precio queda fijo en ese momento.
 7. Mientras está `Pendiente de pago`, la reserva ocupa cupo en la disponibilidad para evitar sobreventa.
 8. Junto con la reserva se crea su cuenta `Abierta` con el cargo por alojamiento.
-9. El cliente no puede cambiar la reserva después de crearla. Si se equivocó y ya pagó, debe pedir a Recepción que la cancele; si no ha pagado, la reserva se cancela sola a los 30 minutos (HU-HUE-06).
+9. El cliente no puede cambiar la reserva después de crearla. Si se equivocó y ya pagó, debe pedir a Recepción que la cancele; si no ha pagado, se aplica la revisión del plazo y la conciliación de HU-HUE-06; no se presume cancelada una reserva con pago incierto.
 10. Al reservar por tipo o por oferta puede indicar **Hora estimada de llegada**, opcional, en formato `HH:mm` (`00:00`–`23:59`), hora local `America/Guatemala`. Omitida o `null` significa sin indicar; no hay valor por defecto ni relleno histórico. No cambia el horario ni las reglas de check-in. Vacío, segundos o zona horaria se rechazan. Recepción la consulta en el detalle autorizado; no se publica en el estado de la reserva.
 
 **Depende de:** HU-HUE-04
@@ -145,16 +147,16 @@ Recordatorio del rol: el **Cliente** reserva en la web pública **sin iniciar se
 - **Para** dejarla confirmada
 
 **Criterios de aceptación**
-1. El cliente paga el **100 %** del total en la página de Stripe (modo prueba); el sistema nunca recibe ni guarda los datos de la tarjeta.
-2. La reserva pasa a `Confirmada` y el pago a `Aprobado` **solo** cuando llega el webhook de Stripe, no por la redirección del navegador.
+1. El cliente paga el **100 %** del total en la página de Recurrente (modo prueba); el sistema nunca recibe ni guarda los datos de la tarjeta.
+2. La reserva pasa a `Confirmada` y el pago a `Aprobado` solo tras la confirmación del backend mediante webhook verificado o conciliación con Recurrente, nunca por la redirección del navegador.
 3. Si el mismo webhook llega dos veces, el pago se registra una sola vez.
-4. Hay una sola sesión de pago **para el pago de la reserva**: si un intento de pago es rechazado o el cliente cierra la página, puede reintentar con el mismo enlace mientras la reserva siga `Pendiente de pago`. Un intento rechazado no cambia el pago, que sigue `Pendiente`; el pago pasa a `Fallido` solo cuando la sesión vence (al cancelarse la reserva a los 30 minutos).
-5. Si no se paga en 30 minutos, la reserva se cancela sola, con los mismos efectos de HU-REC-05 (criterio 5): la cuenta se cierra y la disponibilidad queda libre. Antes de cancelarla, el sistema consulta la sesión en Stripe: si ya estaba pagada, la confirma en lugar de cancelarla.
-6. Al volver de Stripe, el cliente ve una página con el estado de su reserva: confirmada, pago en proceso o pago no completado (con opción de reintentar mientras la reserva siga `Pendiente de pago`).
+4. Un checkout abierto se continúa con el enlace autorizado por el API. Solo se inicia o reintenta cuando accionPago lo permite; procesamiento, confirmación pendiente o incertidumbre bloquean nuevos cobros. Cerrar la página no demuestra que el pago falló. La consulta de estado no registra un pago.
+5. Al vencer el plazo de 30 minutos, el proceso del servidor consulta/conciliará el estado antes de cancelar. No libera cupo ni cancela a ciegas un pago en procesamiento o incierto. Si corresponde cancelar, aplica los efectos oficiales; si el proveedor confirma el pago, se conserva y concilia.
+6. Al volver a `/reserva/resultado`, se consulta el estado real de la reserva. Se muestran confirmado, cancelado, pendiente o en verificación; reintentar depende de la acción autorizada por el API, no solo de PENDIENTE_PAGO. Un fallo de conexión no se presenta como rechazo.
 
 **Depende de:** HU-HUE-05
 **Reglas relacionadas:** RN-CAN-013, RN-PAG-001, RN-PAG-002, RN-PAG-003, RN-PAG-004, RN-PAG-005, RN-PAG-006, RN-PAG-014, RN-RES-004, RN-RES-012 (documento 10)
-**Notas técnicas:** se usa Stripe Checkout; la cancelación a los 30 minutos es un proceso programado en el backend.
+**Notas técnicas:** se usa checkout alojado de Recurrente. Al cumplirse el plazo de 30 minutos, el backend consulta y concilia el estado: confirma si el pago está aprobado y solo cancela tras comprobar el vencimiento sin pago. Si hay procesamiento o no se puede verificar, conserva el cupo y reintenta la consulta; el plazo por sí solo no acredita cancelación.
 
 ---
 
@@ -390,10 +392,10 @@ Recordatorio del rol: el **Cliente** reserva en la web pública **sin iniciar se
 **Criterios de aceptación**
 1. Solo está disponible con la reserva `En estadía`, desde las 00:00 del día de salida hasta la hora de check-out (12:00, fija). Fuera de esa ventana se muestra el aviso de hacer el check-out en Recepción.
 2. No se permite si hay un pedido `En camino`; se muestra el aviso de esperar la entrega. Si hay pedidos `Nuevo` o `En preparación`, se avisa que se cancelarán sin cargo y el huésped debe aceptarlo.
-3. Si el saldo es mayor que cero, el huésped paga el saldo completo con Stripe (modo prueba) en un solo pago; el pago se da por hecho solo al llegar el webhook. Si el saldo ya es Q 0.00, se salta este paso.
+3. Si el saldo es mayor que cero, el huésped paga el saldo completo con Recurrente (modo prueba) en un solo pago; el pago se da por hecho solo cuando el backend lo confirma mediante webhook verificado o conciliación con Recurrente; el cliente consulta el estado real del API. Si el saldo ya es Q 0.00, se salta este paso.
 4. El huésped indica su NIT (validado con su dígito verificador; el último dígito puede ser "K") o elige "Consumidor Final", y el nombre del comprador (por defecto, su nombre). Un NIT inválido se rechaza con un mensaje claro.
 5. El check-out solo se confirma con saldo exactamente Q 0.00.
-6. Al confirmar: se emite la factura, la reserva pasa a `Finalizada`, la cuenta a `Cerrada`, la habitación a `Libre` + `Sucia` (o `Fuera de servicio` si tiene una incidencia que impide su uso), las solicitudes `Pendiente` o `En proceso` pasan a `Cancelada` y los pedidos `Nuevo` o `En preparación` pasan a `Cancelado`. Estos cambios se completan en una sola operación. Si falla la emisión de la factura, no se aplican los cambios del check-out: la reserva sigue `En estadía` y la cuenta `Abierta`. El pago ya aprobado por Stripe se conserva y se puede reintentar el check-out; si el saldo sigue en Q 0.00, no se vuelve a cobrar.
+6. Al confirmar: se emite la factura, la reserva pasa a `Finalizada`, la cuenta a `Cerrada`, la habitación a `Libre` + `Sucia` (o `Fuera de servicio` si tiene una incidencia que impide su uso), las solicitudes `Pendiente` o `En proceso` pasan a `Cancelada` y los pedidos `Nuevo` o `En preparación` pasan a `Cancelado`. Estos cambios se completan en una sola operación. Si falla la emisión de la factura, no se aplican los cambios del check-out: la reserva sigue `En estadía` y la cuenta `Abierta`. El pago ya aprobado por Recurrente se conserva y se puede reintentar el check-out; si el saldo sigue en Q 0.00, no se vuelve a cobrar.
 7. La factura en PDF se envía al correo del huésped.
 8. La app muestra una pantalla final con la factura (se puede abrir el PDF) y ya no permite hacer pedidos ni solicitudes.
 

@@ -25,20 +25,22 @@ Se aprueba **sustituir Stripe por Recurrente** como la pasarela de pagos oficial
 1. **Abstracción de la Pasarela en el Backend (`villa-serena-api`):**
    * Refactorizar la interfaz `com.villaserena.api.reservas.stripe.PasarelaStripe` para generalizarla a un contrato agnóstico: `PasarelaPagos`.
    * Implementar `PasarelaRecurrenteSdk` / `PasarelaRecurrenteClient` consumiendo la API pública de Recurrente (`POST https://app.recurrente.com/api/checkouts`).
-   * Configurar el controlador de webhooks (`/api/pagos/recurrente/webhook`) para recibir y verificar eventos de checkout completado (`checkout.succeeded` / `payment.succeeded`).
-   * Mantener la cancelación automática a los 30 minutos mediante `@Scheduled` para reservas no pagadas.
+   * Configurar el controlador de webhooks (`/api/v1/pagos/recurrente/webhook`) para recibir y verificar eventos de checkout completado (`intent.succeeded`; también se trata `checkout.expired` conforme al contrato).
+   * Mantener el plazo de pago de la reserva y su job de vencimiento; el proceso/conciliación vigente impide cancelar o reintentar a ciegas un pago incierto.
 
 2. **Adaptación en el Frontend (`villa-serena-web`):**
-   * El flujo de reserva pública continuará recibiendo la URL del checkout alojado (`checkout_url`) generada por el backend y redirigiendo al cliente.
-   * La página de retorno (`/reservas/resultado` o `/reservas/confirmacion`) procesará los parámetros de confirmación emitidos por Recurrente tras el pago exitoso.
+   * El flujo de reserva pública continuará recibiendo la URL del checkout alojado (`urlPago`, junto a `expiraEn`; `checkout_url` pertenece al proveedor y se adapta en el servidor) generada por el backend y redirigiendo al cliente.
+   * La página de retorno `/reserva/resultado` consulta el estado real del API. Ningún parámetro de URL confirma un pago; solo la conciliación y el webhook del servidor autorizan la confirmación.
 
 3. **Variables de Entorno y Secretos:**
    * Sustituir las variables `STRIPE_API_KEY`, `STRIPE_WEBHOOK_SECRET` por:
-     * `RECURRENTE_PUBLIC_KEY` (clave pública para inicialización o front)
-     * `RECURRENTE_SECRET_KEY` (clave privada para peticiones de checkout desde el API)
+     * `RECURRENTE_PUBLIC_KEY` (credencial que utiliza el API para esta integración alojada; no requiere inicialización en el frontend)
+     * `RECURRENTE_SECRET_KEY` (clave privada para peticiones de checkout desde el API; nunca se entrega al navegador)
      * `RECURRENTE_WEBHOOK_SECRET` (secreto para verificar la autenticidad de los webhooks)
 
 ---
+
+Las credenciales de esta integración se mantienen exclusivamente en el servidor. La web recibe `urlPago` y redirige al checkout alojado; no inicializa un SDK propio ni captura datos de tarjeta.
 
 ## 3. Consecuencias y Beneficios
 
@@ -51,3 +53,7 @@ Se aprueba **sustituir Stripe por Recurrente** como la pasarela de pagos oficial
 * **Refactorización en `villa-serena-api`:** Modificar el paquete de reservas/pagos, adaptar el DTO del webhook y actualizar las suites de pruebas de integración (`ReservaWebIntegrationTest`).
 * **Actualización en `villa-serena-web`:** Actualizar los tipos generados de OpenAPI y adaptar la redirección del BFF.
 * **Depreciación de herramientas de Stripe:** Sustituir la dependencia de `stripe-java` y el uso de `stripe-cli` por pruebas con payloads JSON de Recurrente o túneles de desarrollo.
+
+## Reconciliación del 22/10/2026
+
+Los nombres orientativos originales quedan reemplazados por el contrato vigente: `urlPago`, `expiraEn`, `estadoCheckout`, `accionPago` y recuperación del intento original. Stripe se conserva únicamente en pagos históricos; no se cambia su proveedor ni se promete reembolso por Recurrente. La decisión de usar Recurrente está aceptada; un checkout real Sandbox completo no se considera validado por documentación o mocks. Véase [reconciliación de flujos](../../02-producto/reconciliacion-frontend-20261022.md).

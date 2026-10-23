@@ -1,5 +1,7 @@
 # HU — Room Service
 
+> Reconciliación 22/10/2026: [decisiones posteriores, estado implementado y límites del contrato](../reconciliacion-frontend-20261022.md). Los estados «Pendiente» anteriores no certifican implementación; portal web y Android coexisten. No se reintroducen campos retirados del MVP.
+
 > **Rol:** Room Service (`ROOM_SERVICE`)
 > **Plataforma:** Web privada
 > **Prefijo:** `HU-RS`
