@@ -58,8 +58,8 @@ Define **qué acción exacta puede hacer cada rol**. Es la referencia para:
 
 | Acción | PÚBLICO | ADMIN | RECEPCION | ROOM_SERVICE | MYL | HUESPED | HU |
 |---|---|---|---|---|---|---|---|
-| Ver la información del hotel y el catálogo de habitaciones | ✅ | — | — | — | — | — | HU-HUE-01, HU-HUE-02 |
-| Buscar disponibilidad y ver el precio | ✅ | — | ✅ | — | — | — | HU-HUE-03, HU-HUE-04, HU-REC-03 |
+| Ver la información del hotel y el catálogo de habitaciones (tipos activos y ofertas comerciales) | ✅ | — | — | — | — | — | HU-HUE-01, HU-HUE-02 |
+| Buscar disponibilidad y ver el precio (por tipo o por oferta comercial) | ✅ | — | ✅ | — | — | — | HU-HUE-03, HU-HUE-04, HU-REC-03 |
 | Crear una reserva | ✅ ¹ | — | ✅ | — | — | — | HU-HUE-05, HU-REC-04 |
 | Pagar la reserva con Recurrente | ✅ | — | — | — | — | — | HU-HUE-06 |
 | Registrar al huésped principal y a los adicionales | — | — | ✅ | — | — | — | HU-REC-01, HU-REC-02 |
@@ -132,7 +132,7 @@ Define **qué acción exacta puede hacer cada rol**. Es la referencia para:
 | Acción | PÚBLICO | ADMIN | RECEPCION | ROOM_SERVICE | MYL | HUESPED | HU |
 |---|---|---|---|---|---|---|---|
 | Gestionar empleados (crear, editar, desactivar, restablecer contraseña) | — | ✅ | — | — | — | — | HU-ADM-01, HU-ADM-02 |
-| Gestionar tipos de habitación y habitaciones | — | ✅ | — | — | — | — | HU-ADM-03, HU-ADM-04 |
+| Gestionar tipos de habitación y habitaciones físicas (`room_types`, `rooms`) | — | ✅ ¹⁵ | — | — | — | — | HU-ADM-03, HU-ADM-04 |
 | Gestionar el menú de Room Service | — | ✅ | — | — | — | — | HU-ADM-05 |
 | Gestionar temporadas y el ajuste de fin de semana | — | ✅ | — | — | — | — | HU-ADM-06, HU-ADM-07 |
 | Configurar los datos del hotel y fiscales | — | ✅ | — | — | — | — | HU-ADM-08 |
@@ -178,6 +178,7 @@ Define **qué acción exacta puede hacer cada rol**. Es la referencia para:
 | ¹² | Solo empleados con área `MANTENIMIENTO` o `AMBAS`. Un empleado solo de Limpieza recibe "Acceso denegado". Reportar un daño sí lo puede hacer cualquier área. |
 | ¹³ | Cualquier huésped con sesión, sin importar el estado de su reserva. |
 | ¹⁴ | Solo con la cuenta `ABIERTA` (HU-REC-13). |
+| ¹⁵ | `ADMIN` gestiona tipos (`room_types`, incluidas sus fotos públicas en S3/CloudFront) y habitaciones físicas (`rooms`) en `/api/v1/admin/tipos-habitacion` y `/api/v1/admin/habitaciones`. La administración de ofertas comerciales (`catalog_offers`, `catalog_offer_rooms`, `room_features`) se define en `API #83` y `web #69` (véase [admin-habitaciones-ofertas-tipos.md](../04-guias-y-referencia/admin-habitaciones-ofertas-tipos.md)). |
 
 ---
 
@@ -197,7 +198,7 @@ Define **qué acción exacta puede hacer cada rol**. Es la referencia para:
 |---|---|---|
 | VIS-01 | El huésped solo ve sus propias reservas, cuenta, pedidos, solicitudes y factura. Si pide un registro ajeno, el servidor lo rechaza. | HU-HUE-09, HU-HUE-15 |
 | VIS-02 | Room Service solo ve el nombre del huésped, la habitación y el piso; Mantenimiento/Limpieza solo la habitación y el piso. Ninguno ve correo, teléfono, documento ni pagos. | HU-RS-01, HU-RS-02, HU-MYL-04 |
-| VIS-03 | La web pública solo expone información del hotel, tipos de habitación activos, disponibilidad y precios. La página de retorno de Recurrente solo muestra el estado de la reserva recién pagada. Nunca expone otras reservas ni datos de otros huéspedes. | HU-HUE-01 a HU-HUE-04 |
+| VIS-03 | La web pública solo expone información del hotel, tipos de habitación activos, ofertas comerciales publicadas (sin notas internas `pendingFeatures`), disponibilidad y precios. La página de retorno de Recurrente solo muestra el estado de la reserva recién consultada. Nunca expone otras reservas ni datos de otros huéspedes. | HU-HUE-01 a HU-HUE-04 |
 | VIS-04 | Un empleado `INACTIVO` no puede iniciar sesión ni renovar su sesión. La política anterior permitía conservar el acceso hasta vencer el JWT; es un antecedente histórico. El API inspeccionado comprueba la vigencia del empleado en cada petición. La reconciliación de esta política sigue pendiente en API #78, según RN-PER-014, sin debilitar los controles implementados. | HU-ADM-02, HU-EMP-01 |
 | VIS-05 | Las notificaciones push no muestran datos personales ni montos. | HU-HUE-17 |
 | VIS-06 | Los secretos (claves de Recurrente, del correo, de firma de los JWT, de los canales) nunca se suben a Git ni llegan a la web o a la app. | AGENTS.md; documento 14 |
