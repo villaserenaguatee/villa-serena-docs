@@ -373,7 +373,7 @@ paths:
                   capacidad: 4
                   precioBaseNoche: 850.00
                   fotos:
-                    - http://localhost:9000/villa-serena-publico/tipos/1/principal.jpg
+                    - https://d13s29erv78l4g.cloudfront.net/tipos/1/principal.jpg
                 - id: 2
                   nombre: Suite Volcán
                   descripcion: Cama king, terraza privada y vista al Volcán de Agua.
@@ -404,8 +404,8 @@ paths:
                 capacidad: 4
                 precioBaseNoche: 850.00
                 fotos:
-                  - http://localhost:9000/villa-serena-publico/tipos/1/principal.jpg
-                  - http://localhost:9000/villa-serena-publico/tipos/1/bano.jpg
+                  - https://d13s29erv78l4g.cloudfront.net/tipos/1/principal.jpg
+                  - https://d13s29erv78l4g.cloudfront.net/tipos/1/bano.jpg
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -446,7 +446,7 @@ paths:
                     capacidad: 4
                     precioBaseNoche: 850.00
                     fotos:
-                      - http://localhost:9000/villa-serena-publico/tipos/1/principal.jpg
+                      - https://d13s29erv78l4g.cloudfront.net/tipos/1/principal.jpg
                   noches: 2
                   total: 1912.50
                   desglose:
@@ -5881,7 +5881,7 @@ paths:
                   ajusteFinSemanaPct: 1
                   fotos:
                     - clave: tipos/suite-demo.jpg
-                      url: http://localhost:9000/publico/tipos/suite-demo.jpg
+                      url: https://d13s29erv78l4g.cloudfront.net/tipos/suite-demo.jpg
                       principal: true
                       orden: 0
         "400":
@@ -5931,7 +5931,7 @@ paths:
                 ajusteFinSemanaPct: 1
                 fotos:
                   - clave: tipos/suite-demo.jpg
-                    url: http://localhost:9000/publico/tipos/suite-demo.jpg
+                    url: https://d13s29erv78l4g.cloudfront.net/tipos/suite-demo.jpg
                     principal: true
                     orden: 0
         "400":
@@ -5988,7 +5988,7 @@ paths:
                 ajusteFinSemanaPct: 1
                 fotos:
                   - clave: tipos/suite-demo.jpg
-                    url: http://localhost:9000/publico/tipos/suite-demo.jpg
+                    url: https://d13s29erv78l4g.cloudfront.net/tipos/suite-demo.jpg
                     principal: true
                     orden: 0
         "400":
@@ -6044,7 +6044,7 @@ paths:
                 ajusteFinSemanaPct: 1
                 fotos:
                   - clave: tipos/suite-demo.jpg
-                    url: http://localhost:9000/publico/tipos/suite-demo.jpg
+                    url: https://d13s29erv78l4g.cloudfront.net/tipos/suite-demo.jpg
                     principal: true
                     orden: 0
         "400":
@@ -6114,7 +6114,7 @@ paths:
                 ajusteFinSemanaPct: 1
                 fotos:
                   - clave: tipos/suite-demo.jpg
-                    url: http://localhost:9000/publico/tipos/suite-demo.jpg
+                    url: https://d13s29erv78l4g.cloudfront.net/tipos/suite-demo.jpg
                     principal: true
                     orden: 0
         "400":
@@ -6184,7 +6184,7 @@ paths:
                 ajusteFinSemanaPct: 1
                 fotos:
                   - clave: tipos/suite-demo.jpg
-                    url: http://localhost:9000/publico/tipos/suite-demo.jpg
+                    url: https://d13s29erv78l4g.cloudfront.net/tipos/suite-demo.jpg
                     principal: true
                     orden: 0
         "400":
@@ -6257,7 +6257,7 @@ paths:
                 ajusteFinSemanaPct: 1
                 fotos:
                   - clave: tipos/suite-demo.jpg
-                    url: http://localhost:9000/publico/tipos/suite-demo.jpg
+                    url: https://d13s29erv78l4g.cloudfront.net/tipos/suite-demo.jpg
                     principal: true
                     orden: 0
         "400":
@@ -9064,8 +9064,8 @@ components:
     UrlFoto:
       type: string
       format: uri
-      description: URL pública de la foto (bucket público de MinIO).
-      examples: [http://localhost:9000/villa-serena-publico/hotel/fachada.jpg]
+      description: URL pública de la foto servida por el CDN o dominio de assets públicos configurado en ARCHIVOS_URL_PUBLICA.
+      examples: [https://d13s29erv78l4g.cloudfront.net/hotel/fachada.jpg]
     Hotel:
       type: object
       required: [nombre, descripcion, fotos, ubicacion, contacto, horaCheckIn, horaCheckOut]
@@ -11771,7 +11771,7 @@ components:
           minimum: 0
       examples:
         - clave: tipos/suite-demo.jpg
-          url: http://localhost:9000/publico/tipos/suite-demo.jpg
+          url: https://d13s29erv78l4g.cloudfront.net/tipos/suite-demo.jpg
           principal: true
           orden: 0
     TipoHabitacionAdmin:
@@ -11821,7 +11821,7 @@ components:
           ajusteFinSemanaPct: 1
           fotos:
             - clave: tipos/suite-demo.jpg
-              url: http://localhost:9000/publico/tipos/suite-demo.jpg
+              url: https://d13s29erv78l4g.cloudfront.net/tipos/suite-demo.jpg
               principal: true
               orden: 0
     CrearTipoHabitacionPeticion:
