@@ -11,9 +11,9 @@ flowchart LR
     P[Personal · navegador]
     H[Huésped · Android]
   end
-  subgraph web[Web · Next.js 15 + React]
+  subgraph web[Web · Next.js 15 + React · local o Vercel]
     W[Web pública y panel privado]
-    B[BFF · sesión del personal]
+    B[BFF · sesión y proxys HTTP]
     SIM[Canal simulado · ADMIN]
     W --> B
     SIM --> B
@@ -30,10 +30,10 @@ flowchart LR
     R & E & O & A --> N
     O & E --> WS
   end
-  subgraph docker[Servicios previstos en Docker local]
+  subgraph servicios[Persistencia, correo, objetos y observabilidad]
     DB[(PostgreSQL 17)]
-    M[Mailpit · SMTP de prueba]
-    F[MinIO · fotos y PDF]
+    M[SMTP · Mailpit local / proveedor SMTP]
+    F[Objetos · MinIO / R2 / S3 + CloudFront]
     PR[Prometheus]
     G[Grafana]
     PR --> G
@@ -48,9 +48,8 @@ flowchart LR
   N --> DB
   N --> M
   N --> X[Expo Push → FCM → teléfono]
-  S -->|Checkout / reembolso| ST[Stripe · modo prueba]
-  ST --> CLI[Stripe CLI · webhook local]
-  CLI -->|Firma Stripe| S
+  S -->|Checkout / reembolso GTQ| REC[Recurrente · Sandbox]
+  REC -->|Webhook firmado Svix| S
   CH[Canal externo simulado] -->|Canal + clave| S
   PR -->|Lee Actuator / Micrometer| S
 ```
@@ -58,13 +57,14 @@ flowchart LR
 ## Reglas y límites
 
 - Los recuadros dentro de Spring son módulos de un solo API, no microservicios.
-- El Docker local está previsto por la documentación; este atlas no afirma que esté disponible.
-- El contrato está en api/openapi.yaml; web y app generan sus tipos por separado.
+- En local, PostgreSQL 17, Mailpit, MinIO, Prometheus y Grafana corren en Docker Compose; en despliegue compartido, la web corre en Vercel y el API detrás de AWS HTTP API Gateway + EC2 ARM64 + S3 + CloudFront.
+- El contrato canónico vive en [`villa-serena-docs/openapi.yaml`](../../openapi.yaml) y cada consumidor fija su revisión en `api-contract.json` ([guía del contrato](../contrato-api.md)).
 
 ## Referencias
 
-- [14 §§2–6](../arquitectura-sistema.md#2-decisiones-de-arquitectura)
-- [09 §§5–7](../../02-producto/matriz-de-permisos.md#5-actores-que-no-son-usuarios)
-- [19 §2](../../04-guias-y-referencia/integracion-canales.md#2-qué-hace-hoy-el-sistema)
+- [Arquitectura del sistema §§2–6](../arquitectura-sistema.md#2-decisiones-de-arquitectura)
+- [Despliegue y modelo de datos](../../04-guias-y-referencia/despliegue-y-modelo-datos.md)
+- [Matriz de permisos §§5–7](../../02-producto/matriz-de-permisos.md#5-actores-que-no-son-usuarios)
+- [Integración con canales §2](../../04-guias-y-referencia/integracion-canales.md#2-qué-hace-hoy-el-sistema)
 
 [Índice de diagramas](README.md) · [Cobertura de historias](COBERTURA.md) · [Siguiente](02-participantes-y-responsabilidades.md)
