@@ -54,6 +54,7 @@ villa-serena-docs/
 * **[Guía de Arranque Local](04-guias-y-referencia/arranque-local.md):** Pasos para levantar el ecosistema completo con Docker Compose.
 * **[Pagos con Recurrente](04-guias-y-referencia/arranque-local.md#42-probar-pagos-con-recurrente):** Configuración local de Sandbox y webhook. La [guía de Stripe CLI](04-guias-y-referencia/stripe-cli.md) se conserva como referencia histórica.
 * **[Fotos de Tipos de Habitación (S3, R2 y CloudFront)](04-guias-y-referencia/fotos-tipos-habitacion.md):** Flujo `ADMIN → BFF → API → S3/R2 → CloudFront`, permisos IAM bajo `tipos/*` y checklist de verificación.
+* **[Administración de Habitaciones, Ofertas y Tipos](04-guias-y-referencia/admin-habitaciones-ofertas-tipos.md):** Relación entre `room_types`, `rooms` y `catalog_offers`, fuentes de precio, disponibilidad y estado de implementación (`API #82`–`#84`, `web #69`).
 * **[Diseño de Integración con Canales](04-guias-y-referencia/integracion-canales.md):** Simulación de ingesta de reservas externas.
 
 ---
