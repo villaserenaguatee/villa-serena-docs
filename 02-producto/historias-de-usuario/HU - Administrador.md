@@ -78,7 +78,7 @@ Las historias comunes a todo el personal (iniciar sesión y cambiar la contrase�
 
 **Criterios de aceptación**
 1. Se registran nombre, descripción, capacidad máxima de huéspedes y precio base por noche en quetzales (con impuestos incluidos). La cantidad total de habitaciones del tipo no se edita manualmente en el tipo: se deriva de las habitaciones físicas registradas en `HU-ADM-04`.
-2. Se pueden subir varias fotos y elegir la foto principal.
+2. En **Administración → Catálogos → Tipos de habitación**, el `ADMIN` puede subir varias fotos (`JPG`/`PNG` reales de hasta 5 MiB mediante el BFF hacia `POST /api/v1/archivos/imagenes` con `uso=TIPO_HABITACION`) y guardar la galería del tipo con su orden y exactamente una foto principal (`PUT /api/v1/admin/tipos-habitacion/{id}/fotos`). Subir un archivo devuelve su clave bajo `tipos/`; la galería pública solo cambia al guardar la asociación en el tipo. Véase la [guía operativa de fotos de tipos de habitación](../../04-guias-y-referencia/fotos-tipos-habitacion.md).
 3. El nombre es obligatorio y no se repite; la capacidad debe ser al menos 1 y el precio base mayor a cero. Si no se cumple, se muestra un error y no se guarda.
 4. Cambiar el precio base del tipo (`room_types.base_price`) solo afecta las reservas nuevas cotizadas por tipo; las reservas existentes conservan su precio congelado. Las ofertas comerciales del catálogo (`catalog_offers.base_price`) mantienen su propio precio fijo por noche hasta que se administren en el módulo de ofertas (`API #83`).
 5. Un tipo se puede desactivar: deja de mostrarse en el catálogo por tipo, las ofertas asociadas dejan de ser reservables y no admite reservas nuevas, pero conserva sus reservas existentes.
@@ -102,7 +102,7 @@ Las historias comunes a todo el personal (iniciar sesión y cambiar la contrase�
 - **Para** que puedan reservarse y asignarse
 
 **Criterios de aceptación**
-1. Se registran número de habitación, piso y tipo de habitación (activo).
+1. Se registran número de habitación, piso y tipo de habitación (activo). Las habitaciones físicas reutilizan la galería fotográfica de su tipo (`HU-ADM-03`); no se cargan fotos por unidad física.
 2. El número de habitación es único; si ya existe, se muestra un error y no se guarda.
 3. Una habitación nueva se crea `Libre` + `Limpia` + `Activa` y suma de inmediato a la disponibilidad operativa de su tipo (`GET /api/v1/publico/disponibilidad` y Recepción).
 4. Se puede cambiar el tipo de una habitación solo si no tiene reservas activas asignadas (`Pendiente de pago`, `Confirmada` o `En estadía`).
