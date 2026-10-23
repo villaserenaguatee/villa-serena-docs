@@ -58,9 +58,9 @@ sequenceDiagram
 
 ## Referencias
 
-- [10 RN-APP-001–011](../../02-producto/reglas-de-negocio.md)
-- [09 VIS-01,7.2](../../02-producto/matriz-de-permisos.md)
-- [14 §6.1.8](../arquitectura-sistema.md)
+- [10 RN-APP-001–011](../../02-producto/reglas-de-negocio.md#13-app-y-acceso-del-huésped--rn-app)
+- [09 VIS-01,7.2](../../02-producto/matriz-de-permisos.md#6-reglas-de-visibilidad-de-datos)
+- [14 §6.1.8](../arquitectura-sistema.md#61-patrón-bff-y-seguridad-de-sesión)
 
 **Historias vinculadas:** `HU-HUE-08`, `HU-HUE-09`, `HU-HUE-17`.
 
