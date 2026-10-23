@@ -29,9 +29,9 @@ flowchart LR
 
 ## Referencias
 
-- [02](../02%20-%20Definicion%20de%20Roles.md)
-- [09 §§3–6](../09%20-%20Matriz%20de%20Permisos.md)
-- [12 §2](../12%20-%20Casos%20de%20Uso.md)
-- [13 §9](../13%20-%20Plan%20de%20Trabajo.md)
+- [02](../../02-producto/roles-y-responsabilidades.md#2-resumen-de-roles)
+- [09 §§3–6](../../02-producto/matriz-de-permisos.md#3-matriz-por-módulo)
+- [12 §2](../../02-producto/casos-de-uso.md#2-actores)
+- [Roadmap por versiones](../../01-metodologia/roadmap-versiones.md#1-resumen-de-fases) (vigente) y [13 §9 del plan original archivado](../../04-guias-y-referencia/historico/plan-de-trabajo-original.md#9-orden-de-recorte)
 
 [Índice de diagramas](README.md) · [Cobertura de historias](COBERTURA.md) · [Anterior](01-componentes-y-conexiones.md) · [Siguiente](03-actividad-general-de-la-reserva-a-la-siguiente-llegada.md)
