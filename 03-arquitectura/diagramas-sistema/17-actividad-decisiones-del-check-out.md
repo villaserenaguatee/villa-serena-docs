@@ -1,5 +1,7 @@
 # 17 — Actividad: decisiones del check-out
 
+> Reconciliación 22/10/2026: [flujos y decisiones actuales](../../02-producto/reconciliacion-frontend-20261022.md). El pago en línea del saldo pendiente usa **Recurrente** (`RECURRENTE`) con confirmación por backend/webhook Svix; el portal web (`/portal`) complementa a la app Android.
+
 **Vista:** Actividad · **Alcance del plan:** Hito.
 
 Una única salida funcional, con dos caminos de pago y reglas de bloqueo explícitas.
@@ -9,14 +11,14 @@ flowchart TB
   I[Solicitar check-out] --> E{Reserva EN_ESTADIA y sin pedido EN_CAMINO?}
   E -->|No| B[Rechazar o esperar entrega]
   E -->|Sí| O{Origen}
-  O -->|App| T{Día de salida entre 00:00 y 12:00?}
+  O -->|Portal web / App| T{Día de salida entre 00:00 y 12:00?}
   T -->|No| REC[Indicar hacerlo en Recepción]
   T -->|Sí| Q{Pedidos NUEVO / EN_PREPARACION?}
   Q -->|Sí| A[Aceptar cancelarlos sin cargo]
   Q -->|No| S{Saldo}
   A --> S
-  S -->|Mayor que cero| ST[Pagar saldo completo por Stripe]
-  ST --> W[Esperar webhook de pago aprobado y releer saldo]
+  S -->|Mayor que cero| ST[Pagar saldo completo en Recurrente]
+  ST --> W[Confirmar pago aprobado en backend / webhook Svix y releer saldo]
   W --> Z{Saldo exactamente cero?}
   S -->|Cero| Z
   S -->|Negativo| NEG[Revisar cuenta; bloquear salida]
@@ -35,21 +37,21 @@ flowchart TB
   DONE --> ROOM[LIBRE + SUCIA o FUERA_DE_SERVICIO si daño bloqueante]
   DONE --> CAN[Cancelar pedidos nuevos o en preparación y solicitudes abiertas]
   DONE --> PUSH[Borrar push y bloquear nuevos pedidos / solicitudes]
-  DONE --> INV[Factura por correo; PDF en app e impresión en Recepción]
+  DONE --> INV[Factura por correo; PDF en portal/app e impresión en Recepción]
 ```
 
 ## Reglas y límites
 
 - Salida tarde se resuelve en Recepción; no hay proceso ni recargo automático.
 - Saldo negativo también bloquea: el requisito es exactamente cero.
-- Si falla el cierre, el pago Stripe previamente aprobado se conserva para reintentar sin cobrar otra vez.
+- Si falla el cierre, el pago en línea previamente aprobado se conserva para reintentar sin cobrar otra vez. La simple redirección desde la pasarela no acredita pago aprobado.
 
 ## Referencias
 
-- [10 RN-RES-015,021,022](../10%20-%20Reglas%20de%20Negocio.md)
-- [10 RN-APP-008](../10%20-%20Reglas%20de%20Negocio.md)
-- [10 RN-RS-011](../10%20-%20Reglas%20de%20Negocio.md)
-- [12 UC-04](../12%20-%20Casos%20de%20Uso.md)
+- [10 RN-RES-015,021,022](../../02-producto/reglas-de-negocio.md)
+- [10 RN-APP-008](../../02-producto/reglas-de-negocio.md)
+- [10 RN-RS-011](../../02-producto/reglas-de-negocio.md)
+- [12 UC-04](../../02-producto/casos-de-uso.md)
 
 **Historias vinculadas:** `HU-HUE-16`, `HU-REC-14`.
 
