@@ -1,5 +1,7 @@
 # 15 — Secuencia: cuenta, cargos y saldo
 
+> Reconciliación 22/10/2026: [flujos y decisiones actuales](../../02-producto/reconciliacion-frontend-20261022.md). El huésped consulta su cuenta desde el portal web (`/portal`) o desde la app Android.
+
 **Vista:** Secuencia · **Alcance del plan:** Hito.
 
 Una cuenta por reserva reúne alojamiento, servicios, room service y pagos.
@@ -10,7 +12,7 @@ sequenceDiagram
   participant B as Panel / BFF
   participant S as API cuenta
   participant D as PostgreSQL
-  participant A as App huésped
+  participant A as Portal web / App huésped
   Note over S,D: Al crear reserva: cuenta ABIERTA y cargo de alojamiento
   R->>B: Consultar cuenta
   B->>S: GET cuenta de reserva
@@ -38,7 +40,7 @@ sequenceDiagram
 
 - Saldo = cargos VIGENTE − pagos APROBADO; anulados, pendientes, fallidos y reembolsados no suman.
 - Solo adicionales se anulan, con motivo; nunca se borran cargos ni se anula alojamiento.
-- El huésped puede consultar la cuenta en cualquier estado, con actualización al abrir o recargar.
+- El huésped puede consultar la cuenta en cualquier estado desde `/portal` o la app, con actualización al abrir o recargar.
 
 ## Referencias
 
