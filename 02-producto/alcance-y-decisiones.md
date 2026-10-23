@@ -1,5 +1,7 @@
 # Alcance del Proyecto y Decisiones Generales
 
+> Reconciliación 22/10/2026: [decisiones posteriores, estado implementado y límites del contrato](reconciliacion-frontend-20261022.md). Los estados «Pendiente» anteriores no certifican implementación; portal web y Android coexisten. No se reintroducen campos retirados del MVP.
+
 Este documento define el perímetro funcional del PMS Villa Serena: qué componentes y capacidades se construyen y qué queda explícitamente fuera de alcance para mantener el sistema enfocado y viable.
 
 ---
@@ -68,7 +70,7 @@ La entrega se organiza por el [roadmap vigente](../01-metodologia/roadmap-versio
 |---|---|---|
 | D-14 | **Pago único, sin abonos** | Cada pago liquida el **saldo completo**. En la web se paga el **100 % al reservar**. En Recepción se cobra **todo en el check-out** (alojamiento y consumos) |
 | D-15 | **No se modifican reservas** | Ni el huésped ni Recepción modifican una reserva. Para cambiar algo, **Recepción la cancela y crea una nueva** |
-| D-16 | **Cancelación de todo o nada** | Solo **Recepción** cancela (a pedido del huésped), y solo reservas `Confirmada` que no vengan de un canal externo; las `Pendiente de pago` se cancelan solas a los 30 minutos tras comprobar la pasarela. Con **48 horas o más** antes de las **15:00 del día de llegada**: reembolso **total** por Recurrente para pagos nuevos (si pagó en línea); los pagos históricos de Stripe conservan su proveedor y requieren conciliación con él. Con menos de 48 horas o si no llega: **no hay reembolso** (si no llega, Recepción cancela la reserva con el motivo "No se presentó"; no existe el estado `No-show`). No se calculan penalidades |
+| D-16 | **Cancelación de todo o nada** | Solo **Recepción** cancela (a pedido del huésped), y solo reservas `Confirmada` que no vengan de un canal externo; las `Pendiente de pago` se revisan al vencer los 30 minutos según el proceso real de pago y solo se cancelan tras confirmar vencimiento sin pago. Con **48 horas o más** antes de las **15:00 del día de llegada**: reembolso **total** por Recurrente para pagos nuevos (si pagó en línea); los pagos históricos de Stripe conservan su proveedor y requieren conciliación con él. Con menos de 48 horas o si no llega: **no hay reembolso** (si no llega, Recepción cancela la reserva con el motivo "No se presentó"; no existe el estado `No-show`). No se calculan penalidades |
 | D-17 | **Sin cambio de habitación durante la estadía** | La habitación se asigna o cambia **solo antes del check-in**. Si hay un daño con el huésped dentro, se atiende con el huésped alojado |
 | D-18 | **Facturación mínima** | Solo se factura **en el check-out**. Se emite, se imprime (80 mm o carta desde el navegador) y se envía en PDF por correo. **Sin anulación de facturas ni marca "COPIA"**. Los datos fiscales van en la configuración del hotel; la **serie fija** y su número inicial no se editan |
 | D-19 | **Mantenimiento de 3 pasos** | Reportar daño → el técnico lo toma (**En proceso**) → **Resuelta**. Sin asignación del Administrador ni reasignaciones en el flujo mínimo de incidencias. Las órdenes operativas existentes sí registran repuestos compartidos con inventario (docs #21) |
@@ -82,7 +84,7 @@ La entrega se organiza por el [roadmap vigente](../01-metodologia/roadmap-versio
 
 Es la visión completa del producto. El MVP (`v0.1.0`) cubre reserva, pago, check-in, cuenta, check-out y factura; los pasos de app Android y operación en vivo corresponden a `v0.2.0`, y las funciones analíticas/complementarias a `v0.3.0` según el roadmap.
 
-1. **Reservar (web pública — `v0.1.0`):** el cliente busca fechas, elige un tipo u oferta, ve el precio cotizado, verifica su correo, ingresa sus datos y **paga el 100 % con Recurrente**. Recibe un correo con su **código de reserva (`VS-...`)**.
+1. **Reservar (web pública — `v0.1.0`):** el cliente busca fechas, elige un tipo u oferta, ve el precio cotizado, verifica su correo, ingresa sus datos y **paga el 100 % con Recurrente**. Recibe confirmación con su **código de reserva (`VS-...`)** (que identifica la reserva y no sustituye el OTP de acceso).
    - Recepción también puede crear reservas (`v0.1.0`, se pagan en el check-out), y el **canal simulado** puede enviarlas por la API (`v0.3.0`).
 2. **Check-in (Recepción — `v0.1.0`):** busca la reserva ("Llegan hoy"), asigna una habitación **libre y limpia** y hace el check-in.
 3. **Estadía (portal web en `v0.1.0` / app Android en `v0.2.0`):** el huésped entra con su **correo + código OTP**, ve su estadía y su cuenta; en `v0.2.0` **pide room service** (se carga a su cuenta), **solicita limpieza o artículos** y recibe **notificaciones push**.
@@ -199,7 +201,7 @@ La columna **Nivel** indica la clasificación del catálogo (sección 2) y la co
 
 | ID | Funcionalidad | Nivel | Versión |
 |---|---|---|---|
-| ALC-TRA-01 | Autenticación: personal con correo + contraseña (bloqueo tras 5 intentos fallidos); huésped con OTP en portal/app; **primer Administrador creado por bootstrap controlado** (`BOOTSTRAP_ADMIN_ENABLED`) | 1 | `v0.1.0` |
+| ALC-TRA-01 | Autenticación: personal con correo + contraseña (bloqueo tras 5 intentos fallidos); huésped con OTP en portal/app; **primer Administrador creado por bootstrap controlado** (`BOOTSTRAP_ADMIN_ENABLED`, deshabilitado por defecto y sin sustituir cuentas existentes) | 1 | `v0.1.0` |
 | ALC-TRA-02 | 5 roles con permisos aplicados en el backend (Spring Security) | 1 | `v0.1.0` |
 | ALC-TRA-03 | Historial de cambios de estado con fecha, hora y responsable | 1 | `v0.1.0` |
 | ALC-TRA-04 | Tiempo real para 4 eventos: nuevo pedido, cambio de estado del pedido, nueva solicitud y cambio de estado de habitación | 1 | `v0.2.0` |
@@ -234,7 +236,7 @@ La columna **Nivel** indica la clasificación del catálogo (sección 2) y la co
 | ALC-REC-14 | Aviso a Recepción de nuevas solicitudes | Las solicitudes van directo a Limpieza, que recibe el aviso |
 | ALC-ADM-05 | Reportes de faltantes y reposición | No se agrega como requisito de esta reconciliación del inventario |
 | ALC-APP-09 | Estadísticas avanzadas de estadías en la app | El portal/app muestra las reservas asociadas al correo sin habilitar servicios de estancia en reservas cerradas |
-| ALC-RS-03 | Pedido telefónico | Los pedidos entran desde el huésped en estadía |
+| ALC-RS-03 | Pedido telefónico | Los pedidos los crea el huésped desde portal web o Android; no se habilita pedido telefónico del personal |
 | ALC-RS-07 | Marcar ítem como agotado (separado) | Se une con ALC-RS-06 |
 | ALC-RS-09 | Historial de pedidos con filtros y tiempo de entrega | Analítica secundaria |
 | ALC-MYL-04 | Información de la habitación y observaciones | No bloquea el flujo |

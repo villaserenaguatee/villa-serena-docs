@@ -76,3 +76,11 @@ El código del proyecto se encuentra distribuido en los siguientes repositorios 
 ## Comprobar el contrato
 
 Con Node.js 24 y pnpm 12, ejecuta `pnpm install --frozen-lockfile` y `pnpm check`. Las instrucciones para agentes están en [AGENTS.md](AGENTS.md). API, web y móvil consumen una revisión fija de docs; no mantienen copias locales de `openapi.yaml`. Consulta la [guía del contrato](03-arquitectura/contrato-api.md) para generar tipos y comprobar consumidores.
+
+## Estado de los recorridos web (22/10/2026)
+
+- [Reconciliación de funcionalidades, decisiones posteriores y bloqueos](02-producto/reconciliacion-frontend-20261022.md).
+- [Manual de recorridos web y errores](04-guias-y-referencia/recorridos-web.md).
+- [Operaciones existentes sin contrato canónico: propuesta pendiente de acuerdo](03-arquitectura/propuestas/contratos-web-pendientes.md).
+
+Estos documentos distinguen código integrado, preparación local para aprobación y validación pendiente. No certifican servicios reales por tener pantallas o mocks.

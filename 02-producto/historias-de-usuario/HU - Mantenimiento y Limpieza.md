@@ -1,5 +1,7 @@
 # HU — Mantenimiento y Limpieza
 
+> Reconciliación 22/10/2026: [decisiones posteriores, estado implementado y límites del contrato](../reconciliacion-frontend-20261022.md). Los estados «Pendiente» anteriores no certifican implementación; portal web y Android coexisten. No se reintroducen campos retirados del MVP.
+
 > **Rol:** Mantenimiento/Limpieza (`MANTENIMIENTO_LIMPIEZA`), con área **Limpieza**, **Mantenimiento** o **Ambas**
 > **Plataforma:** Web privada (pensada para usarse desde el teléfono del empleado)
 > **Prefijo:** `HU-MYL`
