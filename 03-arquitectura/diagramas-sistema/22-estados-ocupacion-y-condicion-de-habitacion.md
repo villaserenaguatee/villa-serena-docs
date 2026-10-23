@@ -34,8 +34,8 @@ flowchart TB
 
 ## Referencias
 
-- [07 §4](../07%20-%20Estados.md)
-- [10 RN-HAB](../10%20-%20Reglas%20de%20Negocio.md)
-- [10 RN-LIM-001,002](../10%20-%20Reglas%20de%20Negocio.md)
+- [07 §4](../maquinas-de-estados.md#4-habitación)
+- [10 RN-HAB](../../02-producto/reglas-de-negocio.md#4-habitaciones--rn-hab)
+- [10 RN-LIM-001,002](../../02-producto/reglas-de-negocio.md#9-limpieza-y-solicitudes--rn-lim)
 
 [Índice de diagramas](README.md) · [Cobertura de historias](COBERTURA.md) · [Anterior](21-estados-reserva-cuenta-pago-cargo-y-factura.md) · [Siguiente](23-estados-pedidos-solicitudes-e-incidencias.md)

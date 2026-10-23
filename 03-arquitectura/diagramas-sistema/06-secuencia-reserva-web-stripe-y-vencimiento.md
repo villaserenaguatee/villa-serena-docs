@@ -50,9 +50,9 @@ sequenceDiagram
 
 ## Referencias
 
-- [07 R1,R4,R5,P1–P3](../07%20-%20Estados.md)
-- [10 RN-PAG-001–006](../10%20-%20Reglas%20de%20Negocio.md)
-- [12 UC-02,05,15](../12%20-%20Casos%20de%20Uso.md)
+- [07 R1,R4,R5,P1–P3](../maquinas-de-estados.md#3-reserva)
+- [10 RN-PAG-001–006](../../02-producto/reglas-de-negocio.md#6-pagos-y-cuenta--rn-pag)
+- [12 UC-02,05,15](../../02-producto/casos-de-uso.md#uc-05--procesar-pago-en-línea)
 
 **Historias vinculadas:** `HU-HUE-05`, `HU-HUE-06`, `HU-HUE-07`.
 

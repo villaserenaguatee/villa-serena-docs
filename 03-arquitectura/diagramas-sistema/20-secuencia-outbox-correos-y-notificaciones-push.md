@@ -47,9 +47,9 @@ sequenceDiagram
 
 ## Referencias
 
-- [14 AD-12,§5](../14%20-%20Tecnologias%20y%20Arquitectura.md)
-- [07 §§11,12.2,12.3](../07%20-%20Estados.md)
-- [10 RN-NOT](../10%20-%20Reglas%20de%20Negocio.md)
-- [OpenAPI x-push](https://github.com/villaserenaguate/villa-serena-api/blob/main/openapi.yaml)
+- [14 AD-12,§5](../arquitectura-sistema.md#5-dónde-vive-cada-regla)
+- [07 §§11,12.2,12.3](../maquinas-de-estados.md#12-tiempo-real-notificaciones-push-y-correos)
+- [10 RN-NOT](../../02-producto/reglas-de-negocio.md#16-notificaciones-y-correos--rn-not)
+- [OpenAPI x-push](../../openapi.yaml)
 
 [Índice de diagramas](README.md) · [Cobertura de historias](COBERTURA.md) · [Anterior](19-secuencia-conexiones-y-cuatro-eventos-en-vivo.md) · [Siguiente](21-estados-reserva-cuenta-pago-cargo-y-factura.md)

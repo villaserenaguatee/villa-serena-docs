@@ -51,8 +51,8 @@ sequenceDiagram
 
 ## Referencias
 
-- [10 RN-RES-011,013,014,019,020,023,024](../10%20-%20Reglas%20de%20Negocio.md)
-- [12 UC-02,03,14](../12%20-%20Casos%20de%20Uso.md)
+- [10 RN-RES-011,013,014,019,020,023,024](../../02-producto/reglas-de-negocio.md#3-reservas--rn-res)
+- [12 UC-02,03,14](../../02-producto/casos-de-uso.md#uc-03--realizar-check-in)
 
 **Historias vinculadas:** `HU-REC-01`, `HU-REC-02`, `HU-REC-04`, `HU-REC-06`, `HU-REC-07`, `HU-REC-08`, `HU-REC-12`.
 

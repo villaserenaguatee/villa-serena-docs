@@ -50,9 +50,9 @@ flowchart TB
 
 ## Referencias
 
-- [01 §4](../01%20-%20Alcance%20del%20Proyecto.md)
-- [07 §§3,11](../07%20-%20Estados.md)
-- [12 UC-02,03,04](../12%20-%20Casos%20de%20Uso.md)
-- [13 objetivos 0–4](../13%20-%20Plan%20de%20Trabajo.md)
+- [01 §4](../../02-producto/alcance-y-decisiones.md#4-flujo-principal-del-sistema)
+- [07 §§3,11](../maquinas-de-estados.md#3-reserva)
+- [12 UC-02,03,04](../../02-producto/casos-de-uso.md#uc-02--crear-reserva)
+- [Roadmap por versiones](../../01-metodologia/roadmap-versiones.md#2-detalle-de-versiones) (vigente) y [13 objetivos 0–4 del plan original archivado](../../04-guias-y-referencia/historico/plan-de-trabajo-original.md#5-detalle-por-objetivo)
 
 [Índice de diagramas](README.md) · [Cobertura de historias](COBERTURA.md) · [Anterior](02-participantes-y-responsabilidades.md) · [Siguiente](04-secuencia-general-del-viaje-del-huesped.md)

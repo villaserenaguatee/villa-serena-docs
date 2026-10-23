@@ -35,7 +35,7 @@ flowchart LR
 
 ## Referencias
 
-- [07 §§6–8](../07%20-%20Estados.md)
-- [10 RN-RS,RN-LIM,RN-MAN](../10%20-%20Reglas%20de%20Negocio.md)
+- [07 §§6–8](../maquinas-de-estados.md#6-pedido-de-room-service)
+- [10 RN-RS,RN-LIM,RN-MAN](../../02-producto/reglas-de-negocio.md#8-room-service--rn-rs)
 
 [Índice de diagramas](README.md) · [Cobertura de historias](COBERTURA.md) · [Anterior](22-estados-ocupacion-y-condicion-de-habitacion.md) · [Siguiente](24-secuencia-administracion-y-configuracion.md)

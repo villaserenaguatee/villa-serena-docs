@@ -44,9 +44,9 @@ sequenceDiagram
 
 ## Referencias
 
-- [04 HU Administrador](../04%20-%20Historias%20de%20Usuario/HU%20-%20Administrador.md)
-- [10 RN-PER,RN-TAR,RN-HAB,RN-IND,RN-FAC](../10%20-%20Reglas%20de%20Negocio.md)
-- [13 §9.1](../13%20-%20Plan%20de%20Trabajo.md)
+- [04 HU Administrador](../../02-producto/historias-de-usuario/HU%20-%20Administrador.md)
+- [10 RN-PER,RN-TAR,RN-HAB,RN-IND,RN-FAC](../../02-producto/reglas-de-negocio.md#11-personal-y-acceso-del-personal--rn-per)
+- [Roadmap por versiones](../../01-metodologia/roadmap-versiones.md#2-detalle-de-versiones) (vigente) y [13 §9.1 del plan original archivado](../../04-guias-y-referencia/historico/plan-de-trabajo-original.md#91-recortes-ya-aplicados-en-este-plan)
 
 **Historias vinculadas:** `HU-ADM-01`, `HU-ADM-02`, `HU-ADM-03`, `HU-ADM-04`, `HU-ADM-05`, `HU-ADM-06`, `HU-ADM-07`, `HU-ADM-08`, `HU-ADM-09`, `HU-ADM-10`.
 
