@@ -62,7 +62,7 @@ sequenceDiagram
 
 ## Referencias
 
-- [01 §4](../../02-producto/alcance-y-decisiones.md)
-- [12 UC-02,03,04,06,11,13,20](../../02-producto/casos-de-uso.md)
+- [01 §4](../../02-producto/alcance-y-decisiones.md#4-flujo-principal-del-sistema)
+- [12 UC-02,03,04,06,11,13,20](../../02-producto/casos-de-uso.md#3-mapa-de-casos-de-uso)
 
 [Índice de diagramas](README.md) · [Cobertura de historias](COBERTURA.md) · [Anterior](03-actividad-general-de-la-reserva-a-la-siguiente-llegada.md) · [Siguiente](05-actividad-disponibilidad-y-tarifa.md)

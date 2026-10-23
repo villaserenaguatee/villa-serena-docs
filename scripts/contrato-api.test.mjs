@@ -2,11 +2,11 @@ import test from 'node:test';
 import { load } from 'js-yaml';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { operationDifferences, generatedTypes } from './contrato-api.mjs';
+import { operationDifferences, generatedTypes, validateMarkdownLinks } from './contrato-api.mjs';
 
 const schema = {
   openapi: '3.1.0', info: { title: 'Prueba', version: '1.0.0' },
@@ -305,4 +305,57 @@ test('fotos de tipos de habitación exigen ADMIN, JPG/PNG hasta 5 MiB y ejemplos
   assert.deepEqual(definitions.FotoCatalogo.required, ['clave', 'url', 'principal', 'orden']);
   assert.match(definitions.FotoCatalogo.examples[0].url, /^https:\/\/d13s29erv78l4g\.cloudfront\.net\/tipos\//);
   assert.doesNotMatch(definitions.UrlFoto.description, /\bMinIO\b/i);
+});
+
+test('valida todos los enlaces Markdown locales del repositorio sin destinos ni fragmentos rotos', () => {
+  const root = fileURLToPath(new URL('../', import.meta.url));
+  assert.deepEqual(validateMarkdownLinks(root), []);
+});
+
+test('detecta ruta correcta, ruta inexistente, archivo movido, URL codificada, directorios y fragmento inválido', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'markdown-links-'));
+  try {
+    mkdirSync(join(directory, '02-producto/historias-de-usuario'), { recursive: true });
+    mkdirSync(join(directory, '03-arquitectura/diagramas-sistema'), { recursive: true });
+    mkdirSync(join(directory, '04-guias-y-referencia/historico'), { recursive: true });
+    writeFileSync(join(directory, '02-producto/reglas-de-negocio.md'), '# Reglas de Negocio (RN)\n\n## 3. Reservas — RN-RES\n');
+    writeFileSync(join(directory, '02-producto/historias-de-usuario/HU - Cliente y Huesped.md'), '# HU Cliente\n\n## Criterios de aceptación\n');
+    writeFileSync(join(directory, '03-arquitectura/arquitectura-sistema.md'), '# Tecnologías y Arquitectura\n\n## 2. Decisiones de arquitectura\n');
+    writeFileSync(
+      join(directory, '04-guias-y-referencia/historico/contexto-original-chat.md'),
+      '# Contexto histórico\n\n- [`20 - Diagramas del Sistema/`](20%20-%20Diagramas%20del%20Sistema/README.md)\n',
+    );
+    writeFileSync(
+      join(directory, '03-arquitectura/diagramas-sistema/01-prueba.md'),
+      [
+        '# Diagrama de prueba',
+        '- [Ruta correcta](../arquitectura-sistema.md#2-decisiones-de-arquitectura)',
+        '- [URL codificada con espacios](../../02-producto/historias-de-usuario/HU%20-%20Cliente%20y%20Huesped.md#criterios-de-aceptación)',
+        '- [Directorio válido](../../02-producto/)',
+        '```markdown',
+        '[Enlace dentro de bloque de código](../no-se-evalua.md)',
+        '```',
+      ].join('\n'),
+    );
+    assert.deepEqual(validateMarkdownLinks(directory), []);
+
+    writeFileSync(
+      join(directory, '03-arquitectura/diagramas-sistema/02-errores.md'),
+      [
+        '# Casos de fallo',
+        '- [Ruta inexistente](./no-existe.md)',
+        '- [Archivo movido de numeración antigua](../14%20-%20Tecnologias%20y%20Arquitectura.md)',
+        '- [Fragmento inválido](../../02-producto/reglas-de-negocio.md#seccion-inexistente)',
+        '- [Enlace ficticio](#)',
+      ].join('\n'),
+    );
+    const errors = validateMarkdownLinks(directory);
+    assert.equal(errors.length, 4);
+    assert.match(errors[0], /destino inexistente \(\.\/no-existe\.md\)/);
+    assert.match(errors[1], /destino inexistente \(\.\.\/14%20-%20Tecnologias%20y%20Arquitectura\.md\)/);
+    assert.match(errors[2], /fragmento inexistente #seccion-inexistente/);
+    assert.match(errors[3], /enlace vacío o ficticio \(#\)/);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
 });

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { resolve, dirname } from 'node:path';
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
@@ -37,6 +37,84 @@ export async function generatedTypes(schema, sourceHash) {
   }
   const ast = await openapiTS(schema);
   return `/** Generado desde villa-serena-docs/openapi.yaml. No editar.\n * Contrato SHA-256: ${sourceHash}\n */\n${astToString(ast)}`;
+}
+
+// Referencia histórica anterior a la reorganización de la wiki que se conserva sin reescribir el archivo archivado.
+const ARCHIVED_HISTORICAL_LINKS = new Set([
+  '04-guias-y-referencia/historico/contexto-original-chat.md -> 20%20-%20Diagramas%20del%20Sistema/README.md',
+]);
+
+function headingSlugs(markdown) {
+  const counts = new Map();
+  const slugs = new Set();
+  for (const line of markdown.replace(/```[\s\S]*?```/g, '').split(/\r?\n/)) {
+    const match = /^#{1,6}\s+(.+)$/.exec(line.trim());
+    if (!match) continue;
+    const base = match[1].trim().toLowerCase().replace(/[`*_~]/g, '').replace(/[^\p{L}\p{N}\s-]/gu, '').replace(/\s/g, '-');
+    const count = counts.get(base) ?? 0;
+    counts.set(base, count + 1);
+    slugs.add(count === 0 ? base : `${base}-${count}`);
+  }
+  return slugs;
+}
+
+export function validateMarkdownLinks(baseDir = root) {
+  const resolvedRoot = resolve(baseDir);
+  const slugCache = new Map();
+  const getSlugs = (filePath) => {
+    if (!slugCache.has(filePath)) slugCache.set(filePath, headingSlugs(readFileSync(filePath, 'utf8')));
+    return slugCache.get(filePath);
+  };
+  const walk = (dir) => readdirSync(dir, { withFileTypes: true })
+    .filter((entry) => !entry.name.startsWith('.') && entry.name !== 'node_modules')
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .flatMap((entry) => {
+      const full = resolve(dir, entry.name);
+      return entry.isDirectory() ? walk(full) : (entry.name.endsWith('.md') ? [full] : []);
+    });
+
+  const errors = [];
+  for (const file of walk(resolvedRoot)) {
+    const relFile = relative(resolvedRoot, file).replaceAll('\\', '/');
+    const content = readFileSync(file, 'utf8').replace(/```[\s\S]*?```/g, '');
+    for (const match of content.matchAll(/\[([^\]]+)\]\(([^)]*)\)/g)) {
+      const rawTarget = match[2].trim().replace(/^<|>$/g, '').replace(/\s+(?:"[^"]*"|'[^']*')$/, '').trim();
+      if (/^(https?:|mailto:)/i.test(rawTarget)) continue;
+      if (ARCHIVED_HISTORICAL_LINKS.has(`${relFile} -> ${rawTarget}`)) continue;
+      if (!rawTarget || rawTarget === '#') {
+        errors.push(`${relFile}: enlace vacío o ficticio (${rawTarget || 'vacío'})`);
+        continue;
+      }
+      const [rawPath, ...fragmentParts] = rawTarget.split('#');
+      const rawFragment = fragmentParts.join('#');
+      let decodedPath, decodedFragment;
+      try {
+        decodedPath = rawPath ? decodeURIComponent(rawPath) : '';
+        decodedFragment = rawFragment ? decodeURIComponent(rawFragment).toLowerCase() : '';
+      } catch {
+        errors.push(`${relFile}: URL mal codificada (${rawTarget})`);
+        continue;
+      }
+      const targetPath = decodedPath ? resolve(dirname(file), decodedPath) : file;
+      const relTarget = relative(resolvedRoot, targetPath).replaceAll('\\', '/');
+      if (relTarget.startsWith('..') || !existsSync(targetPath)) {
+        errors.push(`${relFile}: destino inexistente (${rawTarget})`);
+        continue;
+      }
+      const stat = statSync(targetPath);
+      const docForFragment = stat.isDirectory() ? resolve(targetPath, 'README.md') : targetPath;
+      if (rawFragment) {
+        if (!existsSync(docForFragment) || !statSync(docForFragment).isFile()) {
+          errors.push(`${relFile}: directorio sin README.md para validar fragmento (${rawTarget})`);
+          continue;
+        }
+        if (!getSlugs(docForFragment).has(decodedFragment)) {
+          errors.push(`${relFile}: fragmento inexistente #${rawFragment} en (${rawTarget})`);
+        }
+      }
+    }
+  }
+  return errors;
 }
 
 async function main() {
@@ -79,7 +157,9 @@ async function main() {
   if (output && !output.endsWith('.d.ts')) throw new Error('El destino debe terminar en .d.ts; no se exportan copias YAML.');
   const generated = await generatedTypes(schema, hash);
   if (command === 'validate') {
-    console.log('Contrato validado y generación TypeScript comprobada.');
+    const linkErrors = validateMarkdownLinks(root);
+    if (linkErrors.length) throw new Error(`Enlaces Markdown rotos:\n${linkErrors.join('\n')}`);
+    console.log('Contrato validado, generación TypeScript y enlaces Markdown comprobados.');
   } else if (values.check) {
     if (readFileSync(output, 'utf8') !== generated) throw new Error('Tipos desactualizados: regenera desde el mismo commit fijado de docs.');
     console.log(`Tipos al día: ${output}`);

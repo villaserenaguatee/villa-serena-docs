@@ -32,9 +32,9 @@ flowchart TB
 
 ## Referencias
 
-- [10 RN-RES-001,002,005–008](../10%20-%20Reglas%20de%20Negocio.md)
-- [10 RN-TAR-001–010](../10%20-%20Reglas%20de%20Negocio.md)
-- [12 UC-01](../12%20-%20Casos%20de%20Uso.md)
+- [10 RN-RES-001,002,005–008](../../02-producto/reglas-de-negocio.md#3-reservas--rn-res)
+- [10 RN-TAR-001–010](../../02-producto/reglas-de-negocio.md#5-tarifas--rn-tar)
+- [12 UC-01](../../02-producto/casos-de-uso.md#uc-01--buscar-disponibilidad)
 
 **Historias vinculadas:** `HU-HUE-01`, `HU-HUE-02`, `HU-HUE-03`, `HU-HUE-04`, `HU-REC-03`.
 

@@ -50,10 +50,10 @@ sequenceDiagram
 
 ## Referencias
 
-- [07 S1–S6](../07%20-%20Estados.md)
-- [10 RN-RS](../10%20-%20Reglas%20de%20Negocio.md)
-- [09 VIS-02](../09%20-%20Matriz%20de%20Permisos.md)
-- [12 UC-06](../12%20-%20Casos%20de%20Uso.md)
+- [07 S1–S6](../maquinas-de-estados.md#6-pedido-de-room-service)
+- [10 RN-RS](../../02-producto/reglas-de-negocio.md#8-room-service--rn-rs)
+- [09 VIS-02](../../02-producto/matriz-de-permisos.md#6-reglas-de-visibilidad-de-datos)
+- [12 UC-06](../../02-producto/casos-de-uso.md#uc-06--gestionar-pedido-de-room-service)
 
 **Historias vinculadas:** `HU-HUE-10`, `HU-HUE-11`, `HU-RS-01`, `HU-RS-02`, `HU-RS-03`, `HU-RS-04`, `HU-RS-05`, `HU-RS-06`, `HU-RS-07`.
 

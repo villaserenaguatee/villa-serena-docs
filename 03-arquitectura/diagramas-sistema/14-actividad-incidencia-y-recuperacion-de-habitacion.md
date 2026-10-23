@@ -35,9 +35,9 @@ flowchart TB
 
 ## Referencias
 
-- [10 RN-MAN](../10%20-%20Reglas%20de%20Negocio.md)
-- [10 RN-HAB-001–003,006](../10%20-%20Reglas%20de%20Negocio.md)
-- [12 UC-08](../12%20-%20Casos%20de%20Uso.md)
+- [10 RN-MAN](../../02-producto/reglas-de-negocio.md#10-mantenimiento--rn-man)
+- [10 RN-HAB-001–003,006](../../02-producto/reglas-de-negocio.md#4-habitaciones--rn-hab)
+- [12 UC-08](../../02-producto/casos-de-uso.md#uc-08--gestionar-incidencia-de-mantenimiento)
 
 **Historias vinculadas:** `HU-REC-17`, `HU-MYL-06`, `HU-MYL-07`, `HU-MYL-08`.
 

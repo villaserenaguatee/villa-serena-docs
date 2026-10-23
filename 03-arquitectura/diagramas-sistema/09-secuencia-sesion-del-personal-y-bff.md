@@ -56,9 +56,9 @@ sequenceDiagram
 
 ## Referencias
 
-- [14 §§6,6.1](../arquitectura-sistema.md)
-- [10 RN-PER-011–015](../../02-producto/reglas-de-negocio.md)
-- [09 §§3.8,7](../../02-producto/matriz-de-permisos.md)
+- [14 §§6,6.1](../arquitectura-sistema.md#6-seguridad-jwt-bff-y-cors)
+- [10 RN-PER-011–015](../../02-producto/reglas-de-negocio.md#11-personal-y-acceso-del-personal--rn-per)
+- [09 §§3.8,7](../../02-producto/matriz-de-permisos.md#38-acceso-tiempo-real-y-notificaciones)
 
 **Historias vinculadas:** `HU-EMP-01`, `HU-EMP-02`.
 
