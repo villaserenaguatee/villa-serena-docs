@@ -1,5 +1,7 @@
 # Matriz de Permisos y Control de Acceso
 
+> Reconciliación 22/10/2026: [decisiones posteriores, estado implementado y límites del contrato](reconciliacion-frontend-20261022.md). Los estados «Pendiente» anteriores no certifican implementación; portal web y Android coexisten. No se reintroducen campos retirados del MVP.
+
 Especifica los permisos detallados de lectura, creación, modificación y anulación por rol para cada uno de los módulos del sistema.
 
 ---
@@ -59,7 +61,7 @@ Define **qué acción exacta puede hacer cada rol**. Es la referencia para:
 | Ver la información del hotel y el catálogo de habitaciones | ✅ | — | — | — | — | — | HU-HUE-01, HU-HUE-02 |
 | Buscar disponibilidad y ver el precio | ✅ | — | ✅ | — | — | — | HU-HUE-03, HU-HUE-04, HU-REC-03 |
 | Crear una reserva | ✅ ¹ | — | ✅ | — | — | — | HU-HUE-05, HU-REC-04 |
-| Pagar la reserva con Stripe | ✅ | — | — | — | — | — | HU-HUE-06 |
+| Pagar la reserva con Recurrente | ✅ | — | — | — | — | — | HU-HUE-06 |
 | Registrar al huésped principal y a los adicionales | — | — | ✅ | — | — | — | HU-REC-01, HU-REC-02 |
 | Buscar reservas y ver el detalle (con el historial de estados) | — | — | ✅ | — | — | — | HU-REC-06 |
 | Ver mis reservas y el detalle de mi estadía | — | — | — | — | — | 👤 | HU-HUE-09 |
@@ -77,7 +79,7 @@ Define **qué acción exacta puede hacer cada rol**. Es la referencia para:
 | Ver la cuenta (cargos, pagos y saldo) | — | — | ✅ | — | — | 👤 | HU-REC-13, HU-HUE-15 |
 | Agregar cargos de servicio | — | — | ⚠️ ⁴ | — | — | — | HU-REC-13 |
 | Anular cargos (no el de alojamiento) | — | — | ⚠️ ¹⁴ | — | — | — | HU-REC-13 |
-| Pagar el saldo con Stripe | — | — | — | — | — | 👤 ⁵ | HU-HUE-16 |
+| Pagar el saldo con Recurrente | — | — | — | — | — | 👤 ⁵ | HU-HUE-16 |
 | Check-out (incluye el pago único y la emisión de la factura) | — | — | ✅ | — | — | 👤 ⁵ | HU-REC-14, HU-REC-15, HU-HUE-16 |
 | Imprimir la factura | — | — | ✅ | — | — | — | HU-REC-16 |
 | Ver la factura (PDF) | — | — | ✅ | — | — | 👤 | HU-REC-15, HU-HUE-16 |
@@ -162,7 +164,7 @@ Define **qué acción exacta puede hacer cada rol**. Es la referencia para:
 
 | # | Nota |
 |---|---|
-| ¹ | La reserva web nace `PENDIENTE_PAGO` y se paga al 100 % con Stripe. |
+| ¹ | La reserva web nace `PENDIENTE_PAGO` y se paga al 100 % con Recurrente. |
 | ² | Solo reservas `CONFIRMADA` que **no** vengan de un canal externo. |
 | ³ | Solo antes del check-in: reservas `PENDIENTE_PAGO` o `CONFIRMADA`. |
 | ⁴ | Solo con la reserva `EN_ESTADIA` (y, para los cargos, con la cuenta `ABIERTA`). |
@@ -184,8 +186,8 @@ Define **qué acción exacta puede hacer cada rol**. Es la referencia para:
 | Actor | Qué puede hacer | Cómo se autentica |
 |---|---|---|
 | `CANAL` | **Solo crear** reservas por la API (HU-CM-01). No cancela ni consulta reservas | Canal y clave en cada petición; la clave se compara con su hash (canales y claves cargados en los datos iniciales) |
-| `STRIPE` | Avisar del resultado de los pagos por el webhook (pagado o sesión vencida) | Firma del webhook de Stripe |
-| `SISTEMA` | Los efectos automáticos del documento 07 (sección 11): cancelación a los 30 minutos, efectos del check-out, cargo del pedido entregado (HU-RS-06), correo de confirmación (HU-HUE-07), cambios de la habitación por incidencias, correos y notificaciones push | Proceso interno del backend |
+| `RECURRENTE` | Avisar del resultado de los pagos por el webhook (pagado o sesión vencida) | Firma del webhook de Recurrente |
+| `SISTEMA` | Los efectos automáticos del documento 07 (sección 11): revisión y conciliación al vencer el plazo (cancelación solo tras vencimiento confirmado sin pago), efectos del check-out, cargo del pedido entregado (HU-RS-06), correo de confirmación (HU-HUE-07), cambios de la habitación por incidencias, correos y notificaciones push | Proceso interno del backend |
 
 ---
 
@@ -195,10 +197,10 @@ Define **qué acción exacta puede hacer cada rol**. Es la referencia para:
 |---|---|---|
 | VIS-01 | El huésped solo ve sus propias reservas, cuenta, pedidos, solicitudes y factura. Si pide un registro ajeno, el servidor lo rechaza. | HU-HUE-09, HU-HUE-15 |
 | VIS-02 | Room Service solo ve el nombre del huésped, la habitación y el piso; Mantenimiento/Limpieza solo la habitación y el piso. Ninguno ve correo, teléfono, documento ni pagos. | HU-RS-01, HU-RS-02, HU-MYL-04 |
-| VIS-03 | La web pública solo expone información del hotel, tipos de habitación activos, disponibilidad y precios. La página de retorno de Stripe solo muestra el estado de la reserva recién pagada. Nunca expone otras reservas ni datos de otros huéspedes. | HU-HUE-01 a HU-HUE-04 |
-| VIS-04 | Un empleado `INACTIVO` no puede iniciar sesión ni renovar su sesión. Una sesión ya abierta dura hasta que vence su token de acceso (máximo 15 minutos). | HU-ADM-02, HU-EMP-01 |
+| VIS-03 | La web pública solo expone información del hotel, tipos de habitación activos, disponibilidad y precios. La página de retorno de Recurrente solo muestra el estado de la reserva recién pagada. Nunca expone otras reservas ni datos de otros huéspedes. | HU-HUE-01 a HU-HUE-04 |
+| VIS-04 | Un empleado `INACTIVO` no puede iniciar sesión ni renovar su sesión. La política anterior permitía conservar el acceso hasta vencer el JWT; es un antecedente histórico. El API inspeccionado comprueba la vigencia del empleado en cada petición. La reconciliación de esta política sigue pendiente en API #78, según RN-PER-014, sin debilitar los controles implementados. | HU-ADM-02, HU-EMP-01 |
 | VIS-05 | Las notificaciones push no muestran datos personales ni montos. | HU-HUE-17 |
-| VIS-06 | Los secretos (claves de Stripe, del correo, de firma de los JWT, de los canales) nunca se suben a Git ni llegan a la web o a la app. | AGENTS.md; documento 14 |
+| VIS-06 | Los secretos (claves de Recurrente, del correo, de firma de los JWT, de los canales) nunca se suben a Git ni llegan a la web o a la app. | AGENTS.md; documento 14 |
 
 ---
 
@@ -214,7 +216,7 @@ Orientación para Pablo, Hugo y el backend. El diseño completo está en el docu
 | Tipo y rol (empleado con su rol, o `HUESPED`) | Aplicar las columnas de la matriz con `@PreAuthorize` |
 | Área (solo `MANTENIMIENTO_LIMPIEZA`) | Notas ⁸ y ¹² |
 
-El estado del empleado (`ACTIVO`/`INACTIVO`) se revisa **al iniciar sesión y al renovar el token**, no en cada petición (VIS-04).
+El estado del empleado se comprueba al iniciar y renovar sesión. La política anterior permitía conservar el acceso hasta vencer el JWT; es un antecedente histórico. El API inspeccionado comprueba la vigencia del empleado en cada petición. La reconciliación de esta política sigue pendiente en API #78, según RN-PER-014, sin debilitar los controles implementados.
 
 ### 7.2 Cómo se aplica cada símbolo
 
@@ -230,7 +232,7 @@ El estado del empleado (`ACTIVO`/`INACTIVO`) se revisa **al iniciar sesión y al
 
 ### 7.3 Endpoints públicos (sin sesión)
 
-Información del hotel, tipos de habitación activos, disponibilidad y precio, crear la reserva web, iniciar su pago y la página de estado al volver de Stripe. El webhook de Stripe y la API del canal también son públicos, pero se protegen con la firma y con la clave del canal.
+Información del hotel, tipos de habitación activos, disponibilidad y precio, crear la reserva web, iniciar su pago y la página de estado al volver de Recurrente. El webhook de Recurrente y la API del canal también son públicos, pero se protegen con la firma y con la clave del canal.
 
 ### 7.4 Tiempo real (WebSocket)
 
@@ -245,7 +247,7 @@ Solo los **4 eventos** del documento 07 (sección 12). Spring autoriza cada susc
 
 La web se conecta con un ticket de 60 segundos obtenido a través del BFF. La app se conecta con su propio JWT de huésped, sin pasar por el BFF.
 
-### 7.5 Archivos (Cloudflare R2; en local, MinIO)
+### 7.5 Archivos (R2 en dev / Amazon S3 en producción)
 
 | Contenido | Acceso |
 |---|---|
@@ -254,3 +256,5 @@ La web se conecta con un ticket de 60 segundos obtenido a través del BFF. La ap
 | Fotos de las incidencias | Quien la reportó (`RECEPCION` o `MYL`), `MYL` con área `MANTENIMIENTO` o `AMBAS`, y `ADMIN` en solo lectura |
 
 Los archivos privados se entregan con URL firmadas de corta duración que genera el backend después de revisar el permiso.
+
+Almacenamiento definido en la [PR #36 y ADR-007](https://github.com/villaserenaguatee/villa-serena-docs/blob/5dcd7a26ea01a0063375aa18df8fe792e4270301/03-arquitectura/adr/ADR-007-almacenamiento-r2-s3.md), pendiente de integración: `dev` utiliza R2, `prod` S3 y `local` mínimo un adaptador persistente en PostgreSQL, sin MinIO ni nube. Esto no modifica los permisos anteriores ni acredita aprovisionamiento. En R2 el bucket privado no es público; en S3 ambos buckets bloquean acceso público directo y los assets públicos se sirven mediante CloudFront/OAC. Las URLs privadas las firma el backend después de autorizar al usuario, contra el endpoint del proveedor, no el dominio de assets. Los secretos nunca llegan al navegador.

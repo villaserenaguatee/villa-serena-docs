@@ -1,5 +1,7 @@
 # HU — Personal del Hotel
 
+> Reconciliación 22/10/2026: [decisiones posteriores, estado implementado y límites del contrato](../reconciliacion-frontend-20261022.md). Los estados «Pendiente» anteriores no certifican implementación; portal web y Android coexisten. No se reintroducen campos retirados del MVP.
+
 > **Rol:** Todo el personal: Administrador (`ADMIN`), Recepcionista (`RECEPCION`), Room Service (`ROOM_SERVICE`) y Mantenimiento/Limpieza (`MANTENIMIENTO_LIMPIEZA`)
 > **Plataforma:** Web privada
 > **Prefijo:** `HU-EMP`
@@ -8,7 +10,7 @@
 
 Estas historias son **comunes a todos los empleados** del hotel, sin importar su rol: todos entran a la web privada con correo y contraseña, y todos deben cambiar la contraseña temporal que les entrega el Administrador. Por eso se escriben una sola vez aquí y no se repiten en el archivo de cada rol.
 
-El acceso del huésped (correo + código en la app) está en "HU - Cliente y Huesped". El primer Administrador se crea al arrancar el sistema con variables de entorno (tarea técnica, no historia).
+El acceso del huésped (correo + código en la app) está en "HU - Cliente y Huesped". El primer Administrador se crea al arrancar únicamente si el bootstrap está habilitado explícitamente, deshabilitado por defecto; no sustituye cuentas existentes ni genera administradores adicionales. Es una tarea técnica, no una historia.
 
 ---
 
