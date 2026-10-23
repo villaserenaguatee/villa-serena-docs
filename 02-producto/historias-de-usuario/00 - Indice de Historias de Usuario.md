@@ -1,5 +1,7 @@
 # 04 — Historias de Usuario: Índice
 
+> Reconciliación 22/10/2026: [decisiones posteriores, estado implementado y límites del contrato](../reconciliacion-frontend-20261022.md). Los estados «Pendiente» anteriores no certifican implementación; portal web y Android coexisten. No se reintroducen campos retirados del MVP.
+
 > **Proyecto:** Property Management System (PMS) para Hoteles Boutique — Hotel ficticio "Villa Serena"
 > **Estado:** 📝 Para revisión del equipo
 > **Fecha:** 30 de septiembre de 2026
@@ -55,7 +57,7 @@ Las historias usan las **etiquetas**. Los códigos y transiciones están en el d
 | Cuenta | `Abierta` · `Cerrada` |
 | Cargo de la cuenta | `Vigente` · `Anulado` |
 | Pago | `Pendiente` · `Aprobado` · `Fallido` · `Reembolsado` |
-| Método de pago (no es un estado) | `Stripe` (web y app) · `Canal` (reservas de Booking o Expedia) · `Efectivo`, `Tarjeta` u `Otro` (registrados en Recepción) |
+| Método de pago (no es un estado) | `Recurrente` (web y app) · `Canal` (reservas de Booking o Expedia) · `Efectivo`, `Tarjeta` u `Otro` (registrados en Recepción) |
 | Factura | `Emitida` (no existe `Anulada`) |
 | Ítem del menú | `Disponible` · `Agotado` |
 | Empleado | `Activo` · `Inactivo` |
@@ -213,8 +215,10 @@ Toda funcionalidad de Nivel 1 y Nivel 2 del alcance está cubierta por una histo
 | ALC-TRA-04 | Configuración del tiempo real (WebSocket) para los 4 eventos |
 | ALC-TRA-09 / 09b | Grafana en local (y logs y alerta, si da tiempo) |
 | ALC-TRA-10 | Entorno local con Docker |
-| ALC-TRA-01 (parte) | Creación del primer Administrador al arrancar, con variables de entorno |
-| Varias | **Datos iniciales (Flyway):** canales y sus claves (HU-CM-03), catálogo de artículos con su cantidad máxima (HU-HUE-13), datos del hotel, datos fiscales, serie y número inicial del correlativo (HU-ADM-08), y usuarios de prueba de cada rol, con **dos Administradores** para no perder el acceso si uno olvida su contraseña (V-04, V-06) |
+| ALC-TRA-01 (parte) | Creación del primer Administrador únicamente con bootstrap habilitado explícitamente (deshabilitado por defecto), sin sustituir cuentas existentes |
+| Varias | **Antecedente histórico, sustituido:** se propuso precargar canales, artículos, hotel, datos fiscales, serie/correlativo y usuarios de prueba mediante Flyway, incluidos dos Administradores (HU-CM-03, HU-HUE-13, HU-ADM-08; V-04, V-06). **Procedimiento vigente:** Flyway administra las migraciones del esquema; no carga automáticamente catálogos ni usuarios de demostración. Los fixtures se cargan explícitamente después del arranque, solo en una instancia local con tablas de negocio vacías. El primer ADMIN requiere habilitar el bootstrap; no se crean administradores adicionales automáticamente. Para cargar fixtures sobre tablas vacías, el bootstrap permanece apagado. |
+
+Referencia vigente: [PR #36 y ADR-007](https://github.com/villaserenaguatee/villa-serena-docs/blob/5dcd7a26ea01a0063375aa18df8fe792e4270301/03-arquitectura/adr/ADR-007-almacenamiento-r2-s3.md), [procedimiento de arranque de la misma revisión](https://github.com/villaserenaguatee/villa-serena-docs/blob/5dcd7a26ea01a0063375aa18df8fe792e4270301/04-guias-y-referencia/arranque-local.md) y [ENTORNOS del API](https://github.com/villaserenaguatee/villa-serena-api/blob/dev/docs/ENTORNOS.md). La PR #36 está pendiente de integración; estas referencias no acreditan aprovisionamiento ni ejecutan cargas de datos.
 
 ---
 
@@ -227,7 +231,7 @@ Detalles que no estaban definidos en el alcance y se resolvieron así. **Revíse
 | HU-HUE-13 | El catálogo de artículos para el huésped (toallas, almohadas…) y su cantidad máxima se cargan en los **datos iniciales**; no hay pantalla para administrarlo |
 | HU-HUE-14, HU-HUE-15, HU-MYL-07 | No están entre los 4 eventos en tiempo real: se actualizan al abrir la pantalla o con un botón "Actualizar". El huésped se entera de la solicitud atendida por la notificación push |
 | HU-REC-02 | El tope de huéspedes adicionales es el número de huéspedes de la reserva |
-| HU-REC-05 | Si Stripe rechaza el reembolso, la reserva no se cancela (Recepción puede volver a intentarlo) |
+| HU-REC-05 | Si Recurrente rechaza el reembolso, la reserva no se cancela (Recepción puede volver a intentarlo) |
 | HU-REC-13 | Solo se anulan cargos adicionales; el cargo por alojamiento no se anula |
 | HU-REC-14 | El check-out es una sola operación: si falla la factura, no se registra el pago ni cambia ningún estado |
 | HU-REC-05 | No existe `No-show`: el huésped que no llega se cancela con motivo "No se presentó" (sin reembolso). No se envía correo de cancelación |
@@ -239,14 +243,14 @@ Detalles que no estaban definidos en el alcance y se resolvieron así. **Revíse
 | Todas | El Administrador usa solo sus pantallas y el canal simulado; no usa las de Recepción ni las de piso |
 | HU-ADM-08 | Los datos fiscales, la serie y el número inicial vienen en los datos iniciales; la serie y el número inicial no se editan en pantalla. No hay bloqueo del check-out por "faltan datos de facturación". La política de cancelación se muestra a partir de la regla de 48 horas, no se edita libremente |
 | HU-ADM-09 | Ingresos = suma de los pagos `Aprobado` del rango (un pago reembolsado deja de sumar); las reservas por canal cuentan todas las creadas en el rango, incluidas las canceladas; la ocupación es la de hoy |
-| HU-REC-01, HU-HUE-05, HU-CM-01 | El huésped principal tiene los mismos 6 datos obligatorios en todos los orígenes (nombre, correo, teléfono, nacionalidad, tipo y número de documento) y se identifica por su correo: si el correo ya existe, se usa ese perfil sin cambiar sus datos |
+| HU-REC-01, HU-HUE-05, HU-CM-01 | El huésped principal tiene datos según el contrato de cada origen; el MVP omite nacionalidad y pasaporte y conserva los históricos y se identifica por su correo: si el correo ya existe, se usa ese perfil sin cambiar sus datos |
 | HU-REC-06 | "Llegan hoy" solo muestra las entradas de hoy; quien llega después de medianoche se busca por nombre o código (limitación aceptada) |
 | HU-HUE-08 | La sesión de la app dura mientras se use: refresh token de 7 días que se renueva en cada uso |
-| HU-REC-05 | Recepción solo cancela reservas `Confirmada`; las `Pendiente de pago` se cancelan solas a los 30 minutos |
+| HU-REC-05 | Recepción solo cancela reservas `Confirmada`; las `Pendiente de pago` se revisan al vencer el plazo y solo se cancelan tras comprobar vencimiento sin pago. Procesamiento o incertidumbre conservan cupo hasta conciliación |
 | HU-REC-05 | Las reservas de canal no se cancelan, ni siquiera si el huésped no llega: quedan `Confirmada` (limitación aceptada) |
 | HU-ADM-02 | Un empleado desactivado con sesión abierta puede seguir hasta que venza su token de acceso (máx. 15 min) |
-| HU-HUE-06 | Un intento de pago rechazado no cambia el pago (sigue `Pendiente`); pasa a `Fallido` solo cuando vence la sesión de Stripe (documento 07, observación O-01) |
-| HU-HUE-16 | Limitación aceptada: no se controla que el huésped abra dos sesiones de pago del saldo a la vez (documento 07, sección 5.3) |
+| HU-HUE-06 | Un intento de pago rechazado no cambia el pago (sigue `Pendiente`); pasa a `Fallido` solo cuando vence la sesión de Recurrente (documento 07, observación O-01) |
+| HU-HUE-16 | Antecedente histórico, sustituido: el plan no controlaba dos sesiones de saldo (documento 07, sección 5.3). El contrato vigente reutiliza el checkout abierto autorizado y bloquea nuevos intentos si está pagado, en procesamiento o sin verificar; continuar/reintentar depende de `accionPago` |
 | HU-REC-12, HU-HUE-15 | El huésped puede ver su cuenta en la app en cualquier estado de la reserva; el check-in solo habilita room service y solicitudes (documento 09, OP-01) |
 | HU-RS-06, HU-REC-17 | Cargo de room service: se ve al abrir o recargar la cuenta (no es tiempo real). Incidencia con habitación ocupada: solo si el daño impide el uso (documento 10, OBS-04 y OBS-05) |
 | Room Service | No hay horario: el servicio está siempre disponible (documento 10, OBS-01) |
