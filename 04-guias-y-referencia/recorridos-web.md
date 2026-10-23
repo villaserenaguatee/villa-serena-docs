@@ -24,8 +24,26 @@ Referencia: [reconciliación y versiones del 22/10/2026](../02-producto/reconcil
 - Mantenimiento: incidencias de tres pasos; órdenes/preventivos/activos existentes son operación ampliada. Repuestos comparten inventario. Un error de operaciones adicionales no debe ocultar las incidencias básicas.
 - Room Service: cola, detalle, notas, transiciones consecutivas, motivo al cancelar, agotado sin reactivación de este rol. El historial debe conservar fecha/hora/responsable/motivo sin inventarlos; corrección preparada para aprobación. Cargo y notificación se producen en servidor al entregar.
 
-## Demostración y errores
+## Matriz de correos e integración con Outbox
 
-Demo requiere entorno development/test en localhost, modos demo coherentes y ausencia de API real. En conexión real se consultan datos del API; fallo no activa fixtures. Las operaciones sin soporte no muestran confirmación de guardado. En móvil se mantienen controles accesibles, desplazamiento y botones sin superponerse; la existencia de estilos responsive no acredita cada navegador/dispositivo.
+La existencia de una plantilla o registro en `outbox_events` no certifica entrega SMTP en un entorno sin servidor de correo configurado:
 
-No ejecutar reservas, pagos, correos o cambios de cuentas reales para comprobar este manual. Preparar casos con HTTP controlado; persistencia y permisos reales quedan para un entorno autorizado.
+| Correo / plantilla | Disparador en backend | Destinatario | Propósito, reintentos y límites |
+|---|---|---|---|
+| **Verificación de correo previa a reserva** | Paso «Verifica tu correo» antes de crear la reserva pública | Cliente (correo del formulario) | Valida que el visitante controla el correo antes de emitir el comprobante `X-Booking-Email-Verification` (vigencia de 20 min) asociado a `X-Booking-Draft` |
+| **Confirmación de reserva** | Alta en Recepción (`R2`), canal (`R3`) o confirmación de pago en línea (`R4`) | Huésped principal | Envía el código `VS-...` y resumen de fechas/tipo mediante Outbox con reintentos. **Límite actual en `dev`:** `ConfirmacionReservaService.java` calcula el indicador `pagado` de la plantilla por canal (`!RECEPCION`) y no constituye conciliación bancaria del importe aprobado |
+| **Código OTP de acceso al portal / app** | Solicitud explícita en `/login` («Obtén tu código de acceso») o en la app (`AccesoHuespedService`) | Huésped principal con al menos una reserva registrada (sin filtrar esa comprobación por estado) | Código de 6 dígitos, 10 minutos de vigencia y un solo uso. No se envía automáticamente al pagar; `VS-...` identifica la reserva y no es contraseña |
+| **Recuperación de contraseña del personal** | Solicitud en «¿Olvidaste tu contraseña?» (`RecuperacionPersonal.java`) | Empleado activo (no aplica al alta inicial ni a huéspedes) | Envía enlace temporal de restablecimiento de un solo uso |
+| **Contacto público** | Envío del formulario público de contacto (`POST /api/v1/publico/contacto`) | Buzón operativo / acuse según configuración | Registra y despacha la consulta del visitante sin crear sesión ni reserva |
+| **Objetos olvidados** | Eventos del módulo de objetos olvidados | Huésped / administración según evento | Aviso informativo sobre hallazgo o seguimiento; contrato integral pendiente de reconciliación |
+| **Factura en PDF** | Emisión de factura `EMITIDA` (`F1`) dentro del check-out (`R8`) | Huésped principal | Envía los datos de la factura y su PDF tras el cierre transaccional |
+
+No se envía correo al cancelar una reserva (`HU-REC-05`) ni al generar la contraseña temporal inicial de un empleado (`AdministracionEmpleados.java` / `EmpleadosAdminController.java` la devuelven una sola vez en pantalla al `ADMIN`, con cambio obligatorio en `/panel/cambiar-contrasena`).
+
+## Demostración, errores y referencias históricas
+
+Demo requiere entorno `development`/`test` en `localhost`, modos demo coherentes y ausencia de API real. En conexión real se consultan datos del API; un fallo no activa fixtures automáticamente. Las operaciones sin soporte no muestran confirmación de guardado. En móvil se mantienen controles accesibles, desplazamiento y botones sin superponerse; la existencia de estilos responsive no acredita cada navegador/dispositivo.
+
+Los informes anteriores `web/docs/ENTREGA_ACTUAL.md` y `api/docs/ENTREGA_ACTUAL.md` se conservan como fotografías históricas (contienen referencias previas a Stripe, llenado social o traducción) y no sustituyen a este manual ni a la [reconciliación vigente](../02-producto/reconciliacion-frontend-20261022.md).
+
+No ejecutar reservas, pagos, correos o cambios de cuentas reales para comprobar este manual. Preparar casos con HTTP controlado; persistencia y permisos reales quedan para un entorno autorizado ([issue #13](https://github.com/villaserenaguatee/villa-serena-docs/issues/13)).
