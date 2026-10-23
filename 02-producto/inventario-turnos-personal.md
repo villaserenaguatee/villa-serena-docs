@@ -37,7 +37,7 @@ El inventario comparte existencias con compras y repuestos de mantenimiento. Roo
 | # | Decisión | Origen |
 |---|---|---|
 | D8-01 | **Inventario compartido:** compras y repuestos usan las mismas existencias; Room Service, limpieza y solicitudes no descuentan automáticamente. | D-20 |
-| D8-02 | **Turnos e inventario son Nivel 2:** se construyen solo si da tiempo, en su versión mínima. Falta confirmar con el ingeniero si son obligatorios (Alcance, sección 9). | Alcance, sección 2 |
+| D8-02 | **Turnos e inventario son Nivel 2 (`v0.3.0` en el roadmap):** el inventario compartido ya está implementado en API y web (`/api/v1/gestion/inventario/...`), mientras que turnos cuenta con interfaz tipada en web pendiente del endpoint [`API #89`](https://github.com/villaserenaguatee/villa-serena-api/issues/89). El seguimiento de la confirmación académica se registra en [Alcance, sección 9](alcance-y-decisiones.md#9-estado-de-supuestos-técnicos-y-confirmaciones-académicas). | Alcance, secciones 2 y 9 |
 | D8-03 | **Los turnos son informativos:** no bloquean el acceso ni sugieren a quién asignar trabajo. | HU-ADM-12 |
 | D8-04 | **No se valida el trabajo en curso al desactivar a un empleado.** No es necesario para funcionar ni para presentar. | Índice de HU, sección 7 |
 | D8-05 | **El catálogo de artículos se carga en los datos iniciales;** no hay pantalla para administrarlo. | HU-HUE-13 |
