@@ -68,8 +68,11 @@ Estos ajustes se preparan para revisión. No se incorporan al SHA publicado cita
 
 ## Evidencia, límites y seguimiento
 
-La PR web #90 integró #88; las comprobaciones técnicas aprobaron. Mocks y recorridos aislados no acreditan persistencia, correos, cobros o permisos reales. Las historias con «Pendiente» y los informes de fases anteriores no constituyen el inventario actual de código.
+La PR web #90 integró #88; las comprobaciones técnicas aprobaron. Mocks y recorridos aislados no acreditan persistencia, correos, cobros o permisos reales. Las historias con «Pendiente» y los informes de fases anteriores (`web/docs/ENTREGA_ACTUAL.md` y `api/docs/ENTREGA_ACTUAL.md`, que aún mencionan Stripe, llenado social o traducción) se conservan como fotografías históricas y no constituyen el inventario actual de código.
 
-Seguimiento documental existente: docs #39 (flujos/acceso), #40 (catálogo), #37 (fotos), #38 (arquitectura) y #35 (almacenamiento). Este documento no los cierra ni aprueba nuevas operaciones. API #94 es exclusivamente el acuerdo previo del chat avanzado.
+- **Indicador `pagado` en correo de confirmación:** en `ConfirmacionReservaService.java` (`dev`), el campo `pagado` de la plantilla aún se calcula por canal (`!RECEPCION`) y no representa una conciliación bancaria del importe aprobado.
+- **Vigencia de sesión tras desactivar personal ([API #78](https://github.com/villaserenaguatee/villa-serena-api/issues/78)):** mientras la redacción histórica de `RN-PER-014` permitía que el JWT siguiera válido hasta expirar, `EmpleadoVigente.java` comprueba estado, rol, área y revocación en cada petición. No se debilita ese control.
 
-Quedan **VALIDACIONES FUTURAS CON BACKEND**: titularidad/permisos entre sesiones, persistencia/concurrencia/idempotencia, SMTP y Outbox, PDF/impresión, archivos públicos/privados y Recurrente Sandbox con webhook/conciliación/retornos/saldo y reembolsos. Sin escrituras reales para preparar esta documentación.
+Seguimiento documental relacionado: docs #39 (flujos/acceso), #40 (catálogo), #37 (fotos), #38 (arquitectura) y #35 (almacenamiento). API #94 es exclusivamente el acuerdo previo del chat avanzado.
+
+Quedan **VALIDACIONES FUTURAS CON BACKEND** ([docs #13](https://github.com/villaserenaguatee/villa-serena-docs/issues/13)): titularidad/permisos entre sesiones, persistencia/concurrencia/idempotencia, SMTP y Outbox, PDF/impresión, archivos públicos/privados y Recurrente Sandbox con webhook/conciliación/retornos/saldo y reembolsos. Sin escrituras reales para preparar esta documentación.

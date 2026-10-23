@@ -1,20 +1,22 @@
 # 18 — Secuencia: cierre atómico, factura y archivos
 
+> Reconciliación 22/10/2026: [flujos y decisiones actuales](../../02-producto/reconciliacion-frontend-20261022.md). Distingue el pago en línea previo (Recurrente confirmado por backend/webhook Svix) del cierre transaccional y del envío posterior de correo.
+
 **Vista:** Secuencia · **Alcance del plan:** Hito.
 
-Distingue el pago Stripe previo del cierre transaccional y del envío posterior de correo.
+Distingue el pago en línea previo del cierre transaccional y del envío posterior de correo.
 
 ```mermaid
 sequenceDiagram
-  participant U as App o panel + BFF
+  participant U as Portal / App o panel + BFF
   participant S as API check-out
   participant D as PostgreSQL
   participant F as Facturación / PDF
-  participant M as MinIO privado
+  participant M as Almacenamiento privado
   participant O as Outbox / correo
   U->>S: Confirmar salida, NIT/CF y nombre
   S->>D: Revalidar dueño/rol, estadía, pedidos y saldo
-  Note over U,D: App: Stripe ya confirmó el saldo por webhook, no volver a cobrar
+  Note over U,D: Portal/App: Recurrente ya confirmó el saldo en backend, no volver a cobrar
   rect rgb(234, 245, 239)
     Note over S,D: Unidad transaccional del cierre de negocio
     opt Recepción con saldo positivo
