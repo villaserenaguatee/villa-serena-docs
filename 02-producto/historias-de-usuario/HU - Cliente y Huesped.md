@@ -42,18 +42,19 @@ Recordatorio del rol: el **Cliente** reserva en la web pública **sin iniciar se
 
 **Historia**
 - **Como** cliente
-- **Quiero** ver los tipos de habitación del hotel
-- **Para** elegir el que mejor se adapta a mi viaje
+- **Quiero** ver los tipos de habitación u ofertas comerciales del hotel
+- **Para** elegir la opción que mejor se adapta a mi viaje
 
 **Criterios de aceptación**
-1. Se listan todos los tipos de habitación activos.
-2. Cada tipo muestra nombre, fotos, descripción, capacidad máxima y precio base por noche en quetzales (impuestos incluidos).
-3. Al seleccionar un tipo se muestra su detalle con todas sus fotos y un botón para buscar disponibilidad de ese tipo.
-4. Los tipos desactivados por el Administrador no se muestran.
-5. Si no hay tipos activos, se muestra un mensaje claro en lugar de una lista vacía.
+1. Se listan los tipos de habitación activos (`GET /api/v1/publico/tipos-habitacion`) y las ofertas comerciales publicadas (`GET /api/v1/publico/ofertas`).
+2. Cada ficha muestra nombre, fotos, descripción, capacidad máxima y precio base por noche en quetzales (impuestos incluidos). En las ofertas comerciales, `bookable` indica elegibilidad general del catálogo (tipo activo e inventario elegible configurado), no disponibilidad para fechas concretas, y las notas editoriales internas (`pendingFeatures`) no se exponen.
+3. Al seleccionar una opción se muestra su detalle con sus fotos y un botón para buscar disponibilidad por fechas y huéspedes.
+4. Los tipos desactivados por el Administrador no se muestran como disponibles para reservar.
+5. Si no hay opciones activas, se muestra un mensaje claro en lugar de una lista vacía.
 
 **Depende de:** HU-ADM-03
 **Reglas relacionadas:** RN-HAB-010, RN-TAR-005 (documento 10)
+**Notas técnicas:** véase el [manual de habitaciones, ofertas y tipos](../../04-guias-y-referencia/admin-habitaciones-ofertas-tipos.md) para la relación entre `room_types`, `rooms` y `catalog_offers`.
 
 ---
 
@@ -71,14 +72,14 @@ Recordatorio del rol: el **Cliente** reserva en la web pública **sin iniciar se
 **Criterios de aceptación**
 1. Se eligen la fecha de entrada y la fecha de salida en un calendario, y el número de huéspedes.
 2. La estadía debe ser de 1 a 30 noches; no se aceptan fechas pasadas, una salida igual o anterior a la entrada, ni una entrada a más de 365 días de hoy. Si alguna regla no se cumple, se muestra el motivo y no se busca.
-3. Solo se muestran tipos de habitación activos cuya capacidad sea igual o mayor al número de huéspedes.
-4. La disponibilidad de cada tipo y noche es: habitaciones activas del tipo que no están `Fuera de servicio` − reservas de ese tipo en estado `Pendiente de pago`, `Confirmada` o `En estadía` (tengan o no habitación asignada).
-5. Solo se muestra un tipo si tiene disponibilidad en **todas** las noches del rango.
+3. Solo se muestran tipos de habitación activos u ofertas comerciales elegibles cuya capacidad sea igual o mayor al número de huéspedes.
+4. La disponibilidad por tipo en cada noche (`GET /api/v1/publico/disponibilidad`) es: habitaciones activas del tipo que no están `Fuera de servicio` − reservas de ese tipo en estado `Pendiente de pago`, `Confirmada` o `En estadía` (tengan o no habitación asignada). En la consulta por oferta (`GET /api/v1/publico/ofertas/disponibilidad`), además del cupo del tipo se verifica que al menos una habitación física elegible (`catalog_offer_rooms`) esté libre durante toda la estadía; el campo `inventarioCompartido` identifica ofertas que comparten el mismo inventario físico para que sus cupos no se sumen.
+5. Solo se muestra una opción si tiene disponibilidad en **todas** las noches del rango.
 6. Si no hay disponibilidad, se muestra un mensaje claro y se sugiere cambiar las fechas o el número de huéspedes.
 
 **Depende de:** HU-ADM-03
 **Reglas relacionadas:** RN-HAB-001, RN-RES-002, RN-RES-005, RN-RES-006, RN-RES-007, RN-RES-008 (documento 10)
-**Notas técnicas:** el cálculo de disponibilidad es el mismo que usan Recepción y la API del canal; conviene una sola función en el backend.
+**Notas técnicas:** el cálculo de disponibilidad por tipo es el mismo que usan Recepción y la API del canal; el de ofertas añade el filtro de habitaciones elegibles de `catalog_offer_rooms`.
 
 ---
 
@@ -94,11 +95,11 @@ Recordatorio del rol: el **Cliente** reserva en la web pública **sin iniciar se
 - **Para** saber exactamente cuánto voy a pagar
 
 **Criterios de aceptación**
-1. Para cada tipo disponible se muestra el precio total de la estadía en quetzales, con impuestos incluidos.
-2. El precio de cada noche es: precio base del tipo × (1 + % de la temporada vigente) × (1 + % de fin de semana si la noche es viernes o sábado), redondeado a 2 decimales. El total es la suma de las noches.
-3. Se muestra el desglose por noche, indicando qué noches llevan ajuste de temporada o de fin de semana.
+1. Para cada opción disponible se muestra el precio total de la estadía en quetzales, con impuestos incluidos.
+2. En la cotización por tipo (`GET /api/v1/publico/disponibilidad`), el precio de cada noche es: precio base del tipo (`room_types.base_price`) × (1 + % de la temporada vigente) × (1 + % de fin de semana si la noche es viernes o sábado), redondeado a 2 decimales. En la cotización por oferta comercial (`GET /api/v1/publico/ofertas/disponibilidad`), cada noche usa el precio fijo de la oferta (`catalog_offers.base_price`), con `temporada: null` y `finDeSemana: false`. En ambos casos, el total es la suma de las noches.
+3. Se muestra el desglose por noche, indicando qué noches llevan ajuste de temporada o de fin de semana cuando aplica.
 4. El precio se calcula en el servidor; el navegador solo lo muestra.
-5. Stripe cobra el total que quedó fijo al crear la reserva (HU-HUE-05).
+5. La pasarela de pago cobra el total que quedó fijo al crear la reserva (HU-HUE-05).
 
 **Depende de:** HU-HUE-03, HU-ADM-03, HU-ADM-06
 **Reglas relacionadas:** RN-TAR-001, RN-TAR-002, RN-TAR-005, RN-TAR-006, RN-TAR-007, RN-TAR-008, RN-TAR-009 (documento 10)

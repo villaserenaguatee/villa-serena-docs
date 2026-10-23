@@ -75,15 +75,16 @@ Las historias comunes a todo el personal (iniciar sesión y cambiar la contrase�
 - **Para** mostrarlos en la web y calcular sus precios
 
 **Criterios de aceptación**
-1. Se registran nombre, descripción, capacidad máxima de huéspedes y precio base por noche en quetzales (con impuestos incluidos).
+1. Se registran nombre, descripción, capacidad máxima de huéspedes y precio base por noche en quetzales (con impuestos incluidos). La cantidad total de habitaciones del tipo no se edita manualmente en el tipo: se deriva de las habitaciones físicas registradas en `HU-ADM-04`.
 2. Se pueden subir varias fotos y elegir la foto principal.
 3. El nombre es obligatorio y no se repite; la capacidad debe ser al menos 1 y el precio base mayor a cero. Si no se cumple, se muestra un error y no se guarda.
-4. Cambiar el precio base solo afecta las reservas nuevas; las reservas existentes conservan su precio.
-5. Un tipo se puede desactivar: deja de mostrarse en la web pública y no admite reservas nuevas, pero conserva sus reservas existentes.
-6. Los cambios se reflejan de inmediato en el catálogo de la web pública (HU-HUE-02).
+4. Cambiar el precio base del tipo (`room_types.base_price`) solo afecta las reservas nuevas cotizadas por tipo; las reservas existentes conservan su precio congelado. Las ofertas comerciales del catálogo (`catalog_offers.base_price`) mantienen su propio precio fijo por noche hasta que se administren en el módulo de ofertas (`API #83`).
+5. Un tipo se puede desactivar: deja de mostrarse en el catálogo por tipo, las ofertas asociadas dejan de ser reservables y no admite reservas nuevas, pero conserva sus reservas existentes.
+6. Los cambios sobre el tipo se reflejan de inmediato en las consultas por tipo de la web pública y Recepción (`GET /api/v1/publico/tipos-habitacion` y `GET /api/v1/publico/disponibilidad`); véase el [manual de habitaciones, ofertas y tipos](../../04-guias-y-referencia/admin-habitaciones-ofertas-tipos.md).
 
 **Depende de:** Ninguna
 **Reglas relacionadas:** RN-HAB-009, RN-HAB-010, RN-TAR-004, RN-TAR-007 (documento 10)
+**Notas técnicas:** las fotos públicas de tipos se suben a S3 y se sirven por CloudFront (`PUT /api/v1/admin/tipos-habitacion/{id}/fotos`). Crear o editar un tipo en `room_types` no crea ni publica automáticamente una oferta comercial en `catalog_offers` (`API #83`, `web #69`).
 
 ---
 
@@ -101,13 +102,14 @@ Las historias comunes a todo el personal (iniciar sesión y cambiar la contrase�
 **Criterios de aceptación**
 1. Se registran número de habitación, piso y tipo de habitación (activo).
 2. El número de habitación es único; si ya existe, se muestra un error y no se guarda.
-3. Una habitación nueva se crea `Libre` + `Limpia` y suma de inmediato a la disponibilidad de su tipo.
+3. Una habitación nueva se crea `Libre` + `Limpia` + `Activa` y suma de inmediato a la disponibilidad operativa de su tipo (`GET /api/v1/publico/disponibilidad` y Recepción).
 4. Se puede cambiar el tipo de una habitación solo si no tiene reservas activas asignadas (`Pendiente de pago`, `Confirmada` o `En estadía`).
 5. Una habitación se puede desactivar solo si no está `Ocupada` y no tiene reservas activas asignadas. Si no se cumple, se muestra el motivo.
 6. Una habitación desactivada no cuenta para la disponibilidad ni aparece para asignar; se puede reactivar.
 
 **Depende de:** HU-ADM-03
 **Reglas relacionadas:** RN-HAB-007, RN-HAB-011, RN-HAB-012 (documento 10)
+**Notas técnicas:** registrar una habitación física en `rooms` aumenta el cupo operativo de su `room_type_id`, pero no la vincula automáticamente a una oferta comercial en `catalog_offer_rooms` ni le carga atributos en `room_features` hasta completar `API #83` (véase [admin-habitaciones-ofertas-tipos.md](../../04-guias-y-referencia/admin-habitaciones-ofertas-tipos.md)).
 
 ---
 
@@ -137,13 +139,13 @@ Las historias comunes a todo el personal (iniciar sesión y cambiar la contrase�
 
 ## Épica 3: Tarifas dinámicas
 
-**Cálculo del precio por noche** (lo hace el servidor y queda fijo al crear la reserva):
+**Cálculo del precio por noche en cotizaciones por tipo** (lo hace el servidor y queda fijo al crear la reserva; las ofertas comerciales de `/api/v1/publico/ofertas` usan su propio `catalog_offers.base_price` fijo por noche con `temporada: null` y `finDeSemana: false`):
 
 ```
-Precio de la noche = Precio base del tipo
-                   × (1 + % de la temporada vigente)
-                   × (1 + % de fin de semana, si la noche es viernes o sábado)
-                   → redondeado a 2 decimales
+Precio de la noche (por tipo) = Precio base del tipo (room_types.base_price)
+                              × (1 + % de la temporada vigente)
+                              × (1 + % de fin de semana, si la noche es viernes o sábado)
+                              → redondeado a 2 decimales
 
 Total de la estadía = suma de los precios de cada noche
 ```

@@ -1,8 +1,8 @@
 # 24 — Secuencia: Administración y configuración
 
-**Vista:** Secuencia · **Alcance del plan:** Pospuesto.
+**Vista:** Secuencia · **Alcance del plan:** Operativa (`v0.2.0`) / Integral (`v0.3.0`).
 
-El objetivo 5 está en la especificación, pero el plan lo reemplaza por datos iniciales para el hito.
+Muestra las operaciones de `ADMIN` sobre personal, tipos (`room_types`), habitaciones físicas (`rooms`), fotos públicas en S3/CloudFront, temporadas, menú, datos del hotel e indicadores, diferenciando el catálogo operativo del módulo pendiente de ofertas comerciales (`API #83`).
 
 ```mermaid
 sequenceDiagram
@@ -10,24 +10,27 @@ sequenceDiagram
   participant B as Panel / BFF
   participant S as API administración
   participant D as PostgreSQL
-  participant F as Archivos públicos
+  participant F as S3 / CloudFront (archivos públicos)
   actor P as Empleado
-  Note over A,D: Funcionalidad documentada, objetivo 5 pospuesto del hito
+  Note over A,D: Administración de personal, tipos, habitaciones, tarifas, menú e indicadores
   A->>B: Crear o editar personal, rol y área
   B->>S: Operación exclusiva ADMIN
   S->>D: Correo único, activo/inactivo, no auto-desactivación ni auto-cambio de rol
   S-->>A: Contraseña temporal visible una vez
   A->>P: Entregar contraseña personalmente, no por correo
   P->>S: Cambiar temporal antes de operar, vía BFF
-  A->>B: Tipos, habitaciones y menú
-  B->>S: Validar capacidad, precio, referencias y activación
-  S->>D: Guardar catálogo, no alterar reservas/pedidos ya creados
-  opt Fotos
-    S->>F: Guardar JPG/PNG hasta 5 MB en bucket público
+  A->>B: Tipos (room_types), habitaciones físicas (rooms) y menú
+  B->>S: Validar capacidad, precio base, número único y activación
+  S->>D: Guardar en room_types / rooms / menu_items + administration_audit (no altera reservas ni ofertas catalog_offers)
+  opt Fotos de tipos de habitación
+    B->>S: POST /api/v1/archivos/imagenes (uso=TIPO_HABITACION)
+    S->>F: Subir JPG/PNG hasta 5 MB en tipos/* y devolver URL de CloudFront
+    B->>S: PUT /api/v1/admin/tipos-habitacion/{id}/fotos
+    S->>D: Reemplazar room_type_photos (is_primary, sort_order)
   end
   A->>B: Temporadas y fin de semana
   B->>S: Ajustes mayores que menos 100 por ciento y sin traslapes
-  S->>D: Guardar, afectan solo reservas nuevas
+  S->>D: Guardar, afectan solo reservas nuevas cotizadas por tipo
   A->>B: Hotel y datos fiscales
   B->>S: Validar NIT y datos obligatorios
   S->>D: Guardar sin modificar facturas anteriores
@@ -38,15 +41,16 @@ sequenceDiagram
 
 ## Reglas y límites
 
-- En el hito: personal, catálogos, temporadas, menú, hotel y serie se precargan con Flyway; primer ADMIN por entorno.
+- `room_types` define la categoría y su `base_price` para cotizaciones por tipo; `rooms` registra las unidades físicas (de donde se deriva el conteo por tipo). Las ofertas comerciales (`catalog_offers`, `catalog_offer_rooms`) mantienen su propio `base_price` y lista de habitaciones elegibles hasta completar `API #83` y `web #69`.
 - La serie y el correlativo inicial no se editan; cambios del hotel no alteran facturas antiguas.
 - Ingreso = pagos aprobados del rango; ocupación de hoy = ocupadas/activas; reservas por canal incluyen canceladas.
 
 ## Referencias
 
-- [04 HU Administrador](../04%20-%20Historias%20de%20Usuario/HU%20-%20Administrador.md)
-- [10 RN-PER,RN-TAR,RN-HAB,RN-IND,RN-FAC](../10%20-%20Reglas%20de%20Negocio.md)
-- [13 §9.1](../13%20-%20Plan%20de%20Trabajo.md)
+- [04 HU Administrador](../../02-producto/historias-de-usuario/HU%20-%20Administrador.md)
+- [10 RN-PER,RN-TAR,RN-HAB,RN-IND,RN-FAC](../../02-producto/reglas-de-negocio.md#4-habitaciones--rn-hab)
+- [Manual de habitaciones, ofertas y tipos](../../04-guias-y-referencia/admin-habitaciones-ofertas-tipos.md)
+- [Roadmap por versiones](../../01-metodologia/roadmap-versiones.md) · [Plan original §9.1](../../04-guias-y-referencia/historico/plan-de-trabajo-original.md#91-resumen-por-objetivo)
 
 **Historias vinculadas:** `HU-ADM-01`, `HU-ADM-02`, `HU-ADM-03`, `HU-ADM-04`, `HU-ADM-05`, `HU-ADM-06`, `HU-ADM-07`, `HU-ADM-08`, `HU-ADM-09`, `HU-ADM-10`.
 

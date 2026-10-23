@@ -56,8 +56,8 @@ Define **qué acción exacta puede hacer cada rol**. Es la referencia para:
 
 | Acción | PÚBLICO | ADMIN | RECEPCION | ROOM_SERVICE | MYL | HUESPED | HU |
 |---|---|---|---|---|---|---|---|
-| Ver la información del hotel y el catálogo de habitaciones | ✅ | — | — | — | — | — | HU-HUE-01, HU-HUE-02 |
-| Buscar disponibilidad y ver el precio | ✅ | — | ✅ | — | — | — | HU-HUE-03, HU-HUE-04, HU-REC-03 |
+| Ver la información del hotel y el catálogo de habitaciones (tipos activos y ofertas comerciales) | ✅ | — | — | — | — | — | HU-HUE-01, HU-HUE-02 |
+| Buscar disponibilidad y ver el precio (por tipo o por oferta comercial) | ✅ | — | ✅ | — | — | — | HU-HUE-03, HU-HUE-04, HU-REC-03 |
 | Crear una reserva | ✅ ¹ | — | ✅ | — | — | — | HU-HUE-05, HU-REC-04 |
 | Pagar la reserva con Stripe | ✅ | — | — | — | — | — | HU-HUE-06 |
 | Registrar al huésped principal y a los adicionales | — | — | ✅ | — | — | — | HU-REC-01, HU-REC-02 |
@@ -130,7 +130,7 @@ Define **qué acción exacta puede hacer cada rol**. Es la referencia para:
 | Acción | PÚBLICO | ADMIN | RECEPCION | ROOM_SERVICE | MYL | HUESPED | HU |
 |---|---|---|---|---|---|---|---|
 | Gestionar empleados (crear, editar, desactivar, restablecer contraseña) | — | ✅ | — | — | — | — | HU-ADM-01, HU-ADM-02 |
-| Gestionar tipos de habitación y habitaciones | — | ✅ | — | — | — | — | HU-ADM-03, HU-ADM-04 |
+| Gestionar tipos de habitación y habitaciones físicas (`room_types`, `rooms`) | — | ✅ ¹⁵ | — | — | — | — | HU-ADM-03, HU-ADM-04 |
 | Gestionar el menú de Room Service | — | ✅ | — | — | — | — | HU-ADM-05 |
 | Gestionar temporadas y el ajuste de fin de semana | — | ✅ | — | — | — | — | HU-ADM-06, HU-ADM-07 |
 | Configurar los datos del hotel y fiscales | — | ✅ | — | — | — | — | HU-ADM-08 |
@@ -162,7 +162,7 @@ Define **qué acción exacta puede hacer cada rol**. Es la referencia para:
 
 | # | Nota |
 |---|---|
-| ¹ | La reserva web nace `PENDIENTE_PAGO` y se paga al 100 % con Stripe. |
+| ¹ | La reserva web nace `PENDIENTE_PAGO` y se paga al 100 % en línea. |
 | ² | Solo reservas `CONFIRMADA` que **no** vengan de un canal externo. |
 | ³ | Solo antes del check-in: reservas `PENDIENTE_PAGO` o `CONFIRMADA`. |
 | ⁴ | Solo con la reserva `EN_ESTADIA` (y, para los cargos, con la cuenta `ABIERTA`). |
@@ -176,6 +176,7 @@ Define **qué acción exacta puede hacer cada rol**. Es la referencia para:
 | ¹² | Solo empleados con área `MANTENIMIENTO` o `AMBAS`. Un empleado solo de Limpieza recibe "Acceso denegado". Reportar un daño sí lo puede hacer cualquier área. |
 | ¹³ | Cualquier huésped con sesión, sin importar el estado de su reserva. |
 | ¹⁴ | Solo con la cuenta `ABIERTA` (HU-REC-13). |
+| ¹⁵ | `ADMIN` gestiona tipos (`room_types`, incluidas sus fotos públicas en S3/CloudFront) y habitaciones físicas (`rooms`) en `/api/v1/admin/tipos-habitacion` y `/api/v1/admin/habitaciones`. La administración de ofertas comerciales (`catalog_offers`, `catalog_offer_rooms`, `room_features`) se define en `API #83` y `web #69` (véase [admin-habitaciones-ofertas-tipos.md](../04-guias-y-referencia/admin-habitaciones-ofertas-tipos.md)). |
 
 ---
 
@@ -184,7 +185,7 @@ Define **qué acción exacta puede hacer cada rol**. Es la referencia para:
 | Actor | Qué puede hacer | Cómo se autentica |
 |---|---|---|
 | `CANAL` | **Solo crear** reservas por la API (HU-CM-01). No cancela ni consulta reservas | Canal y clave en cada petición; la clave se compara con su hash (canales y claves cargados en los datos iniciales) |
-| `STRIPE` | Avisar del resultado de los pagos por el webhook (pagado o sesión vencida) | Firma del webhook de Stripe |
+| `STRIPE` | Avisar del resultado de los pagos por el webhook (pagado o sesión vencida) | Firma del webhook |
 | `SISTEMA` | Los efectos automáticos del documento 07 (sección 11): cancelación a los 30 minutos, efectos del check-out, cargo del pedido entregado (HU-RS-06), correo de confirmación (HU-HUE-07), cambios de la habitación por incidencias, correos y notificaciones push | Proceso interno del backend |
 
 ---
@@ -195,7 +196,7 @@ Define **qué acción exacta puede hacer cada rol**. Es la referencia para:
 |---|---|---|
 | VIS-01 | El huésped solo ve sus propias reservas, cuenta, pedidos, solicitudes y factura. Si pide un registro ajeno, el servidor lo rechaza. | HU-HUE-09, HU-HUE-15 |
 | VIS-02 | Room Service solo ve el nombre del huésped, la habitación y el piso; Mantenimiento/Limpieza solo la habitación y el piso. Ninguno ve correo, teléfono, documento ni pagos. | HU-RS-01, HU-RS-02, HU-MYL-04 |
-| VIS-03 | La web pública solo expone información del hotel, tipos de habitación activos, disponibilidad y precios. La página de retorno de Stripe solo muestra el estado de la reserva recién pagada. Nunca expone otras reservas ni datos de otros huéspedes. | HU-HUE-01 a HU-HUE-04 |
+| VIS-03 | La web pública solo expone información del hotel, tipos de habitación activos, ofertas comerciales publicadas (sin notas internas `pendingFeatures`), disponibilidad y precios. La página de retorno de pago solo muestra el estado de la reserva recién consultada. Nunca expone otras reservas ni datos de otros huéspedes. | HU-HUE-01 a HU-HUE-04 |
 | VIS-04 | Un empleado `INACTIVO` no puede iniciar sesión ni renovar su sesión. Una sesión ya abierta dura hasta que vence su token de acceso (máximo 15 minutos). | HU-ADM-02, HU-EMP-01 |
 | VIS-05 | Las notificaciones push no muestran datos personales ni montos. | HU-HUE-17 |
 | VIS-06 | Los secretos (claves de Stripe, del correo, de firma de los JWT, de los canales) nunca se suben a Git ni llegan a la web o a la app. | AGENTS.md; documento 14 |
