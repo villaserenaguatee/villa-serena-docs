@@ -17,9 +17,9 @@ Este documento describe la arquitectura global, topología de servicios, patrón
 5. [Dónde vive cada regla](#5-dónde-vive-cada-regla)
 6. [Seguridad: JWT, BFF y CORS](#6-seguridad-jwt-bff-y-cors) — incluye 6.1 Patrón BFF y seguridad de sesión
 7. [Estructura de los repositorios](#7-estructura-de-los-repositorios)
-8. [Entorno local](#8-entorno-local)
-9. [Despliegue en la VPS (después)](#9-despliegue-en-la-vps-después)
-10. [CI/CD (después)](#10-cicd-después)
+8. [Entornos `local` y `dev`](#8-entornos-local-y-dev)
+9. [Despliegue en producción (`prod`: Vercel + AWS)](#9-despliegue-en-producción-prod-vercel--aws)
+10. [CI/CD y diagnóstico operativo](#10-cicd-y-diagnóstico-operativo)
 11. [Requisitos no funcionales](#11-requisitos-no-funcionales)
 12. [Limitaciones conocidas y mitigaciones](#12-limitaciones-conocidas-y-mitigaciones)
 13. [Cuentas y costos](#13-cuentas-y-costos)
@@ -42,10 +42,10 @@ Confirmadas por el catedrático. No se sustituyen.
 | **API REST, BFF y CORS** | Patrones de arquitectura | Hito |
 | **React Native** | App del huésped (Expo) | Hito |
 | **Grafana** | Monitoreo; en el hito, **en local con Docker** | Hito |
-| **Cloudflare** | DNS, proxy, SSL, WAF y Tunnel delante de la VPS | Después |
-| **VPS** (pagada o AWS) | Aloja web, backend y base de datos | Después |
+| **Cloudflare** | DNS y almacenamiento R2 en `dev` (compatible con S3) | Desarrollo y dominio |
+| **Vercel + AWS (EC2, API Gateway, S3, CloudFront, SSM)** | Vercel aloja `villa-serena-web` (`villaserenaguate.org`); AWS aloja `villa-serena-api` y PostgreSQL 17 en EC2 ARM64 detrás de HTTP API Gateway (`api.villaserenaguate.org`) + VPC Link + Cloud Map, y archivos en S3 + CloudFront | Despliegue |
 
-**Lenguajes:** **Java** (backend), **TypeScript** (web y app) y **SQL** (migraciones).
+**Lenguajes:** **Java** (backend), **TypeScript** (web y app) y **SQL** (migraciones de esquema en inglés).
 
 ---
 
@@ -53,31 +53,31 @@ Confirmadas por el catedrático. No se sustituyen.
 
 | # | Decisión | Motivo |
 |---|---|---|
-| AD-01 | **Spring Boot 4.1 con Java 21 LTS** expone una **API REST** con toda la lógica de negocio | Obligatorio |
+| AD-01 | **Spring Boot 4.1 (`4.1.1`) con Java 21 LTS** expone una **API REST** con toda la lógica de negocio | Obligatorio |
 | AD-02 | **Spring Security + JWT** para todos: personal con correo y contraseña (**contraseña temporal** generada por el Administrador y cambio obligatorio); huésped con **código OTP por correo** | Obligatorio; HU-ADM-01, HU-EMP-02, HU-HUE-08 |
 | AD-03 | **Next.js aplica el patrón BFF:** las peticiones HTTP de la web al API pasan por Next.js, que mantiene el JWT en cookies httpOnly y llama a Spring. El WebSocket conecta directamente a Spring mediante un ticket temporal obtenido por el BFF | Patrón BFF con excepción explícita de WebSocket |
 | AD-04 | **La app llama directamente a Spring** (API y WebSocket) con su propio JWT guardado en `expo-secure-store`, **sin pasar por el BFF** | La app no usa cookies de navegador; HU-HUE-11 |
-| AD-05 | **CORS** en Spring permite solo los orígenes propios (en el hito, `http://localhost:3000`) | Obligatorio |
-| AD-06 | **PostgreSQL 17** con migraciones **Flyway** y **Spring Data JPA**. Las reglas que nunca deben romperse también son **restricciones de la base de datos** (sección 5) | Doble protección |
-| AD-07 | **Almacenamiento por entorno:** `local` mínimo sin nube; `dev` con R2 remoto y servicios auxiliares Docker; `prod` con S3. Ver [ADR-007](https://github.com/villaserenaguatee/villa-serena-docs/blob/5dcd7a26ea01a0063375aa18df8fe792e4270301/03-arquitectura/adr/ADR-007-almacenamiento-r2-s3.md) | D-22; ALC-TRA-10 |
-| AD-08 | **Después del hito:** una sola **VPS** con Docker Compose detrás de **Cloudflare** (DNS, proxy, SSL, WAF y **Tunnel**: la VPS no abre puertos). Los archivos usan **R2 remoto en dev** y **Amazon S3 en producción**, mediante el adaptador S3 configurable; ver [ADR-007](https://github.com/villaserenaguatee/villa-serena-docs/blob/5dcd7a26ea01a0063375aa18df8fe792e4270301/03-arquitectura/adr/ADR-007-almacenamiento-r2-s3.md) | D-12; ALC-TRA-06 |
+| AD-05 | **CORS** en Spring permite solo los orígenes propios (`http://localhost:3000` en local/dev; `https://villaserenaguate.org` en producción) | Obligatorio |
+| AD-06 | **PostgreSQL 17** con migraciones **Flyway** (`src/main/resources/db/migration`, tablas y columnas en **inglés**, códigos de estado de negocio en español) y **Spring Data JPA / JDBC**. Las reglas críticas son también **restricciones de la base de datos** (sección 5) | Doble protección y esquema unificado (`#59`) |
+| AD-07 | **Perfiles `local` y `dev` con Docker Compose:** `local` levanta API + PostgreSQL con adaptador local de archivos privados; `dev` suma Mailpit, Prometheus, Grafana y **Cloudflare R2** remoto (MinIO y el perfil `demo` se retiraron) | Simplificación operativa; ver [guía de despliegue y modelo de datos](../04-guias-y-referencia/despliegue-y-modelo-datos.md) |
+| AD-08 | **Despliegue en Vercel y AWS (`prod`):** `villa-serena-web` se despliega en **Vercel** (`villaserenaguate.org`); `villa-serena-api` y PostgreSQL 17 corren en **EC2 Debian 13 ARM64** sin SSH público (administrada por **AWS SSM**), expuesta en `api.villaserenaguate.org` mediante **AWS HTTP API Gateway + VPC Link + Cloud Map**. Los archivos usan **Amazon S3** (bucket privado con URLs firmadas y bucket público con **CloudFront**) | Arquitectura real provisionada en `villa-serena-infra` |
 | AD-09 | **Tiempo real con WebSocket + STOMP**, **solo para 4 eventos**: nuevo pedido, cambio de estado del pedido, nueva solicitud y cambio de estado de habitación | D-21; documento 07, sección 12 |
 | AD-10 | **Notificaciones push** con **Expo Push Service sobre FCM**, enviadas por Spring, **solo** para pedido `ENTREGADO` y solicitud `ATENDIDA` | ALC-APP-10; HU-HUE-17 |
 | AD-11 | **App con React Native + Expo SDK 54** (Expo Router). Expo Go de SDK 54 (desde expo.dev/go) para pruebas rápidas; **development build** para probar push; **APK con EAS Build** | Decisión del 1 de octubre: se queda en SDK 54 |
-| AD-12 | **Tareas en segundo plano con `@Scheduled` + Outbox:** la **revisión y conciliación de reservas web al vencer el plazo**, con cancelación solo tras confirmar vencimiento sin pago, y el **reintento de correos y push**. No hay cancelación automática por no-show, ni recordatorios, ni sincronización con canales | HU-HUE-06, HU-HUE-07, HU-HUE-17 |
-| AD-13 | **Channel Manager: REST/JSON simple.** Clave por canal (guardada con hash), sin duplicados por identificador externo. **Sin formato OTA, sin firma HMAC, sin cancelación y sin pantalla de canales.** El canal simulado (pantalla del Administrador) llama a la API real con las claves de sus variables de entorno | ALC-CM-03; HU-CM-01, HU-CM-03 |
-| AD-14 | **Facturación como módulo de Spring:** factura de demostración con serie fija (datos iniciales), correlativo sin saltos, total con "IVA incluido" **sin desglose**, sin anulación ni "COPIA". **Impresión desde el navegador** (CSS para 80 mm y carta) | D-13, D-18; supuesto S-02 |
-| AD-15 | **Grafana en local:** Spring Actuator + Micrometer → **Prometheus** → **Grafana**, con un tablero de estado del API, peticiones, errores HTTP, CPU y RAM. Logs centralizados (Loki) y alertas son **Nivel 2** | ALC-TRA-09 y ALC-TRA-09b |
-| AD-16 | **5 repositorios en `villaserenaguate`:** `villa-serena-docs`, `villa-serena-infra`, `villa-serena-api`, `villa-serena-web` y `villa-serena-movil`. El contrato canónico vive en `villa-serena-docs/openapi.yaml`; API lo implementa y los frontends generan tipos directamente desde docs, sin copias YAML locales | Separación obligatoria; un contrato de referencia |
-| AD-17 | **Pasarela Recurrente (reemplaza a Stripe):** cobro en Quetzales (GTQ) mediante Checkout alojado de Recurrente y webhooks con firma criptográfica (ver [ADR-017](adr/ADR-017-pasarela-recurrente.md)) | Moneda local (GTQ), pasarela guatemalteca; HU-HUE-06 |
-| AD-18 | **Flyway solo versiona el esquema.** Los fixtures locales se cargan explícitamente después del arranque. El primer administrador se crea únicamente con bootstrap habilitado, sin generar administradores adicionales | Índice de HU, sección 5; V-04, V-06 |
+| AD-12 | **Tareas en segundo plano con `@Scheduled` + Outbox (`outbox_events`):** la **revisión y conciliación de reservas web al vencer el plazo de 30 minutos** (con cancelación solo tras confirmar vencimiento sin pago) y el **reintento de correos y push**. No hay cancelación automática por no-show, ni recordatorios, ni sincronización con canales | HU-HUE-06, HU-HUE-07, HU-HUE-17 |
+| AD-13 | **Channel Manager: REST/JSON simple.** Clave por canal (guardada con hash en `external_channels`), sin duplicados por identificador externo. **Sin formato OTA, sin firma HMAC, sin cancelación y sin pantalla de canales.** El canal simulado (pantalla del Administrador) llama a la API real con las claves de sus variables de entorno | ALC-CM-03; HU-CM-01, HU-CM-03 |
+| AD-14 | **Facturación como módulo de Spring:** factura de demostración con serie fija, correlativo sin saltos (`invoices`, `invoice_sequence`), total con "IVA incluido" **sin desglose**, sin anulación ni "COPIA". **Impresión desde el navegador** (CSS para 80 mm y carta) | D-13, D-18; supuesto S-02 |
+| AD-15 | **Grafana en `dev`:** Spring Actuator + Micrometer → **Prometheus** → **Grafana**, con un tablero de estado del API, peticiones, errores HTTP, CPU y RAM. Logs centralizados (Loki) y alertas son **Nivel 2** | ALC-TRA-09 y ALC-TRA-09b |
+| AD-16 | **5 repositorios en `villaserenaguatee`:** `villa-serena-docs`, `villa-serena-infra`, `villa-serena-api`, `villa-serena-web` y `villa-serena-movil`. El contrato canónico vive en `villa-serena-docs/openapi.yaml`; cada consumidor fija su SHA en `api-contract.json` sin copias YAML locales | Separación obligatoria; un contrato de referencia |
+| AD-17 | **Pasarela Recurrente (reemplaza a Stripe):** cobro en Quetzales (GTQ) mediante Checkout alojado de Recurrente y webhooks con firma criptográfica Svix (ver [ADR-017](adr/ADR-017-pasarela-recurrente.md)) | Moneda local (GTQ), pasarela guatemalteca; HU-HUE-06 |
+| AD-18 | **Esquema Flyway sin seeds automáticos; fixtures y bootstrap separados:** Flyway aplica únicamente el esquema. El **primer Administrador** se crea únicamente con `BOOTSTRAP_ADMIN_ENABLED=true` (sin generar administradores adicionales ni sustituir cuentas). Los datos ficticios para `local` se cargan explícitamente después del arranque con `scripts/demo/load-data.sql` sobre una base vacía | Separación entre esquema de producción y datos de prueba (`#59`) |
 | AD-19 | **Zona horaria America/Guatemala:** las fechas se guardan en UTC y se convierten a esta zona para mostrar y para calcular "hoy", la regla de 48 horas, la ventana del check-out y el check-in | Necesario para las reglas de fecha de las historias |
 
 ---
 
 ## 3. Vista general
 
-### 3.1 Entorno de desarrollo local
+### 3.1 Entornos `local` y `dev`
 
 ```
 NAVEGADOR (cliente y personal)
@@ -88,70 +88,75 @@ NAVEGADOR (cliente y personal)
 APP ANDROID (huésped)
   └── HTTP y WebSocket con su propio JWT ───────────► api (directo)
 
-api — Spring Boot
-  ├──► PostgreSQL 17 ........ datos            (Docker)
-  ├──► Mailpit .............. correos de prueba (Docker)
-  ├──► Cloudflare R2 ........ fotos y PDF       (remoto; perfil dev)
+api — Spring Boot (perfiles local / dev)
+  ├──► PostgreSQL 17 ........ esquema Flyway en inglés (Docker)
+  ├──► Mailpit .............. correos de prueba en dev (Docker)
+  ├──► Archivos ............. adaptador local en PostgreSQL (local) o Cloudflare R2 remoto (dev)
   ├──► Expo Push → FCM ...... notificaciones push
-  └──◄ Recurrente ........... avisos de pago por webhook accesible desde el proveedor
+  └──◄ Recurrente ........... avisos de pago por webhook Svix
 
-Prometheus (Docker) ──lee métricas de──► api (Actuator)
-Grafana (Docker) ─────muestra──────────► Prometheus
+Prometheus (Docker en dev) ──lee métricas de──► api (Actuator)
+Grafana (Docker en dev) ─────muestra──────────► Prometheus
 ```
 
-### 3.2 Después del hito (VPS)
+### 3.2 Despliegue en producción (`prod`: Vercel + AWS)
 
 ```
- Navegador ─┐                         ┌─ App Android
-            ▼                         ▼
- ┌────────────── CLOUDFLARE: DNS · Proxy + SSL · WAF · Tunnel ──────────────┐
- └───────────────┬──────────────────────────────────────────────────────────┘
-                 │ (túnel cifrado; la VPS no abre puertos)
- ┌───────────────▼──────────────── VPS · Docker Compose ────────────────────┐
- │  web (Next.js) · api (Spring) · postgres · cloudflared · monitoreo        │
- └───────────────────────────────────────────────────────────────────────────┘
-   Archivos: Amazon S3 (assets públicos por CloudFront) · Backups: configuración independiente · Correo: Resend · Pagos: Recurrente · Push: Expo/FCM
+ Navegador ──────► Vercel (villaserenaguate.org) · Next.js 15 + BFF
+                      │
+                      ├── HTTPS ──► AWS HTTP API Gateway (api.villaserenaguate.org)
+ App Android ─────────┘                 │
+                                        ▼
+                               VPC Link + AWS Cloud Map
+                                        │ (TCP 8080 privado)
+                                        ▼
+                  ┌────────── AWS EC2 · Debian 13 ARM64 (SSM, sin SSH) ──────────┐
+                  │  villa-serena-api (Spring Boot) ──► villa-serena-db (PG 17)  │
+                  └──────────────────────────────────────────────────────────────┘
+    Archivos públicos: S3 + CloudFront (d13s29erv78l4g.cloudfront.net) · Privados: S3 firmado
+    Secretos y CD: AWS SSM Parameter Store + SSM Run Command (OIDC desde GitHub Actions)
+    Correo: SMTP / Resend · Pagos: Recurrente · Push: Expo/FCM
 ```
 
 ---
 
 ## 4. Tecnologías por capa
 
-### 4.1 Backend (`villa-serena-api`, Java)
+### 4.1 Backend (`villa-serena-api`, Java — `pom.xml`)
 
 | Tecnología | Uso |
 |---|---|
-| **Spring Boot 4.1** + **Java 21 LTS** + **Maven** | Proyecto del backend (starters `spring-boot-starter-webmvc`, `-security-oauth2-resource-server`, `-flyway`) |
+| **Spring Boot `4.1.1`** + **Java 21 LTS** + **Maven (`mvnw`)** | Proyecto del backend (`spring-boot-starter-webmvc`, `spring-boot-starter-security-oauth2-resource-server`, `spring-boot-starter-flyway`, `spring-boot-starter-data-jpa`, `spring-boot-starter-validation`, `spring-boot-starter-actuator`) |
 | **Spring Web** (REST) | Endpoints `/api/v1/...` |
-| **Spring Security** + **OAuth2 Resource Server** (JWT con claves propias) | Emisión y validación de JWT; `@PreAuthorize` por rol y verificación de propiedad (documento 09) |
+| **Spring Security** + **OAuth2 Resource Server** (JWT HS256) | Emisión y validación de JWT; `@PreAuthorize` por rol y verificación de propiedad (documento 09) |
 | **BCrypt** | Contraseñas del personal y códigos OTP guardados con hash |
-| **Spring Data JPA** (Hibernate) + **Flyway** | Acceso a datos y migraciones del esquema; fixtures separados de carga explícita |
-| **Jakarta Bean Validation** | Validación de entradas |
-| **Spring WebSocket + STOMP** | Los 4 eventos en tiempo real (sección 6) |
-| **Spring Scheduling** (`@Scheduled`) + **tabla Outbox** | Revisión/conciliación al vencer el plazo, cancelación confirmada sin pago y reintentos de correos/push |
-| **Spring Mail** + **Thymeleaf** | Correos existentes de OTP de acceso, confirmación de reserva y factura; también verificación previa del correo y recuperación del personal. El inventario original de tres era un subconjunto del flujo de estadía. SMTP depende del entorno configurado; una plantilla no acredita entrega |
-| **Cliente HTTP de Recurrente** | Checkout alojado, verificación del webhook y reembolso total; conserva registros históricos del proveedor anterior |
-| **OpenPDF** | PDF de la factura |
-| **AWS SDK S3** | Archivos en **Cloudflare R2** (dev) o **Amazon S3** (prod), con credenciales por entorno y URL firmadas para los privados. `local` mínimo usa el adaptador persistente en PostgreSQL, sin nube |
-| **RestClient** de Spring | Envío de push a Expo Push API |
-| **springdoc-openapi** | OpenAPI generado y Swagger UI para contrastar la implementación; los tipos TypeScript se generan desde el contrato canónico de docs |
-| **Actuator** + **Micrometer (Prometheus)** | Salud y métricas para Grafana |
-| **JUnit 5** + **Mockito** + **Testcontainers** + **Spring Security Test** | Pruebas |
+| **Spring Data JPA / JDBC** + **Flyway** (`flyway-database-postgresql`) | Acceso a datos y migraciones de esquema en inglés (`V1`–`V29`); fixtures separados de carga explícita |
+| **Jakarta Bean Validation** + **`libphonenumber` (`9.0.40`)** | Validación de entradas y normalización telefónica |
+| **Spring WebSocket + STOMP** (`spring-boot-starter-websocket`) | Los 4 eventos en tiempo real (sección 6) |
+| **Spring Scheduling** (`@Scheduled`) + **tabla `outbox_events`** | Revisión y conciliación al vencer el plazo, cancelación confirmada sin pago y reintentos de correos y push |
+| **Spring Mail** + **Thymeleaf** | Correos transaccionales (OTP de acceso, verificación previa de correo, confirmación de reserva, factura y recuperación del personal). En `dev`, **Mailpit**; en `prod`, SMTP/Resend |
+| **Cliente HTTP de Recurrente** | Checkout alojado en GTQ, verificación del webhook Svix y reembolso total; conserva registros históricos `STRIPE` |
+| **OpenPDF (`com.github.librepdf:openpdf:3.0.5`)** | PDF de la factura de demostración |
+| **AWS SDK S3 (`software.amazon.awssdk:s3:2.55.0`)** | Archivos en **Cloudflare R2** (`dev`) o **Amazon S3 + CloudFront** (`prod`), con URLs firmadas para el bucket privado; en `local` se usa el adaptador en PostgreSQL (`local_private_files`) |
+| **RestClient** de Spring | Envío de push a Expo Push API y llamadas HTTP a Recurrente |
+| **`springdoc-openapi-starter-webmvc-ui` (`3.1.0`)** | OpenAPI exportado (`target/openapi-spring.json`) y Swagger UI en local/dev para contrastar la implementación con `villa-serena-docs/openapi.yaml` |
+| **Actuator** + **Micrometer (`micrometer-registry-prometheus`)** | Salud (`/actuator/health`) y métricas para Grafana |
+| **JUnit 5** + **Mockito** + **Testcontainers (`postgresql`)** + **Spring Security Test** | Pruebas unitarias y de integración sobre PostgreSQL 17 real |
 
-### 4.2 Web (`villa-serena-web`, TypeScript)
+### 4.2 Web (`villa-serena-web`, TypeScript — `package.json`)
 
 | Tecnología | Uso |
 |---|---|
-| **Next.js 15** (App Router) + **React 19** | Web pública, panel privado y **BFF**; versión principal acordada (P-01 resuelto) |
+| **Next.js `15.5.x`** (App Router) + **React `19.0.0`** | Web pública, panel privado y **BFF** desplegado en Vercel |
 | **Route Handlers de Next.js** | BFF: login, cierre de sesión, renovación y reenvío de peticiones a Spring |
-| **Tailwind CSS 4** + **shadcn/ui** + **lucide-react** | Estilos y componentes |
-| **TanStack Query** + **TanStack Table** | Datos y tablas |
-| **React Hook Form** + **Zod** | Formularios y validación |
-| **react-day-picker** (Calendar de shadcn/ui, modo rango) | Selector de fechas de la reserva |
-| **EventCalendar** (`@event-calendar/core`, MIT), vista `resourceTimelineMonth` | Calendario Gantt de Recepción |
-| **@stomp/stompjs** | Tiempo real (Room Service, Limpieza y estado de habitaciones) |
-| **date-fns** + **@date-fns/tz** | Fechas en America/Guatemala |
-| **openapi-typescript** + **openapi-fetch** (generación desde `villa-serena-docs/openapi.yaml`) | Tipos y cliente del API |
+| **Tailwind CSS `4.0.x`** (`@tailwindcss/postcss`, `clsx`, `tailwind-merge`) + **`lucide-react`** | Estilos y componentes de interfaz propios del repositorio |
+| **TanStack Query (`@tanstack/react-query`)** + **TanStack Table (`@tanstack/react-table`)** | Estado de servidor, caché y tablas operativas |
+| **`next-intl` (`4.14.x`)** + **`libphonenumber-js`** | Internacionalización y validación de teléfonos en formularios controlados |
+| **EventCalendar** (`@event-calendar/core` `5.15.x`), vista `resourceTimelineMonth` | Calendario Gantt de Recepción |
+| **`@stomp/stompjs` (`7.2.0`)** | Tiempo real (Room Service, Limpieza y estado de habitaciones) |
+| **`pdfjs-dist`** + **`xlsx`** | Previsualización de PDF y exportación de reportes/tablas |
+| **`openapi-typescript` (`7.13.0`)** | Generación de `src/lib/api/schema.d.ts` desde la revisión de `villa-serena-docs/openapi.yaml` fijada en `api-contract.json` |
+| **Vitest (`5.0.x`)** + **Testing Library** + **Playwright (`@playwright/test` `1.64.x`)** | Pruebas unitarias, de componentes, de BFF y extremo a extremo (E2E) |
 | **CSS de impresión** (`@media print`, `@page`) | Factura en 80 mm y carta |
 
 ### 4.3 App (`villa-serena-movil`, TypeScript)
@@ -164,9 +169,8 @@ Grafana (Docker) ─────muestra──────────► Prometh
 | **EAS Build** | APK para entregar |
 | **NativeWind** | Estilos con clases de Tailwind |
 | **expo-secure-store** | Guardar el JWT y el refresh token |
-| **openapi-typescript** + **openapi-fetch** | Tipos y cliente del API generados dentro de `villa-serena-movil`, desde `villa-serena-docs/openapi.yaml` |
+| **openapi-typescript** + cliente HTTP | Tipos del API generados desde `villa-serena-docs/openapi.yaml` |
 | **TanStack Query** | Datos de la app (sin modo sin conexión) |
-| **React Hook Form** + **Zod** | Formularios (correo, código, NIT) |
 | **@stomp/stompjs** | Seguimiento en vivo del pedido (evento 2) |
 | **expo-notifications** | Recibir push (Expo Push + FCM) |
 | **expo-web-browser** + **expo-linking** | Abrir el checkout de Recurrente y volver a la app |
@@ -175,24 +179,23 @@ Grafana (Docker) ─────muestra──────────► Prometh
 
 | Tecnología | Uso |
 |---|---|
-| **PostgreSQL 17** (contenedor, volumen persistente) | Base de datos única |
-| **Extensión `btree_gist`** | Restricción `EXCLUDE` contra reservas traslapadas en una misma habitación |
-| **Flyway** | Solo migraciones del esquema al arrancar Spring; fixtures explícitos y separados, nunca automáticos |
-| **Cloudflare R2** (dev) / **Amazon S3** (prod) | Bucket **público**: fotos del hotel, tipos de habitación, menú y amenidades. Bucket **privado**: PDF de facturas y fotos de incidencias |
+| **PostgreSQL 17** (contenedor, volumen persistente) | Base de datos única con tablas en inglés (`employees`, `guests`, `room_types`, `rooms`, `reservations`, `catalog_offers`, `accounts`, `payments`, `invoices`, `state_history`, `outbox_events`, etc.) |
+| **Extensión `btree_gist`** | Restricción `EXCLUDE` (`ex_reservations_room_overlap`) contra reservas activas traslapadas en una misma habitación |
+| **Flyway** | Migraciones de esquema (`src/main/resources/db/migration`); fixtures explícitos y separados, nunca automáticos |
+| **Adaptador local** (`local`) / **Cloudflare R2** (`dev`) / **Amazon S3 + CloudFront** (`prod`) | Activos **públicos**: fotos del hotel, tipos de habitación (`tipos/*`), menú y amenidades servidas por CDN (`ARCHIVOS_URL_PUBLICA`). Bucket **privado** (`STORAGE_BUCKET_PRIVATE`): PDF de facturas y fotos de incidencias con URLs firmadas |
 
 ### 4.5 Entorno, monitoreo y calidad
 
 | Tecnología | Uso | Cuándo |
 |---|---|---|
-| **Docker + Docker Compose** | Contenedores locales: `postgres`, `mailpit`, `prometheus`, `grafana` | Hito |
-| **Grafana** + **Prometheus** | Tablero mínimo del API (ALC-TRA-09) | Hito |
+| **Docker + Docker Compose** | `compose.local.yml` (`postgres`, `api`), `compose.dev.yml` (`postgres`, `mailpit`, `prometheus`, `grafana`, `api`) y `compose.prod.yml` (`api` en EC2) | `local`, `dev` y `prod` |
+| **Grafana** + **Prometheus** | Tablero mínimo del API en `dev` (ALC-TRA-09) | `dev` |
 | **Recurrente Sandbox** | Probar el checkout con webhook accesible mediante una URL acordada; ver la guía de arranque | Desarrollo y demo |
 | **Loki** + alerta por caída o consumo alto | ALC-TRA-09b | Nivel 2 |
-| **VPS Ubuntu 24.04** + **Cloudflare** + **cloudflared** | Producción | Después |
-| **GitHub Actions** + **GHCR** | CI/CD | Después |
-| **Vitest** + **Playwright** | Pruebas de web y de extremo a extremo | Si da tiempo |
-| **ESLint + Prettier**, **Spotless** | Estilo de código | Hito |
-| **pnpm** en cada frontend | Dependencias independientes por repositorio, sin workspaces | Hito |
+| **Vercel** + **AWS (EC2 Debian 13 ARM64, HTTP API Gateway, VPC Link, Cloud Map, S3, CloudFront, SSM)** | Producción sin SSH expuesto | `prod` |
+| **GitHub Actions** + **GHCR (ARM64)** + **AWS OIDC / SSM Run Command** | CI/CD de validación y despliegue | Activo |
+| **Vitest** + **Playwright** + **Testcontainers** | Pruebas automatizadas en CI de web y API | Activo |
+| **pnpm 12** y **Node.js 24** | Gestión de paquetes y verificación del contrato OpenAPI | Activo |
 
 ---
 
@@ -200,16 +203,16 @@ Grafana (Docker) ─────muestra──────────► Prometh
 
 | Mecanismo | Qué protege | Reglas (documento 10) |
 |---|---|---|
-| **Restricciones de PostgreSQL** (Flyway) | Sin reservas traslapadas en la misma habitación (`EXCLUDE`); número de habitación único; correo único de empleado y de huésped; una reserva por canal e identificador externo; un solo cargo por pedido; una sola factura por cuenta; una sola solicitud de limpieza activa por habitación (índice único parcial); correlativo de factura único por serie | RN-RES-002, RN-HAB-007, RN-PER-008, RN-RES-019, RN-CM-004, RN-RS-007, RN-FAC-001, RN-LIM-005, RN-FAC-004 |
+| **Restricciones de PostgreSQL** (Flyway) | Sin reservas traslapadas en la misma habitación (`ex_reservations_room_overlap` con `btree_gist`); número de habitación único (`uq_rooms_number`); correo único de empleado (`uq_employees_email`) y de huésped (`uq_guests_email`); una reserva por canal e identificador externo (`uq_reservations_channel_identifier`); un solo cargo por pedido; una sola factura por cuenta; una sola solicitud de limpieza activa por habitación (índice único parcial); correlativo de factura único por serie | RN-RES-002, RN-HAB-007, RN-PER-008, RN-RES-019, RN-CM-004, RN-RS-007, RN-FAC-001, RN-LIM-005, RN-FAC-004 |
 | **Servicios de dominio de Spring** (`@Transactional`, bloqueo donde hay concurrencia) | Disponibilidad, tarifas, reservas, cuenta y pagos, check-in y check-out (una sola operación), facturación, indicadores y los efectos del documento 07 (sección 11) | RN-RES, RN-HAB, RN-TAR, RN-PAG, RN-CAN, RN-RS, RN-LIM, RN-MAN, RN-FAC, RN-IND (en especial RN-RES-022) |
-| **Inventario y gestión operativa** (transacción y bloqueo del insumo compartido) | Movimientos manuales, compras y repuestos actualizan existencias y auditoría; salidas, mermas y repuestos rechazan stock insuficiente. El stock actual vive en los registros JSON de gestión, no en una restricción SQL específica de stock | RN-INV-001, RN-INV-002, RN-INV-003, RN-INV-011 |
-| **Máquinas de estado en Spring** (transiciones por enum) + **historial** | Las transiciones del documento 07; cada cambio se registra en `historial_estados` | RG-EST-01 a 08 (documento 07); RN-RS-001, RN-RS-002, RN-MAN-002 |
+| **Inventario y gestión operativa** (transacción y bloqueo del insumo compartido) | Movimientos manuales, compras y repuestos actualizan existencias y auditoría en `operations_records`; salidas, mermas y repuestos rechazan stock insuficiente | RN-INV-001, RN-INV-002, RN-INV-003, RN-INV-011 |
+| **Máquinas de estado en Spring** (transiciones por enum) + **historial** | Las transiciones del documento 07; cada cambio se registra en la tabla `state_history` (referida conceptualmente como `historial_estados` en el documento 07) | RG-EST-01 a 08 (documento 07); RN-RS-001, RN-RS-002, RN-MAN-002 |
 | **Spring Security** | La matriz del documento 09 (rol, área y propiedad), acceso del personal y del huésped | RN-SEG-001, 002, 005, 006; RN-PER-011 a 015; RN-APP-001 a 004, RN-APP-010; RN-LIM-011, RN-MAN-009 |
-| **`@Scheduled`** | Revisión/conciliación al vencer el plazo; conservar cupo en procesamiento/incertidumbre y cancelar solo tras vencimiento sin pago confirmado (UC-15); procesamiento del Outbox | RN-RES-012, RN-CAN-013 |
-| **Outbox** | Correos y push con reintentos: si fallan, el cambio de estado se guarda igual | RN-NOT-002, RN-NOT-003 |
+| **`@Scheduled`** | Revisión y conciliación al vencer el plazo de 30 minutos; conservar cupo en procesamiento/incertidumbre y cancelar solo tras vencimiento sin pago confirmado (UC-15); procesamiento de `outbox_events` | RN-RES-012, RN-CAN-013 |
+| **Outbox (`outbox_events`)** | Correos y push con reintentos: si fallan, el cambio de estado se guarda igual | RN-NOT-002, RN-NOT-003 |
 | **WebSocket STOMP** | Los 4 eventos en tiempo real | RN-NOT-006 a 009 |
-| **Webhook de Recurrente y conciliación** | Verificación del pago en backend con firma e idempotencia; el retorno del navegador no acredita el cobro | RN-PAG-001 a 003 |
-| **Módulo de Channel Manager** | Clave del canal, validaciones, sin duplicados y misma disponibilidad que la web | RN-CM-001, 003, 004; RN-TAR-010, RN-PAG-008 |
+| **Webhook de Recurrente y conciliación (`payment_gateway_events`)** | Verificación del pago en backend con firma Svix e idempotencia; el retorno del navegador no acredita el cobro | RN-PAG-001 a 003 |
+| **Módulo de Channel Manager (`external_channels`)** | Clave del canal, validaciones, sin duplicados y misma disponibilidad que la web | RN-CM-001, 003, 004; RN-TAR-010, RN-PAG-008 |
 
 **Principio:** la interfaz valida para dar buena experiencia, pero **Spring y la base de datos deciden**. Una regla solo está implementada si se cumple aunque alguien llame al API directamente.
 
@@ -300,19 +303,17 @@ Cómo se implementa la sesión de la web. No agrega funcionalidad: deja por escr
 
 ## 7. Estructura de los repositorios
 
-Organización: **`villaserenaguate`**. Los cinco repositorios son obligatorios y tienen dependencias y configuración propias.
+Organización: **`villaserenaguatee`**. Los cinco repositorios son obligatorios y tienen dependencias y configuración propias.
 
 | Repositorio | Contenido |
 |---|---|
 | `villa-serena-docs` | Contrato canónico `openapi.yaml`, documentación y diseño breve del Channel Manager (ALC-CM-01) |
-| `villa-serena-infra` | `docker-compose.dev.yml`, `.env.example`, configuración de Prometheus y Grafana. Después: Compose de despliegue, Cloudflare y backups |
-| `villa-serena-api` | Spring Boot/Maven, implementación del contrato de docs, migraciones Flyway del esquema y fixtures locales de carga explícita |
-| `villa-serena-web` | Next.js: web pública, panel privado, BFF y canal simulado; tipos generados directamente desde el contrato de docs |
-| `villa-serena-movil` | Expo: app Android; tipos generados directamente desde el contrato de docs |
+| `villa-serena-infra` | Terraform (`aws/networking`, `aws/compute`, `aws/gateway`, `aws/storage`, `aws/identity`, `cloudflare`), Ansible vía SSM (`ansible/` para EC2 Debian 13 ARM64 y PostgreSQL 17) y Compose auxiliar local (`docker-compose.dev.yml`) |
+| `villa-serena-api` | Spring Boot 4.1 / Maven, implementación del contrato de docs, migraciones Flyway de esquema en inglés (`V1`–`V29`) y scripts de fixtures locales (`scripts/demo/load-data.sql`) |
+| `villa-serena-web` | Next.js 15: web pública, panel privado, BFF y canal simulado desplegado en Vercel; tipos generados desde el SHA de docs fijado en `api-contract.json` |
+| `villa-serena-movil` | Expo SDK 54: app Android; tipos generados desde el contrato de docs |
 
-**Contrato y tipos:** la fuente de verdad es `villa-serena-docs/openapi.yaml`. Las actualizaciones se registran mediante issues de docs y se revisan con los consumidores afectados. No se mantienen copias YAML en API, web ni app. Cada consumidor fija un commit de docs; web y app generan sus tipos con la herramienta de docs y el API implementa y verifica ese acuerdo. La [guía del contrato](contrato-api.md) describe el proceso, las herramientas de generación y comprobación y las diferencias conocidas. Las etiquetas de estados se mantienen en un archivo pequeño de cada frontend. No hay `packages/shared`, monorepo ni `pnpm workspaces`; tampoco se crea otro repositorio o paquete para compartir código.
-
-El calendario original de congelación se conserva como antecedente. La evolución actual del contrato se coordina mediante issues y PR en docs, con API, web y app; las referencias históricas al archivo canónico en API quedan sustituidas por este acuerdo.
+**Contrato y tipos:** la fuente de verdad es `villa-serena-docs/openapi.yaml`. Las actualizaciones se registran mediante issues de docs y se revisan con los consumidores afectados. No se mantienen copias YAML en API, web ni app. Cada consumidor fija un commit de docs en `api-contract.json`; web y app generan sus tipos con la herramienta de docs y el API implementa y verifica ese acuerdo. La [guía del contrato](contrato-api.md) describe el proceso, las herramientas de generación y comprobación y las diferencias conocidas.
 
 Estructura interna del API:
 
@@ -320,71 +321,69 @@ Estructura interna del API:
 villa-serena-api/
 ├── src/main/java/com/villaserena/api/
 │   ├── config/          Seguridad, CORS, WebSocket, OpenAPI
-│   ├── auth/            Login, contraseña temporal, OTP, JWT y renovación
-│   ├── reservas/        Disponibilidad, tarifas, reservas, cuentas y pagos
+│   ├── auth/            Login, contraseña temporal, recuperación, OTP, JWT y renovación
+│   ├── reservas/        Disponibilidad, tarifas, ofertas, reservas, cuentas y pagos
 │   ├── estadia/         Check-in, check-out y habitaciones
 │   ├── roomservice/     Menú y pedidos
-│   ├── piso/            Limpieza, solicitudes e incidencias
-│   ├── personal/        Gestión laboral; empleados de prueba solo mediante fixtures explícitos
-│   ├── inventario/      Nivel 2, movimientos; existencias compartidas con compras y repuestos
-│   ├── catalogos/       Catálogos; datos de prueba mediante fixtures explícitos, no Flyway
-│   ├── facturacion/     Facturas PDF
+│   ├── piso/            Limpieza, solicitudes, incidencias y objetos perdidos
+│   ├── personal/        Empleados, turnos y administración de cuentas (fixtures separados)
+│   ├── inventario/      Movimientos, compras y existencias compartidas con órdenes
+│   ├── catalogos/       Tipos, habitaciones físicas, temporadas, hotel y fotos S3/R2
+│   ├── facturacion/     Facturas PDF (OpenPDF)
 │   ├── canal/           API del canal REST/JSON
 │   ├── notificaciones/  WebSocket, push, correos y Outbox
-│   └── comun/           Estados, historial, errores y utilidades
-└── src/main/resources/db/migration/
+│   └── comun/           Estados, historial (state_history), errores y utilidades
+├── src/main/resources/db/migration/   (V1 a V29: solo esquema en inglés)
+└── scripts/demo/load-data.sql         (fixtures locales explícitos, fuera del JAR)
 ```
-
-Las carpetas fuera del hito son una referencia para después; no hay que implementarlas ahora. CI/CD sigue después del hito, en los repositorios correspondientes.
 
 ---
 
-## 8. Entorno local
+## 8. Entornos `local` y `dev`
 
 | Paso | Comando o detalle |
 |---|---|
-| Servicios | `docker compose -f docker-compose.dev.yml up -d` desde `villa-serena-infra` (PostgreSQL, Mailpit, Prometheus y Grafana; R2 remoto para archivos en dev) |
-| Backend | Desde `villa-serena-api`, utiliza Compose y los comandos del perfil elegido en [ENTORNOS del API](https://github.com/villaserenaguatee/villa-serena-api/blob/dev/docs/ENTORNOS.md). `local`: API y PostgreSQL, almacenamiento privado persistente en PostgreSQL, sin nube. `dev`: R2 remoto y servicios auxiliares. Flyway crea solo el esquema; fixtures manuales posteriores |
+| Perfil `local` (API + PostgreSQL) | `docker compose --env-file .env.local -f compose.local.yml up -d --build --wait` desde `villa-serena-api` (o `./mvnw spring-boot:run -Dspring-boot.run.profiles=local` con PostgreSQL en Docker; almacenamiento privado persistente en PostgreSQL, sin nube) |
+| Perfil `dev` (integraciones completas) | `docker compose --env-file .env.dev -f compose.dev.yml up -d --build --wait` en `villa-serena-api` (PostgreSQL, Mailpit, Prometheus, Grafana y Cloudflare R2 remoto) |
+| Datos de prueba locales (opcional) | Carga explícita con `psql < scripts/demo/load-data.sql` sobre base local vacía, o alta del primer `ADMIN` con `BOOTSTRAP_ADMIN_ENABLED=true` (ver [arranque local](../04-guias-y-referencia/arranque-local.md)) |
 | Web | `pnpm dev` en `villa-serena-web` (`http://localhost:3000`) |
 | App | `npx expo start` en `villa-serena-movil` (Expo Go de SDK 54) o el development build para probar push |
-| Recurrente | Sandbox y webhook `/api/v1/pagos/recurrente/webhook` accesible por el proveedor; ver [arranque local](../04-guias-y-referencia/arranque-local.md#42-probar-pagos-con-recurrente) |
-| Correos | Se ven en la interfaz web de Mailpit |
-| Monitoreo | Tablero de Grafana con estado del API, peticiones, errores HTTP, CPU y RAM |
-| Secretos | Archivos `.env.local` o `.env.dev` del API (Recurrente Sandbox, JWT, credenciales R2 de dev y claves de canal), **fuera de Git** |
+| Recurrente | Sandbox y webhook `/api/v1/pagos/recurrente/webhook` con firma Svix; ver [arranque local](../04-guias-y-referencia/arranque-local.md#42-probar-pagos-con-recurrente) |
+| Correos y monitoreo en `dev` | Correos en Mailpit (`http://localhost:8025`); métricas en Prometheus (`:9090`) y Grafana (`:3001`) |
+| Secretos | `.env.local` / `.env.dev` fuera de Git |
 
 **Para la demostración:** la app en el teléfono debe llegar al API de la computadora (misma red Wi-Fi y la IP local de la computadora). El push necesita el development build y conexión a Internet.
 
 ---
 
-## 9. Despliegue en la VPS (después)
+## 9. Despliegue en producción (`prod`: Vercel + AWS)
 
-Se planifica después de validar el MVP según el [roadmap](../01-metodologia/roadmap-versiones.md), sin fijar aquí una nueva fecha (ALC-TRA-06, ALC-TRA-08).
+La topología activa y el procedimiento de diagnóstico ante errores `503` están detallados en la [guía de despliegue y modelo de datos](../04-guias-y-referencia/despliegue-y-modelo-datos.md).
 
-| Tema | Diseño |
+| Tema | Diseño desplegado |
 |---|---|
-| **Tamaño mínimo** | 2 vCPU, 4 GB de RAM, 40 GB SSD (Spring ~1 GB, Next.js ~300 MB, PostgreSQL ~500 MB) |
-| **Equivalentes en AWS** | EC2 `t3.medium` o Lightsail de 4 GB |
-| **Sistema** | Ubuntu 24.04 LTS, Docker Engine + Compose, usuario sin root, firewall que bloquea todo lo entrante excepto SSH |
-| **Contenedores** | `web`, `api`, `postgres` (volumen persistente), `cloudflared` y monitoreo |
-| **Archivos** | Amazon S3; públicos por CloudFront/OAC y privados con URLs firmadas |
-| **Correo** | Resend |
-| **App** | APK con EAS Build apuntando a `https://api.<dominio>` |
-| **Backups** | `pg_dump` diario comprimido → Cloudflare R2, 7 días de retención; restauración probada |
+| **Web y BFF** | **Vercel** (`https://villaserenaguate.org`), conectado a `API_URL=https://api.villaserenaguate.org` |
+| **Pasarela HTTP del API** | **AWS HTTP API Gateway** (`https://api.villaserenaguate.org`) → **VPC Link** → **AWS Cloud Map** → IPv4 privada de EC2 en el puerto `8080` |
+| **Servidor de backend y BD** | **AWS EC2 Debian 13 ARM64** con 2 GiB de swap (`/swapfile`), Docker Engine + Compose v2, administrado exclusivamente por **AWS Systems Manager (SSM)** sin puerto SSH abierto |
+| **Contenedores en EC2** | Proyecto `villa-serena-db` (`postgres:17`, volumen `villa-serena-db_pgdata`, sin puerto público) y proyecto `villa-serena-api` (`compose.prod.yml`) unidos por la red Docker `villa-serena-backend` |
+| **Archivos** | **Amazon S3** con rol IAM de EC2: bucket privado (`STORAGE_BUCKET_PRIVATE`) para PDF de facturas e incidencias con URLs firmadas; bucket público servido por **Amazon CloudFront** (`https://d13s29erv78l4g.cloudfront.net`) |
+| **Secretos de producción** | **AWS SSM Parameter Store** (`/villa-serena/prod/postgres/password` y `/villa-serena/prod/api/*`) |
+| **App** | APK con EAS Build apuntando a `https://api.villaserenaguate.org` |
 
 ---
 
-## 10. CI/CD (después)
+## 10. CI/CD y diagnóstico operativo
 
-ALC-TRA-07. Se configura después del hito.
+| Flujo | Repositorio y archivo | Qué ejecuta |
+|---|---|---|
+| **Contrato API** | `villa-serena-docs` (`contrato-api.yml`) | `pnpm check`: valida `openapi.yaml`, comprueba generación TypeScript y ejecuta `scripts/contrato-api.test.mjs` |
+| **CI de API** | `villa-serena-api` (`ci.yml`) | `./mvnw -B verify` con PostgreSQL 17 en Testcontainers, exportación de `target/openapi-spring.json` y verificación del pin `api-contract.json` |
+| **CD de API a EC2** | `villa-serena-api` (`cd.yml`, `workflow_dispatch` en `main`) | Construye y publica imagen `linux/arm64` en GHCR (`ghcr.io/villaserenaguatee/villa-serena-api:<sha>`), asume rol IAM por **GitHub OIDC** y despliega en EC2 mediante **`aws ssm send-command`** (`/opt/villa-serena/api/deploy.sh`), verificando `http://127.0.0.1:8080/actuator/health` |
+| **Bootstrap de EC2 y PostgreSQL** | `villa-serena-infra` (`ansible/`) | Playbooks manuales vía SSM para inicializar Docker + swap en Debian 13 ARM64 y levantar `villa-serena-db` sin destruir volúmenes |
 
-| Evento | Pasos |
-|---|---|
-| **Pull request** | Backend: `mvn verify` (compilación, formato, pruebas). Web y app: lint y typecheck. Tipos del OpenAPI al día |
-| **Merge a `main`** | Lo anterior → imágenes `api` y `web` a GHCR (etiqueta del commit) → despliegue en la VPS por SSH → APK con EAS Build |
+Para diagnosticar un `503 Service Unavailable` en `api.villaserenaguate.org` mediante comandos de solo lectura en SSM, consulta la [sección 4 de la guía de despliegue](../04-guias-y-referencia/despliegue-y-modelo-datos.md#4-diagnóstico-seguro-ante-errores-503-en-apivillaserenaguateorg).
 
-**Integración durante el desarrollo:** las PR se dirigen a la rama acordada de cada repositorio (`main` en docs; `dev` o `develop` en código), con revisión y las verificaciones configuradas. Las protecciones y resultados efectivos se consultan en GitHub. Los workflows del tablero y de colaboración pueden funcionar antes del despliegue.
-
-**Configuración por entorno:** se usan los archivos y variables existentes, con credenciales fuera de Git. El API distingue `local`, `dev` y `prod`; no utiliza un perfil `demo` para cargar datos. Flyway aplica solo el esquema. Los fixtures se cargan de forma manual y explícita, después del arranque, solo en una instancia local con tablas de negocio vacías. El bootstrap queda deshabilitado por defecto; si se habilita, crea solo el primer ADMIN, exige cambio de contraseña y no sustituye cuentas existentes. Para fixtures sobre tablas vacías debe permanecer apagado. Consulta el [arranque de la PR #36](https://github.com/villaserenaguatee/villa-serena-docs/blob/5dcd7a26ea01a0063375aa18df8fe792e4270301/04-guias-y-referencia/arranque-local.md) y ENTORNOS del API; esta propuesta documental no ejecuta esas operaciones. Un Tunnel temporal puede facilitar las pruebas del API desde frontend, con autenticación, acceso acordado y cierre al terminar; no expone servicios administrativos de Docker.
+**Integración durante el desarrollo:** las PR se dirigen a la rama acordada de cada repositorio (`main` en docs; `dev` o `develop` en código), con revisión y las verificaciones configuradas. Un Cloudflare Tunnel temporal puede facilitar las pruebas del API desde frontend, con autenticación, acceso acordado y cierre al terminar; no expone servicios administrativos de Docker.
 
 ---
 

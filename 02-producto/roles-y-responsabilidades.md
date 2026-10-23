@@ -28,7 +28,7 @@ Define **quién usa el sistema**, **desde dónde**, **cómo entra** y **de qué 
 
 | Rol | Código | Dónde trabaja | Cómo entra | Quién crea la cuenta |
 |---|---|---|---|---|
-| Administrador | `ADMIN` | Web privada | Correo + contraseña | El primero, al arrancar el sistema (variables de entorno); los de prueba, en los datos iniciales |
+| Administrador | `ADMIN` | Web privada | Correo + contraseña | El primero, mediante bootstrap controlado por entorno (`BOOTSTRAP_ADMIN_ENABLED`); los adicionales, desde el panel de Administración o el script explícito de prueba local |
 | Recepcionista | `RECEPCION` | Web privada | Correo + contraseña | Administrador |
 | Room Service | `ROOM_SERVICE` | Web privada | Correo + contraseña | Administrador |
 | Mantenimiento/Limpieza | `MANTENIMIENTO_LIMPIEZA` | Web privada (pensada para el teléfono del empleado) | Correo + contraseña | Administrador |
@@ -36,7 +36,7 @@ Define **quién usa el sistema**, **desde dónde**, **cómo entra** y **de qué 
 
 > El **código** del rol se guarda en la base de datos y va en el JWT. Se escribe igual en todo el proyecto.
 
-**Antecedente histórico, sustituido (V-04):** se propuso cargar un usuario de prueba de cada rol y dos Administradores mediante Flyway. **Procedimiento vigente:** Flyway administra las migraciones del esquema, no carga automáticamente catálogos ni usuarios de demostración. Los fixtures se cargan explícitamente después del arranque, solo en una instancia local con tablas de negocio vacías y con el bootstrap apagado. El administrador inicial requiere habilitar expresamente el bootstrap, deshabilitado por defecto; crea solo el primer ADMIN, exige cambio de contraseña y no sustituye cuentas existentes. Véanse [PR #36 y ADR-007](https://github.com/villaserenaguatee/villa-serena-docs/blob/5dcd7a26ea01a0063375aa18df8fe792e4270301/03-arquitectura/adr/ADR-007-almacenamiento-r2-s3.md) y la [guía de arranque](https://github.com/villaserenaguatee/villa-serena-docs/blob/5dcd7a26ea01a0063375aa18df8fe792e4270301/04-guias-y-referencia/arranque-local.md), pendientes de integración; esta documentación no ejecuta operaciones ni acredita aprovisionamiento.
+**Inicialización y datos de prueba (antecedente V-04 sustituido):** las migraciones de Flyway (`src/main/resources/db/migration`, con `V6` reservada sin datos demo) solo crean y evolucionan el esquema; no cargan automáticamente catálogos ni usuarios de demostración. El primer `ADMIN` en un entorno nuevo se crea únicamente cuando se habilita `BOOTSTRAP_ADMIN_ENABLED=true` (`BootstrapAdminStartupInitializer`, deshabilitado por defecto, exige cambio de contraseña y no sustituye cuentas existentes). Los datos ficticios para `local` se cargan de forma explícita después del arranque con `scripts/demo/load-data.sql` sobre tablas vacías y con el bootstrap apagado (ver [despliegue y modelo de datos](../04-guias-y-referencia/despliegue-y-modelo-datos.md#32-separación-entre-esquema-bootstrap-y-fixtures)).
 
 ---
 
