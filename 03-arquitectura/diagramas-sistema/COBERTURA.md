@@ -75,4 +75,4 @@ Las 68 historias del índice V3 tienen al menos una vista asociada. Esta tabla l
 | `HU-EMP-01` | Iniciar y cerrar sesión en la web privada | Hito | [09](09-secuencia-sesion-del-personal-y-bff.md) |
 | `HU-EMP-02` | Cambiar mi contraseña temporal | Hito | [09](09-secuencia-sesion-del-personal-y-bff.md) |
 
-[Volver al índice](README.md) · [Índice V3 de historias](../04%20-%20Historias%20de%20Usuario/00%20-%20Indice%20de%20Historias%20de%20Usuario.md)
+[Volver al índice](README.md) · [Índice V3 de historias](../../02-producto/historias-de-usuario/00%20-%20Indice%20de%20Historias%20de%20Usuario.md)

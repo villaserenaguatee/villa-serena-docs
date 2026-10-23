@@ -48,9 +48,10 @@ flowchart LR
 
 ## Referencias
 
-- [Arquitectura del sistema §§2, 9 y 10](../arquitectura-sistema.md)
+- [Arquitectura del sistema §§2, 9 y 10](../arquitectura-sistema.md#2-decisiones-de-arquitectura)
 - [Despliegue, modelo de datos y diagnóstico operativo](../../04-guias-y-referencia/despliegue-y-modelo-datos.md)
 - [Contrato API y sincronización](../contrato-api.md)
 - [Marco de trabajo Scrumban](../../01-metodologia/scrumban.md)
+- [CONTRIBUTING §§2,5](../../CONTRIBUTING.md#2-crear-una-rama)
 
 [Índice de diagramas](README.md) · [Cobertura de historias](COBERTURA.md) · [Anterior](25-actividad-las-cinco-historias-opcionales.md)

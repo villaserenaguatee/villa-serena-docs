@@ -62,9 +62,9 @@ flowchart LR
 
 ## Referencias
 
-- [Arquitectura del sistema §§2–6](../arquitectura-sistema.md)
+- [Arquitectura del sistema §§2–6](../arquitectura-sistema.md#2-decisiones-de-arquitectura)
 - [Despliegue y modelo de datos](../../04-guias-y-referencia/despliegue-y-modelo-datos.md)
-- [Matriz de permisos §§5–7](../../02-producto/matriz-de-permisos.md)
-- [Integración con canales §2](../../04-guias-y-referencia/integracion-canales.md)
+- [Matriz de permisos §§5–7](../../02-producto/matriz-de-permisos.md#5-actores-que-no-son-usuarios)
+- [Integración con canales §2](../../04-guias-y-referencia/integracion-canales.md#2-qué-hace-hoy-el-sistema)
 
 [Índice de diagramas](README.md) · [Cobertura de historias](COBERTURA.md) · [Siguiente](02-participantes-y-responsabilidades.md)

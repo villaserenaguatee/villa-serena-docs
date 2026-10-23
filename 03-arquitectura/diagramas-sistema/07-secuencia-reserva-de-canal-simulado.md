@@ -42,9 +42,9 @@ sequenceDiagram
 
 ## Referencias
 
-- [19 §§2–4](../19%20-%20Diseno%20de%20Integracion%20con%20Canales.md)
-- [10 RN-CM](../10%20-%20Reglas%20de%20Negocio.md)
-- [07 R3,P5](../07%20-%20Estados.md)
+- [19 §§2–4](../../04-guias-y-referencia/integracion-canales.md#2-qué-hace-hoy-el-sistema)
+- [10 RN-CM](../../02-producto/reglas-de-negocio.md#14-channel-manager--rn-cm)
+- [07 R3,P5](../maquinas-de-estados.md#33-transiciones)
 
 **Historias vinculadas:** `HU-CM-01`, `HU-CM-02`, `HU-CM-03`.
 

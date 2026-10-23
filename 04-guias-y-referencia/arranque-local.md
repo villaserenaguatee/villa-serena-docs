@@ -41,7 +41,7 @@ Los comandos de Git, pnpm, Expo y Docker Compose son comunes. Las variantes de M
 | Probar el API | `mvnw.cmd test` | `./mvnw.cmd test` | `./mvnw test` |
 | Copiar el entorno de ejemplo | `copy .env.example .env` | `Copy-Item .env.example .env` | `cp .env.example .env` |
 
-Los perfiles vigentes del API son `local`, `dev` y `prod` (el antiguo perfil `demo` fue retirado; consulta [despliegue y modelo de datos](despliegue-y-modelo-datos.md#4-perfiles-de-spring-retiro-de-demo-y-separación-entre-esquema-bootstrap-y-fixtures)). En macOS/Linux, si el wrapper no tiene permiso de ejecución, `chmod +x mvnw` lo habilita. Los ejemplos con `<...>` son marcadores que se sustituyen antes de ejecutarlos; no son comandos para copiar literalmente.
+Los perfiles vigentes del API son `local`, `dev` y `prod` (el antiguo perfil `demo` fue retirado; consulta [despliegue y modelo de datos](despliegue-y-modelo-datos.md#32-separación-entre-esquema-bootstrap-y-fixtures)). En macOS/Linux, si el wrapper no tiene permiso de ejecución, `chmod +x mvnw` lo habilita. Los ejemplos con `<...>` son marcadores que se sustituyen antes de ejecutarlos; no son comandos para copiar literalmente.
 
 ---
 
