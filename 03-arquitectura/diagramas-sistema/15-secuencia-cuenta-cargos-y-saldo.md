@@ -42,9 +42,9 @@ sequenceDiagram
 
 ## Referencias
 
-- [07 §5](../07%20-%20Estados.md)
-- [10 RN-PAG-009–021](../10%20-%20Reglas%20de%20Negocio.md)
-- [12 UC-04](../12%20-%20Casos%20de%20Uso.md)
+- [07 §5](../maquinas-de-estados.md#5-cuenta-cargos-pagos-y-factura)
+- [10 RN-PAG-009–021](../../02-producto/reglas-de-negocio.md#6-pagos-y-cuenta--rn-pag)
+- [12 UC-04](../../02-producto/casos-de-uso.md#uc-04--realizar-check-out)
 
 **Historias vinculadas:** `HU-REC-13`, `HU-HUE-15`.
 

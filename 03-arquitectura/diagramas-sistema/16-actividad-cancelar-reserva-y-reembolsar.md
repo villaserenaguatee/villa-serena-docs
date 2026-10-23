@@ -28,9 +28,9 @@ flowchart TB
 
 ## Referencias
 
-- [10 RN-CAN](../10%20-%20Reglas%20de%20Negocio.md)
-- [07 R7](../07%20-%20Estados.md)
-- [12 UC-10](../12%20-%20Casos%20de%20Uso.md)
+- [10 RN-CAN](../../02-producto/reglas-de-negocio.md#7-cancelación--rn-can)
+- [07 R7](../maquinas-de-estados.md#33-transiciones)
+- [12 UC-10](../../02-producto/casos-de-uso.md#uc-10--cancelar-reserva)
 
 **Historias vinculadas:** `HU-REC-05`.
 

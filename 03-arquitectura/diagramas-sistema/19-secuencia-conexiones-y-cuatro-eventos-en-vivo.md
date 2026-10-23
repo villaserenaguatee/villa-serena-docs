@@ -44,9 +44,9 @@ sequenceDiagram
 
 ## Referencias
 
-- [14 §§6,6.1](../14%20-%20Tecnologias%20y%20Arquitectura.md)
-- [09 §7.4](../09%20-%20Matriz%20de%20Permisos.md)
-- [07 §12.1](../07%20-%20Estados.md)
-- [OpenAPI x-websocket](https://github.com/villaserenaguate/villa-serena-api/blob/main/openapi.yaml)
+- [14 §§6,6.1](../arquitectura-sistema.md#6-seguridad-jwt-bff-y-cors)
+- [09 §7.4](../../02-producto/matriz-de-permisos.md#74-tiempo-real-websocket)
+- [07 §12.1](../maquinas-de-estados.md#121-los-4-eventos-en-tiempo-real)
+- [OpenAPI x-websocket](../../openapi.yaml)
 
 [Índice de diagramas](README.md) · [Cobertura de historias](COBERTURA.md) · [Anterior](18-secuencia-cierre-atomico-factura-y-archivos.md) · [Siguiente](20-secuencia-outbox-correos-y-notificaciones-push.md)
