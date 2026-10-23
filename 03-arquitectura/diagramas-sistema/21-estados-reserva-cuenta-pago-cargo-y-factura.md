@@ -43,7 +43,7 @@ flowchart LR
 
 ## Referencias
 
-- [07 §§3,5](../07%20-%20Estados.md)
-- [10 RN-PAG,RN-CAN,RN-FAC](../10%20-%20Reglas%20de%20Negocio.md)
+- [07 §§3,5](../maquinas-de-estados.md#3-reserva)
+- [10 RN-PAG,RN-CAN,RN-FAC](../../02-producto/reglas-de-negocio.md#6-pagos-y-cuenta--rn-pag)
 
 [Índice de diagramas](README.md) · [Cobertura de historias](COBERTURA.md) · [Anterior](20-secuencia-outbox-correos-y-notificaciones-push.md) · [Siguiente](22-estados-ocupacion-y-condicion-de-habitacion.md)

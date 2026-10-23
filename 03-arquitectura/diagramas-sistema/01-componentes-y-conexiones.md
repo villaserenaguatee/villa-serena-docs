@@ -63,8 +63,8 @@ flowchart LR
 
 ## Referencias
 
-- [14 §§2–6](../14%20-%20Tecnologias%20y%20Arquitectura.md)
-- [09 §§5–7](../09%20-%20Matriz%20de%20Permisos.md)
-- [19 §2](../19%20-%20Diseno%20de%20Integracion%20con%20Canales.md)
+- [14 §§2–6](../arquitectura-sistema.md#2-decisiones-de-arquitectura)
+- [09 §§5–7](../../02-producto/matriz-de-permisos.md#5-actores-que-no-son-usuarios)
+- [19 §2](../../04-guias-y-referencia/integracion-canales.md#2-qué-hace-hoy-el-sistema)
 
 [Índice de diagramas](README.md) · [Cobertura de historias](COBERTURA.md) · [Siguiente](02-participantes-y-responsabilidades.md)

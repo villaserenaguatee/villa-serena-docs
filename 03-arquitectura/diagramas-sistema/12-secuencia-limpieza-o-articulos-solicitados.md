@@ -45,9 +45,9 @@ sequenceDiagram
 
 ## Referencias
 
-- [07 Q1–Q5](../07%20-%20Estados.md)
-- [10 RN-LIM-003–015](../10%20-%20Reglas%20de%20Negocio.md)
-- [12 UC-13](../12%20-%20Casos%20de%20Uso.md)
+- [07 Q1–Q5](../maquinas-de-estados.md#7-solicitud-del-huésped)
+- [10 RN-LIM-003–015](../../02-producto/reglas-de-negocio.md#9-limpieza-y-solicitudes--rn-lim)
+- [12 UC-13](../../02-producto/casos-de-uso.md#uc-13--atender-solicitud-de-limpieza-o-artículos)
 
 **Historias vinculadas:** `HU-HUE-12`, `HU-HUE-13`, `HU-HUE-14`, `HU-MYL-04`, `HU-MYL-05`.
 

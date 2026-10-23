@@ -30,9 +30,9 @@ flowchart TB
 
 ## Referencias
 
-- [10 RN-LIM-001,002,004,010,011](../10%20-%20Reglas%20de%20Negocio.md)
-- [07 C2–C5](../07%20-%20Estados.md)
-- [12 UC-07](../12%20-%20Casos%20de%20Uso.md)
+- [10 RN-LIM-001,002,004,010,011](../../02-producto/reglas-de-negocio.md#9-limpieza-y-solicitudes--rn-lim)
+- [07 C2–C5](../maquinas-de-estados.md#42-condición)
+- [12 UC-07](../../02-producto/casos-de-uso.md#uc-07--limpiar-una-habitación)
 
 **Historias vinculadas:** `HU-REC-10`, `HU-REC-11`, `HU-MYL-01`, `HU-MYL-02`, `HU-MYL-03`.
 
