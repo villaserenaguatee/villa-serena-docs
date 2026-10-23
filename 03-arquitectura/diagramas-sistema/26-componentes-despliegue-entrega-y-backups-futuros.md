@@ -50,6 +50,7 @@ flowchart LR
 
 - [Arquitectura del sistema §§2, 9 y 10](../arquitectura-sistema.md#2-decisiones-de-arquitectura)
 - [Despliegue, modelo de datos y diagnóstico operativo](../../04-guias-y-referencia/despliegue-y-modelo-datos.md)
+- [01 §6](../../02-producto/alcance-y-decisiones.md#6-infraestructura-y-despliegue-compartido)
 - [Contrato API y sincronización](../contrato-api.md)
 - [Marco de trabajo Scrumban](../../01-metodologia/scrumban.md)
 - [CONTRIBUTING §§2,5](../../CONTRIBUTING.md#2-crear-una-rama)

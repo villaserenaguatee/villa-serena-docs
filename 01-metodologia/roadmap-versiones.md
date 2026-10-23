@@ -64,3 +64,9 @@ Para evitar el agotamiento y la parálisis por exceso de alcance, el desarrollo 
   2. **Inventario Compartido:** Control de existencias de insumos mediante entradas, salidas y mermas manuales, compartido con compras y repuestos de mantenimiento, según el [acuerdo de inventario](../02-producto/inventario-turnos-personal.md#7-inventario-compartido-nivel-2).
   3. **Canales de Venta Externos:** Simulación de recepción de reservas externas a través de endpoints de Channel Manager.
   4. **Métricas y Observabilidad:** Dashboards de monitoreo en Prometheus y Grafana (latencia del API, tasas de error y transacciones de reservas).
+
+---
+
+## 3. Trazabilidad con el Catálogo de Alcance (`ALC-*`)
+
+La asignación detallada de las **58 funcionalidades de Nivel 1** y las **6 de Nivel 2** a cada una de estas tres versiones (`v0.1.0`, `v0.2.0` y `v0.3.0`), junto con el estado de los supuestos técnicos `S-01` a `S-04` y las confirmaciones académicas, se consulta en [Alcance del Proyecto y Decisiones Generales (§§5, 8 y 9)](../02-producto/alcance-y-decisiones.md#5-alcance-del-sistema-y-conciliación-por-versión).

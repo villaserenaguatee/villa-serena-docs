@@ -23,7 +23,7 @@ Este documento describe la arquitectura global, topología de servicios, patrón
 11. [Requisitos no funcionales](#11-requisitos-no-funcionales)
 12. [Limitaciones conocidas y mitigaciones](#12-limitaciones-conocidas-y-mitigaciones)
 13. [Cuentas y costos](#13-cuentas-y-costos)
-14. [Supuestos y pendientes por confirmar](#14-supuestos-y-pendientes-por-confirmar)
+14. [Supuestos técnicos y estado de confirmación académica](#14-supuestos-técnicos-y-estado-de-confirmación-académica)
 
 ---
 
@@ -483,12 +483,14 @@ Para diagnosticar un `503 Service Unavailable` en `api.villaserenaguate.org` med
 
 ---
 
-## 14. Supuestos y pendientes por confirmar
+## 14. Supuestos técnicos y estado de confirmación académica
 
-| # | Supuesto o pendiente | Alternativa si no se confirma |
-|---|---|---|
-| S-01 | **Cloudflare como "servidor de notificaciones"** significa la capa de red por donde pasa el WebSocket (a través del Tunnel). **En el hito no hay Cloudflare:** el WebSocket va directo a Spring en local; S-01 aplica después, en la VPS | Cloudflare Workers/Durable Objects como servidor de WebSocket (mucho más complejo) |
-| S-02 | **Facturación simulada** (serie, correlativo, NIT, total con "IVA incluido" sin desglose, PDF con leyenda de demostración) sin certificador FEL. **Impresora:** desde el navegador en 80 mm y carta. Falta confirmar si basta el PDF de 80 mm cuando no haya impresora térmica | Certificador FEL real o impresión ESC/POS directa |
-| S-03 | **Sincronización en segundo plano** se refiere a las tareas del backend (`@Scheduled` + Outbox) | App con funcionamiento sin conexión (mucho más trabajo) |
-| S-04 | **Proveedor de la VPS:** cualquiera con Ubuntu 24.04 y al menos 4 GB de RAM | — |
-| P-01 (resuelto) | **Versión principal de Next.js: 15**, acordada por el equipo | Una actualización futura se propone mediante issue con su impacto |
+El detalle de seguimiento académico de [#11](https://github.com/villaserenaguatee/villa-serena-docs/issues/11) se consolida en [Alcance y decisiones, sección 9](../02-producto/alcance-y-decisiones.md#9-estado-de-supuestos-técnicos-y-confirmaciones-académicas):
+
+| # | Supuesto técnico | Resolución adoptada en el sistema | Alternativa descartada |
+|---|---|---|---|
+| S-01 | **Canal de notificaciones en tiempo real** | El navegador y la app abren WebSocket/STOMP directo contra Spring Boot (la web usa un ticket de un solo uso y 60 segundos emitido vía BFF). | Cloudflare Workers / Durable Objects como servidor intermediario de WebSocket |
+| S-02 | **Facturación simulada e impresión en 80 mm / carta** | Factura de demostración (serie fija, correlativo consecutivo, NIT con verificador o `CF`, total con "IVA incluido" sin desglose, PDF y vista de impresión del navegador para formato térmico de **80 mm** u **hoja carta**). | Certificador FEL real ante la SAT o protocolo ESC/POS de hardware térmico directo |
+| S-03 | **Sincronización en segundo plano** | Tareas programadas en el backend (`@Scheduled` para `VencimientoReservasJob` y procesador transaccional de `outbox_events`). | Sincronización offline-first en el cliente móvil |
+| S-04 | **Infraestructura de despliegue** | Web/BFF desplegada en **Vercel** y API + PostgreSQL 17 en **AWS EC2 `t4g.small` (Debian 13 ARM64)** detrás de AWS HTTP API Gateway + VPC Link + Cloud Map, con almacenamiento en S3 + CloudFront. | VPS única con todos los contenedores detrás de Cloudflare Tunnel |
+| P-01 (resuelto) | **Versión principal de Next.js: 15**, acordada por el equipo | App Router sobre Next.js 15 y React 19. | — |
