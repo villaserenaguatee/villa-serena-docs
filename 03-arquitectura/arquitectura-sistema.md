@@ -1,5 +1,7 @@
 # Tecnologías y Arquitectura del Sistema
 
+> Estado 22/10/2026: frontend publicado en Vercel, HTTP mediante BFF y API independiente; el diseño VPS anterior se conserva como antecedente/propuesta, no como topología acreditada. El portal web complementa Android, sin trasladar push Expo al navegador. Véase [reconciliación](../02-producto/reconciliacion-frontend-20261022.md) y docs #38.
+
 > Almacenamiento actualizado por [ADR-007](adr/ADR-007-almacenamiento-r2-s3.md): R2 en `dev`, S3 en `prod` y `local` mínimo sin nube. Los comandos y variables vigentes están en [ENTORNOS del API](https://github.com/villaserenaguatee/villa-serena-api/blob/dev/docs/ENTORNOS.md); los diseños de despliegue y backups de otras secciones no acreditan aprovisionamiento.
 
 Este documento describe la arquitectura global, topología de servicios, patrón BFF, seguridad (JWT y CORS) y stack tecnológico oficial para el ecosistema de **Villa Serena**.
@@ -62,7 +64,7 @@ Confirmadas por el catedrático. No se sustituyen.
 | AD-09 | **Tiempo real con WebSocket + STOMP**, **solo para 4 eventos**: nuevo pedido, cambio de estado del pedido, nueva solicitud y cambio de estado de habitación | D-21; documento 07, sección 12 |
 | AD-10 | **Notificaciones push** con **Expo Push Service sobre FCM**, enviadas por Spring, **solo** para pedido `ENTREGADO` y solicitud `ATENDIDA` | ALC-APP-10; HU-HUE-17 |
 | AD-11 | **App con React Native + Expo SDK 54** (Expo Router). Expo Go de SDK 54 (desde expo.dev/go) para pruebas rápidas; **development build** para probar push; **APK con EAS Build** | Decisión del 1 de octubre: se queda en SDK 54 |
-| AD-12 | **Tareas en segundo plano con `@Scheduled` + Outbox:** solo la **cancelación de reservas web sin pago a los 30 minutos** y el **reintento de correos y push**. No hay no-show, ni recordatorios, ni sincronización con canales | HU-HUE-06, HU-HUE-07, HU-HUE-17 |
+| AD-12 | **Tareas en segundo plano con `@Scheduled` + Outbox:** la **revisión y conciliación de reservas web al vencer el plazo**, con cancelación solo tras confirmar vencimiento sin pago, y el **reintento de correos y push**. No hay cancelación automática por no-show, ni recordatorios, ni sincronización con canales | HU-HUE-06, HU-HUE-07, HU-HUE-17 |
 | AD-13 | **Channel Manager: REST/JSON simple.** Clave por canal (guardada con hash), sin duplicados por identificador externo. **Sin formato OTA, sin firma HMAC, sin cancelación y sin pantalla de canales.** El canal simulado (pantalla del Administrador) llama a la API real con las claves de sus variables de entorno | ALC-CM-03; HU-CM-01, HU-CM-03 |
 | AD-14 | **Facturación como módulo de Spring:** factura de demostración con serie fija (datos iniciales), correlativo sin saltos, total con "IVA incluido" **sin desglose**, sin anulación ni "COPIA". **Impresión desde el navegador** (CSS para 80 mm y carta) | D-13, D-18; supuesto S-02 |
 | AD-15 | **Grafana en local:** Spring Actuator + Micrometer → **Prometheus** → **Grafana**, con un tablero de estado del API, peticiones, errores HTTP, CPU y RAM. Logs centralizados (Loki) y alertas son **Nivel 2** | ALC-TRA-09 y ALC-TRA-09b |
@@ -123,14 +125,14 @@ Grafana (Docker) ─────muestra──────────► Prometh
 | **Spring Web** (REST) | Endpoints `/api/v1/...` |
 | **Spring Security** + **OAuth2 Resource Server** (JWT con claves propias) | Emisión y validación de JWT; `@PreAuthorize` por rol y verificación de propiedad (documento 09) |
 | **BCrypt** | Contraseñas del personal y códigos OTP guardados con hash |
-| **Spring Data JPA** (Hibernate) + **Flyway** | Acceso a datos, migraciones y datos iniciales |
+| **Spring Data JPA** (Hibernate) + **Flyway** | Acceso a datos y migraciones del esquema; fixtures separados de carga explícita |
 | **Jakarta Bean Validation** | Validación de entradas |
 | **Spring WebSocket + STOMP** | Los 4 eventos en tiempo real (sección 6) |
-| **Spring Scheduling** (`@Scheduled`) + **tabla Outbox** | Cancelación a los 30 minutos y reintentos de correos y push |
-| **Spring Mail** + **Thymeleaf** | 3 correos: código OTP, confirmación de reserva y factura. En local, **Mailpit**; después, **Resend** |
+| **Spring Scheduling** (`@Scheduled`) + **tabla Outbox** | Revisión/conciliación al vencer el plazo, cancelación confirmada sin pago y reintentos de correos/push |
+| **Spring Mail** + **Thymeleaf** | Correos existentes de OTP de acceso, confirmación de reserva y factura; también verificación previa del correo y recuperación del personal. El inventario original de tres era un subconjunto del flujo de estadía. SMTP depende del entorno configurado; una plantilla no acredita entrega |
 | **Cliente HTTP de Recurrente** | Checkout alojado, verificación del webhook y reembolso total; conserva registros históricos del proveedor anterior |
 | **OpenPDF** | PDF de la factura |
-| **AWS SDK S3** | Archivos en **Cloudflare R2** (dev) o **Amazon S3** (prod), con credenciales por entorno y URL firmadas para los privados |
+| **AWS SDK S3** | Archivos en **Cloudflare R2** (dev) o **Amazon S3** (prod), con credenciales por entorno y URL firmadas para los privados. `local` mínimo usa el adaptador persistente en PostgreSQL, sin nube |
 | **RestClient** de Spring | Envío de push a Expo Push API |
 | **springdoc-openapi** | OpenAPI generado y Swagger UI para contrastar la implementación; los tipos TypeScript se generan desde el contrato canónico de docs |
 | **Actuator** + **Micrometer (Prometheus)** | Salud y métricas para Grafana |
@@ -175,7 +177,7 @@ Grafana (Docker) ─────muestra──────────► Prometh
 |---|---|
 | **PostgreSQL 17** (contenedor, volumen persistente) | Base de datos única |
 | **Extensión `btree_gist`** | Restricción `EXCLUDE` contra reservas traslapadas en una misma habitación |
-| **Flyway** | Migraciones y datos iniciales (ejecutados por Spring al arrancar) |
+| **Flyway** | Solo migraciones del esquema al arrancar Spring; fixtures explícitos y separados, nunca automáticos |
 | **Cloudflare R2** (dev) / **Amazon S3** (prod) | Bucket **público**: fotos del hotel, tipos de habitación, menú y amenidades. Bucket **privado**: PDF de facturas y fotos de incidencias |
 
 ### 4.5 Entorno, monitoreo y calidad
@@ -203,7 +205,7 @@ Grafana (Docker) ─────muestra──────────► Prometh
 | **Inventario y gestión operativa** (transacción y bloqueo del insumo compartido) | Movimientos manuales, compras y repuestos actualizan existencias y auditoría; salidas, mermas y repuestos rechazan stock insuficiente. El stock actual vive en los registros JSON de gestión, no en una restricción SQL específica de stock | RN-INV-001, RN-INV-002, RN-INV-003, RN-INV-011 |
 | **Máquinas de estado en Spring** (transiciones por enum) + **historial** | Las transiciones del documento 07; cada cambio se registra en `historial_estados` | RG-EST-01 a 08 (documento 07); RN-RS-001, RN-RS-002, RN-MAN-002 |
 | **Spring Security** | La matriz del documento 09 (rol, área y propiedad), acceso del personal y del huésped | RN-SEG-001, 002, 005, 006; RN-PER-011 a 015; RN-APP-001 a 004, RN-APP-010; RN-LIM-011, RN-MAN-009 |
-| **`@Scheduled`** | Cancelación de reservas web sin pago a los 30 minutos (UC-15); procesamiento del Outbox | RN-RES-012, RN-CAN-013 |
+| **`@Scheduled`** | Revisión/conciliación al vencer el plazo; conservar cupo en procesamiento/incertidumbre y cancelar solo tras vencimiento sin pago confirmado (UC-15); procesamiento del Outbox | RN-RES-012, RN-CAN-013 |
 | **Outbox** | Correos y push con reintentos: si fallan, el cambio de estado se guarda igual | RN-NOT-002, RN-NOT-003 |
 | **WebSocket STOMP** | Los 4 eventos en tiempo real | RN-NOT-006 a 009 |
 | **Webhook de Recurrente y conciliación** | Verificación del pago en backend con firma e idempotencia; el retorno del navegador no acredita el cobro | RN-PAG-001 a 003 |
@@ -222,7 +224,7 @@ Grafana (Docker) ─────muestra──────────► Prometh
 | **Contenido del JWT** | Id de usuario, tipo (EMPLEADO o HUESPED), rol, área (solo Mantenimiento/Limpieza) y expiración. Nunca datos personales |
 | **Personal** | Correo + contraseña (BCrypt). El Administrador genera una **contraseña temporal** (se muestra una vez, sin correo); el empleado debe cambiarla en su primer acceso. **5 intentos fallidos seguidos → bloqueo de 15 minutos** |
 | **Huésped** | OTP de 6 dígitos por correo, vence en 10 minutos, un solo uso, guardado con hash. **5 intentos fallidos → bloqueo de 15 minutos** |
-| **Empleado desactivado** | No puede iniciar sesión ni renovar: sus refresh tokens se revocan. Su token de acceso vigente sirve hasta que vence (máximo 15 minutos); **no** se revisa su estado en cada petición |
+| **Empleado desactivado** | No puede iniciar sesión ni renovar: sus refresh tokens se revocan. La política anterior permitía conservar el acceso hasta vencer el JWT; es un antecedente histórico. El API inspeccionado comprueba la vigencia del empleado en cada petición. La reconciliación de esta política sigue pendiente en API #78, según RN-PER-014, sin debilitar los controles implementados. |
 | **BFF (web)** | El navegador llama a `/api/...` de Next.js. Next.js guarda los tokens en **cookies httpOnly, Secure, SameSite=Lax**, renueva el acceso y llama a Spring. El navegador nunca ve el JWT |
 | **App** | Guarda los tokens en `expo-secure-store` y llama a Spring directamente |
 | **CORS** | Spring permite solo los orígenes propios: en el hito, `http://localhost:3000`; después, `https://<dominio>`. La app no depende de CORS |
@@ -252,12 +254,12 @@ Cómo se implementa la sesión de la web. No agrega funcionalidad: deja por escr
 | Petición | Camino | Sesión |
 |---|---|---|
 | Web pública: información del hotel, disponibilidad, crear la reserva, iniciar el pago y página de retorno de Recurrente | Navegador → BFF → Spring | Sin sesión |
-| Panel del personal (todas las pantallas privadas) | Navegador → BFF → Spring | Cookie de sesión del empleado |
+| Panel del personal y portal web del huésped | Navegador → BFF → Spring | Cookies httpOnly de la sesión correspondiente; permisos y titularidad validados por Spring |
 | WebSocket del panel | Navegador → **Spring directo**, con el ticket de 60 segundos que entrega el BFF | Ticket |
 | App del huésped (API y WebSocket) | App → **Spring directo** | JWT del huésped |
 | Webhook de Recurrente y API del canal | Servicio externo → **Spring directo** | Firma Svix / clave del canal |
 
-- El huésped **no tiene sesión en la web**: solo usa la app. El BFF solo maneja sesiones del personal.
+- El portal web del huésped tiene sesión mediante el BFF y cookies httpOnly. Android llama directamente al API y utiliza SecureStore; no utiliza el BFF. La exclusividad anterior de la app es un antecedente sustituido por la coexistencia de ambos clientes.
 - El reenviador genérico del BFF (`/api/...` → `/api/v1/...`) **bloquea** las rutas del webhook de Recurrente y de la API del canal.
 
 **2. Inicio de sesión del personal**
@@ -304,7 +306,7 @@ Organización: **`villaserenaguate`**. Los cinco repositorios son obligatorios y
 |---|---|
 | `villa-serena-docs` | Contrato canónico `openapi.yaml`, documentación y diseño breve del Channel Manager (ALC-CM-01) |
 | `villa-serena-infra` | `docker-compose.dev.yml`, `.env.example`, configuración de Prometheus y Grafana. Después: Compose de despliegue, Cloudflare y backups |
-| `villa-serena-api` | Spring Boot/Maven, implementación del contrato de docs, migraciones Flyway y datos iniciales |
+| `villa-serena-api` | Spring Boot/Maven, implementación del contrato de docs, migraciones Flyway del esquema y fixtures locales de carga explícita |
 | `villa-serena-web` | Next.js: web pública, panel privado, BFF y canal simulado; tipos generados directamente desde el contrato de docs |
 | `villa-serena-movil` | Expo: app Android; tipos generados directamente desde el contrato de docs |
 
@@ -323,9 +325,9 @@ villa-serena-api/
 │   ├── estadia/         Check-in, check-out y habitaciones
 │   ├── roomservice/     Menú y pedidos
 │   ├── piso/            Limpieza, solicitudes e incidencias
-│   ├── personal/        Fuera del hito; empleados de prueba en Flyway
+│   ├── personal/        Gestión laboral; empleados de prueba solo mediante fixtures explícitos
 │   ├── inventario/      Nivel 2, movimientos; existencias compartidas con compras y repuestos
-│   ├── catalogos/       Lectura de datos cargados por Flyway para el hito
+│   ├── catalogos/       Catálogos; datos de prueba mediante fixtures explícitos, no Flyway
 │   ├── facturacion/     Facturas PDF
 │   ├── canal/           API del canal REST/JSON
 │   ├── notificaciones/  WebSocket, push, correos y Outbox
@@ -342,7 +344,7 @@ Las carpetas fuera del hito son una referencia para después; no hay que impleme
 | Paso | Comando o detalle |
 |---|---|
 | Servicios | `docker compose -f docker-compose.dev.yml up -d` desde `villa-serena-infra` (PostgreSQL, Mailpit, Prometheus y Grafana; R2 remoto para archivos en dev) |
-| Backend | `./mvnw spring-boot:run -Dspring-boot.run.profiles=dev` en `villa-serena-api`; Flyway crea solo el esquema, fixtures manuales posteriores |
+| Backend | Desde `villa-serena-api`, utiliza Compose y los comandos del perfil elegido en [ENTORNOS del API](https://github.com/villaserenaguatee/villa-serena-api/blob/dev/docs/ENTORNOS.md). `local`: API y PostgreSQL, almacenamiento privado persistente en PostgreSQL, sin nube. `dev`: R2 remoto y servicios auxiliares. Flyway crea solo el esquema; fixtures manuales posteriores |
 | Web | `pnpm dev` en `villa-serena-web` (`http://localhost:3000`) |
 | App | `npx expo start` en `villa-serena-movil` (Expo Go de SDK 54) o el development build para probar push |
 | Recurrente | Sandbox y webhook `/api/v1/pagos/recurrente/webhook` accesible por el proveedor; ver [arranque local](../04-guias-y-referencia/arranque-local.md#42-probar-pagos-con-recurrente) |
@@ -382,7 +384,7 @@ ALC-TRA-07. Se configura después del hito.
 
 **Integración durante el desarrollo:** las PR se dirigen a la rama acordada de cada repositorio (`main` en docs; `dev` o `develop` en código), con revisión y las verificaciones configuradas. Las protecciones y resultados efectivos se consultan en GitHub. Los workflows del tablero y de colaboración pueden funcionar antes del despliegue.
 
-**Configuración por entorno:** se usan los archivos y variables existentes, con credenciales fuera de Git. El API activa `demo` para cargar datos ficticios según la [guía de arranque](../04-guias-y-referencia/arranque-local.md); no es necesario crear perfiles nuevos. Un Tunnel temporal puede facilitar las pruebas del API desde frontend, con autenticación, acceso acordado y cierre al terminar; no expone servicios administrativos de Docker.
+**Configuración por entorno:** se usan los archivos y variables existentes, con credenciales fuera de Git. El API distingue `local`, `dev` y `prod`; no utiliza un perfil `demo` para cargar datos. Flyway aplica solo el esquema. Los fixtures se cargan de forma manual y explícita, después del arranque, solo en una instancia local con tablas de negocio vacías. El bootstrap queda deshabilitado por defecto; si se habilita, crea solo el primer ADMIN, exige cambio de contraseña y no sustituye cuentas existentes. Para fixtures sobre tablas vacías debe permanecer apagado. Consulta la [guía de arranque local](../04-guias-y-referencia/arranque-local.md) y ENTORNOS del API; esta propuesta documental no ejecuta esas operaciones. Un Tunnel temporal puede facilitar las pruebas del API desde frontend, con autenticación, acceso acordado y cierre al terminar; no expone servicios administrativos de Docker.
 
 ---
 

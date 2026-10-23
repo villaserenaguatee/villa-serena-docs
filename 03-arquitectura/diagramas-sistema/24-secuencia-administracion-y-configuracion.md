@@ -1,8 +1,10 @@
 # 24 — Secuencia: Administración y configuración
 
-**Vista:** Secuencia · **Alcance del plan:** Pospuesto.
+> Reconciliación 22/10/2026: [flujos y decisiones actuales](../../02-producto/reconciliacion-frontend-20261022.md). El nombre histórico del archivo se conserva. El portal web complementa Android; el retorno no confirma pagos y subir documentos no realiza check-in.
 
-El objetivo 5 está en la especificación, pero el plan lo reemplaza por datos iniciales para el hito.
+**Vista:** Secuencia · **Alcance:** implementación parcial y operaciones documentadas pendientes de API; no acredita integración real.
+
+**Antecedente histórico:** el plan del hito pospuso el objetivo 5 y lo reemplazó por datos iniciales. **Estado actual:** cuentas oficiales de Personal y gestión básica de categorías/habitaciones tienen integración existente; hotel, menú, temporadas, turnos e indicadores disponen de interfaces/consumidores preparados y dependen de las operaciones pendientes del API. Fotografías y publicación integral conservan las dependencias API #82/#83. Véase el [estado por módulo](../../02-producto/reconciliacion-frontend-20261022.md#estado-por-módulo).
 
 ```mermaid
 sequenceDiagram
@@ -12,7 +14,8 @@ sequenceDiagram
   participant D as PostgreSQL
   participant F as Archivos públicos
   actor P as Empleado
-  Note over A,D: Funcionalidad documentada, objetivo 5 pospuesto del hito
+  Note over A,D: Flujo funcional; Personal y catálogo básico existentes, demás operaciones con dependencias
+  Note over S,D: Hotel, menú, temporadas, turnos e indicadores: API pendiente, no guardados acreditados
   A->>B: Crear o editar personal, rol y área
   B->>S: Operación exclusiva ADMIN
   S->>D: Correo único, activo/inactivo, no auto-desactivación ni auto-cambio de rol
@@ -38,15 +41,16 @@ sequenceDiagram
 
 ## Reglas y límites
 
-- En el hito: personal, catálogos, temporadas, menú, hotel y serie se precargan con Flyway; primer ADMIN por entorno.
+- **Antecedente histórico, sustituido:** en el hito se propuso precargar personal, catálogos, temporadas, menú, hotel y serie con Flyway, con un primer ADMIN por entorno.
+- **Procedimiento vigente:** Flyway administra las migraciones del esquema, no la carga automática de catálogos ni usuarios de demostración. Los fixtures se cargan explícitamente después del arranque, solo en una instancia local con tablas de negocio vacías. El primer ADMIN requiere habilitar el bootstrap; este no sustituye cuentas ni genera administradores adicionales. El bootstrap debe permanecer apagado al cargar fixtures sobre tablas vacías. Véanse [ADR-007](../adr/ADR-007-almacenamiento-r2-s3.md) y el [arranque documentado](../../04-guias-y-referencia/arranque-local.md). La documentación no acredita operaciones ejecutadas.
 - La serie y el correlativo inicial no se editan; cambios del hotel no alteran facturas antiguas.
 - Ingreso = pagos aprobados del rango; ocupación de hoy = ocupadas/activas; reservas por canal incluyen canceladas.
 
 ## Referencias
 
-- [04 HU Administrador](../04%20-%20Historias%20de%20Usuario/HU%20-%20Administrador.md)
-- [10 RN-PER,RN-TAR,RN-HAB,RN-IND,RN-FAC](../10%20-%20Reglas%20de%20Negocio.md)
-- [13 §9.1](../13%20-%20Plan%20de%20Trabajo.md)
+- [04 HU Administrador](../../02-producto/historias-de-usuario/HU%20-%20Administrador.md)
+- [10 RN-PER,RN-TAR,RN-HAB,RN-IND,RN-FAC](../../02-producto/reglas-de-negocio.md)
+- [13 §9.1](../../01-metodologia/roadmap-versiones.md)
 
 **Historias vinculadas:** `HU-ADM-01`, `HU-ADM-02`, `HU-ADM-03`, `HU-ADM-04`, `HU-ADM-05`, `HU-ADM-06`, `HU-ADM-07`, `HU-ADM-08`, `HU-ADM-09`, `HU-ADM-10`.
 

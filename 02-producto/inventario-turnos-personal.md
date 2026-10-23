@@ -1,5 +1,7 @@
 # Inventario, Turnos y Personal
 
+> Reconciliación 22/10/2026: [decisiones posteriores, estado implementado y límites del contrato](reconciliacion-frontend-20261022.md). Los estados «Pendiente» anteriores no certifican implementación; portal web y Android coexisten. No se reintroducen campos retirados del MVP.
+
 Define el modelo para el personal del hotel, la gestión de turnos laborales y el catálogo de artículos e inventario compartido.
 
 ---
@@ -69,7 +71,7 @@ Se editan nombre, teléfono, rol y área (HU-ADM-02).
 | 2. Primer acceso | Entra con la contraseña temporal y el sistema le **exige cambiarla** antes de usar cualquier otra sección (al menos 8 caracteres, con una letra y un número, distinta de la actual) | HU-EMP-01, HU-EMP-02 |
 | 3. Uso normal | Correo + contraseña. Tras **5 intentos fallidos seguidos**, la cuenta se bloquea **15 minutos**. Puede cambiar su contraseña cuando quiera | HU-EMP-01, HU-EMP-02 |
 | 4. Olvidó su contraseña | No hay "olvidé mi contraseña": el Administrador la **restablece**, se genera otra contraseña temporal y la anterior deja de funcionar | HU-ADM-02 |
-| 5. Desactivar | El Administrador lo pasa a `INACTIVO` (no puede hacerlo consigo mismo). No puede iniciar sesión ni renovar su sesión; si tenía una abierta, le sirve hasta que venza su token de acceso (máximo 15 minutos). Se puede reactivar | HU-ADM-02 |
+| 5. Desactivar | El Administrador lo pasa a `INACTIVO` (no puede hacerlo consigo mismo). No puede iniciar sesión ni renovar su sesión; La política anterior permitía conservar el acceso hasta vencer el JWT; es un antecedente histórico. El API inspeccionado comprueba la vigencia del empleado en cada petición. La reconciliación de esta política sigue pendiente en API #78, según RN-PER-014, sin debilitar los controles implementados. Se puede reactivar | HU-ADM-02 |
 
 **Siempre queda un Administrador activo:** el Administrador no puede desactivarse ni cambiarse el rol a sí mismo, y quien desactiva es siempre un Administrador activo (HU-ADM-02).
 
@@ -77,8 +79,10 @@ Se editan nombre, teléfono, rol y área (HU-ADM-02).
 
 | Cuenta | Cómo se crea |
 |---|---|
-| Primer Administrador | Al arrancar el sistema, con variables de entorno (tarea técnica) |
-| Usuarios de prueba de cada rol, con **dos Administradores** | Datos iniciales (Flyway), para la demostración y para no perder el acceso (V-04) |
+| Primer Administrador | Requiere habilitar explícitamente el bootstrap, deshabilitado por defecto; crea solo el primer ADMIN, exige cambio de contraseña y no sustituye cuentas existentes |
+| Usuarios de prueba de cada rol, con **dos Administradores** | **Antecedente histórico (V-04), sustituido:** se propuso cargarlos mediante Flyway. El procedimiento vigente separa las migraciones del esquema de los fixtures: estos se cargan explícitamente después del arranque, solo en una instancia local con tablas de negocio vacías y con el bootstrap apagado; no se crean usuarios de demostración automáticamente |
+
+El procedimiento y sus límites están en [ADR-007](../03-arquitectura/adr/ADR-007-almacenamiento-r2-s3.md) y su [guía de arranque](../04-guias-y-referencia/arranque-local.md). La documentación no ejecuta cargas ni acredita aprovisionamiento.
 
 ### 3.4 Responsable de cada acción
 
@@ -93,14 +97,14 @@ Los cambios de estado de reservas, habitaciones, pedidos, solicitudes e incidenc
 | Nombre completo | Obligatorio |
 | Correo | Obligatorio; **identifica al huésped** |
 | Teléfono | Obligatorio |
-| Nacionalidad | Obligatoria |
-| Tipo de documento | DPI o pasaporte (obligatorio) |
+| Nacionalidad | Opcional en el contrato; no se solicita en el formulario MVP. Los datos históricos se conservan |
+| Tipo de documento | DPI en el formulario MVP; pasaporte conservado para lectura histórica |
 | Número de documento | Obligatorio |
 
-- Los **mismos 6 datos** se piden en la web, en Recepción y en la API del canal (HU-HUE-05, HU-REC-01, HU-CM-01).
+- Los datos se validan según contrato y origen; el formulario MVP solicita nombre, correo, teléfono y DPI, sin nacionalidad ni pasaporte (HU-HUE-05, HU-REC-01, HU-CM-01).
 - Si ya existe un huésped con ese correo, la reserva se asocia a ese perfil **sin cambiar sus datos**.
 - El huésped **no tiene contraseña**: entra a la app con un código de 6 dígitos enviado a su correo (HU-HUE-08).
-- **Huéspedes adicionales:** se guardan en la reserva con nombre completo, tipo y número de documento y nacionalidad. **No son usuarios** y no entran a la app (HU-REC-02).
+- **Huéspedes adicionales:** se guardan en la reserva con nombre completo y DPI en el MVP; documentos históricos conservados y nacionalidad opcional en el API. **No son usuarios** y no entran a la app (HU-REC-02).
 
 **Usuarios del sistema (resumen):**
 
