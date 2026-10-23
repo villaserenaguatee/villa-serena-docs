@@ -59,10 +59,10 @@ sequenceDiagram
 
 ## Referencias
 
-- [07 R8,F1,K2,C1,C7,Q5,S6](../maquinas-de-estados.md)
-- [10 RN-FAC](../../02-producto/reglas-de-negocio.md)
-- [09 §7.5](../../02-producto/matriz-de-permisos.md)
-- [12 UC-04,20](../../02-producto/casos-de-uso.md)
+- [07 R8,F1,K2,C1,C7,Q5,S6](../maquinas-de-estados.md#11-efectos-automáticos-entre-módulos)
+- [10 RN-FAC](../../02-producto/reglas-de-negocio.md#15-facturación--rn-fac)
+- [09 §7.5](../../02-producto/matriz-de-permisos.md#7-guía-de-implementación)
+- [12 UC-04,20](../../02-producto/casos-de-uso.md#uc-20--emitir-e-imprimir-la-factura)
 
 **Historias vinculadas:** `HU-REC-15`, `HU-REC-16`.
 
