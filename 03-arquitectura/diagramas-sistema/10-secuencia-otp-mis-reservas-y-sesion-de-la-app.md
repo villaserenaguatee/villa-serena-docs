@@ -1,5 +1,7 @@
 # 10 — Secuencia: OTP, mis reservas y sesión de la app
 
+> Reconciliación 22/10/2026: [flujos y decisiones actuales](../../02-producto/reconciliacion-frontend-20261022.md). El nombre histórico del archivo se conserva. El portal web complementa Android; el retorno no confirma pagos y subir documentos no realiza check-in.
+
 **Vista:** Secuencia · **Alcance del plan:** Hito.
 
 Solo el huésped principal se autentica; todas sus reservas se vinculan por correo.
@@ -56,9 +58,9 @@ sequenceDiagram
 
 ## Referencias
 
-- [10 RN-APP-001–011](../10%20-%20Reglas%20de%20Negocio.md)
-- [09 VIS-01,7.2](../09%20-%20Matriz%20de%20Permisos.md)
-- [14 §6.1.8](../14%20-%20Tecnologias%20y%20Arquitectura.md)
+- [10 RN-APP-001–011](../../02-producto/reglas-de-negocio.md)
+- [09 VIS-01,7.2](../../02-producto/matriz-de-permisos.md)
+- [14 §6.1.8](../arquitectura-sistema.md)
 
 **Historias vinculadas:** `HU-HUE-08`, `HU-HUE-09`, `HU-HUE-17`.
 

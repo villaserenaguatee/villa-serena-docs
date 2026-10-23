@@ -1,5 +1,7 @@
 # HU — Administrador
 
+> Reconciliación 22/10/2026: [decisiones posteriores, estado implementado y límites del contrato](../reconciliacion-frontend-20261022.md). Los estados «Pendiente» anteriores no certifican implementación; portal web y Android coexisten. No se reintroducen campos retirados del MVP.
+
 > **Rol:** Administrador (`ADMIN`)
 > **Plataforma:** Web privada
 > **Prefijo:** `HU-ADM`
@@ -52,7 +54,7 @@ Las historias comunes a todo el personal (iniciar sesión y cambiar la contrase�
 1. Se listan los empleados con nombre, correo, rol, área y estado (`Activo` / `Inactivo`); se puede filtrar por rol y por estado.
 2. Se pueden editar nombre, teléfono, rol y área, con la misma regla de área de HU-ADM-01.
 3. Los empleados **no se eliminan**: se desactivan (`Inactivo`) o se reactivan (`Activo`). Su nombre se conserva en todos los registros históricos.
-4. Un empleado `Inactivo` no puede iniciar sesión ni renovar su sesión. Si tenía una sesión abierta, puede seguir usándola hasta que venza su token de acceso (máximo 15 minutos); no se revisa su estado en cada acción.
+4. Un empleado `Inactivo` no puede iniciar sesión ni renovar su sesión. La política anterior permitía conservar el acceso hasta vencer el JWT; es un antecedente histórico. El API inspeccionado comprueba la vigencia del empleado en cada petición. La reconciliación de esta política sigue pendiente en API #78, según RN-PER-014, sin debilitar los controles implementados.
 5. El Administrador no puede desactivarse ni cambiarse el rol a sí mismo. Como quien desactiva es siempre un Administrador activo, nunca se queda el sistema sin Administrador.
 6. **Restablecer contraseña:** genera una nueva contraseña temporal que se muestra al Administrador una sola vez; la contraseña anterior deja de funcionar y el empleado debe cambiarla en su siguiente acceso (HU-EMP-02).
 

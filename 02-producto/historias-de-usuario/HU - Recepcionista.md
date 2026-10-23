@@ -1,5 +1,7 @@
 # HU — Recepcionista
 
+> Reconciliación 22/10/2026: [decisiones posteriores, estado implementado y límites del contrato](../reconciliacion-frontend-20261022.md). Los estados «Pendiente» anteriores no certifican implementación; portal web y Android coexisten. No se reintroducen campos retirados del MVP.
+
 > **Rol:** Recepcionista (`RECEPCION`). Estas pantallas son solo de Recepción: el Administrador usa únicamente las suyas (R-02).
 > **Plataforma:** Web privada
 > **Prefijo:** `HU-REC`
@@ -22,7 +24,7 @@
 - **Para** poder asociarlo a sus reservas
 
 **Criterios de aceptación**
-1. Se registran nombre completo, tipo de documento (DPI o pasaporte), número de documento, teléfono, correo y nacionalidad.
+1. Se registran nombre completo, DPI, teléfono y correo en el formulario MVP; la nacionalidad no se solicita y el contrato la admite opcional.
 2. Todos los campos son obligatorios, incluido el correo, que debe tener un formato válido (a ese correo llegan la confirmación de la reserva, el código de acceso a la app y la factura).
 3. El huésped se identifica por su correo: si ya existe un huésped con ese correo, se avisa y se usa el perfil existente; no se crea otro.
 4. El huésped registrado queda disponible para asociarlo a reservas (HU-REC-04).
@@ -44,7 +46,7 @@
 - **Para** tener un registro completo de los huéspedes alojados
 
 **Criterios de aceptación**
-1. Desde el detalle de una reserva `Confirmada` o `En estadía` se pueden agregar huéspedes adicionales con nombre completo, tipo y número de documento y nacionalidad.
+1. Desde el detalle de una reserva `Confirmada` o `En estadía` se pueden agregar huéspedes adicionales con nombre completo y DPI en el MVP; documentos históricos conservados y nacionalidad opcional en el API.
 2. El total de huéspedes registrados (principal + adicionales) no puede superar el número de huéspedes de la reserva; si se intenta, se muestra un mensaje y no se guarda.
 3. Los huéspedes adicionales quedan asociados a la reserva, pero no tienen acceso a la app (solo el huésped principal entra con su correo).
 4. Los huéspedes adicionales se muestran en el detalle de la reserva y en el check-in para verificarlos.
@@ -117,12 +119,12 @@
 - **Para** liberar la disponibilidad del hotel
 
 **Criterios de aceptación**
-1. Solo se pueden cancelar reservas `Confirmada`; en cualquier otro estado la opción no aparece y el backend lo rechaza. Las reservas `Pendiente de pago` no se cancelan a mano: se cancelan solas a los 30 minutos si no se pagan (HU-HUE-06).
+1. Solo se pueden cancelar reservas `Confirmada`; en cualquier otro estado la opción no aparece y el backend lo rechaza. Las reservas `Pendiente de pago` no se cancelan a mano: se revisan al vencer el plazo y solo se cancelan tras comprobar vencimiento sin pago; procesamiento o incertidumbre conservan el cupo hasta conciliación (HU-HUE-06).
 2. Las reservas que llegaron de un canal externo (Booking, Expedia) **no se pueden cancelar** desde el sistema; se muestra un mensaje que lo indica.
 3. El motivo de cancelación es obligatorio.
-4. Antes de confirmar se muestra qué pasará con el dinero, sin cálculos parciales: si faltan **48 horas o más** para la hora de check-in (15:00, fija) del día de llegada y el huésped pagó en línea → **reembolso total** por Stripe; con menos de 48 horas → **sin reembolso**; si la reserva no tiene pagos (creada en Recepción) → no hay nada que reembolsar.
+4. Antes de confirmar se muestra qué pasará con el dinero, sin cálculos parciales: si faltan **48 horas o más** para la hora de check-in (15:00, fija) del día de llegada y el huésped pagó en línea → **reembolso total** por Recurrente; con menos de 48 horas → **sin reembolso**; si la reserva no tiene pagos (creada en Recepción) → no hay nada que reembolsar.
 5. Al confirmar, la reserva pasa a `Cancelada`, la cuenta se cierra tal como está (`Cerrada`), la habitación asignada se libera y la disponibilidad vuelve a quedar libre. Se registra fecha, hora, responsable y motivo.
-6. Si corresponde reembolso, se solicita a Stripe y el pago pasa a `Reembolsado`. Si Stripe rechaza el reembolso, la reserva no se cancela y se muestra el error.
+6. Si corresponde reembolso, se solicita a Recurrente y el pago pasa a `Reembolsado`. Si Recurrente rechaza el reembolso, la reserva no se cancela y se muestra el error.
 
 **Depende de:** HU-REC-04, HU-HUE-06
 **Reglas relacionadas:** RN-CAN-001, RN-CAN-002, RN-CAN-006, RN-CAN-008, RN-CAN-011, RN-CAN-012, RN-CAN-013, RN-RES-004, RN-SEG-006 (documento 10)
@@ -347,7 +349,7 @@
 4. Se indica el NIT del comprador (validado con su dígito verificador; el último dígito puede ser "K") o se elige "Consumidor Final" (CF), y el nombre del comprador (por defecto, el del huésped). Si el NIT no es válido, no se puede continuar.
 5. Al confirmar, con el saldo exactamente en 0: se emite la factura (HU-REC-15), la reserva pasa a `Finalizada`, la cuenta a `Cerrada` y la habitación a `Libre` + `Sucia` (o `Fuera de servicio` si tiene una incidencia que impide su uso).
 6. También al confirmar: las solicitudes `Pendiente` o `En proceso` pasan a `Cancelada` y los pedidos `Nuevo` o `En preparación` pasan a `Cancelado` (sin cargo). Se registran fecha, hora y responsable.
-7. Todo ocurre en una sola operación: si algo falla (por ejemplo, un error al emitir la factura), no se registra el pago ni cambia ningún estado, y se muestra el motivo. Esto se refiere al pago que Recepción registra dentro del check-out; los pagos aprobados previamente, incluidos los de Stripe, se conservan.
+7. Todo ocurre en una sola operación: si algo falla (por ejemplo, un error al emitir la factura), no se registra el pago ni cambia ningún estado, y se muestra el motivo. Esto se refiere al pago que Recepción registra dentro del check-out; los pagos aprobados previamente, incluidos los de Recurrente, se conservan.
 
 **Depende de:** HU-REC-13, HU-REC-15
 **Reglas relacionadas:** RN-FAC-005, RN-HAB-002, RN-HAB-004, RN-HAB-008, RN-LIM-009, RN-PAG-007, RN-PAG-013, RN-PAG-014, RN-RES-015, RN-RES-021, RN-RES-022, RN-RS-011 (documento 10)

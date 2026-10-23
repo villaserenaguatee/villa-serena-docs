@@ -165,3 +165,9 @@ Este es un inventario inicial obtenido del [código de API en 9396c82](https://g
 | Pagos | [ADR-017](adr/ADR-017-pasarela-recurrente.md) acuerda Recurrente; la base del contrato aún describe Stripe. | Reconciliar rutas, firmas, DTO y transición con la implementación de pagos, sin sustituir nombres a ciegas. |
 
 Los documentos de `04-guias-y-referencia/historico` e `historial-prompts` conservan referencias antiguas al contrato en API como parte del historial. Para trabajo nuevo se aplica esta guía y el YAML de docs.
+
+## Reconciliación del frontend publicada y propuesta documental (22/10/2026)
+
+Web main `e0587c3013dbea7c68c494c4dd4329b37db720eb` consume este contrato en `77225a11d06daf576a404e2a557185868bd49c56`. Ya retiró su copia YAML y nacionalidad obligatoria del MVP; el inventario inicial anterior es histórico y no describe por sí mismo main actual. La hora pública y el detalle de Recepción, los estados de checkout y la recuperación por intento están adoptados. El DTO de alta de Recepción sigue sin hora estimada.
+
+Esta reconciliación modifica documentos narrativos, no `openapi.yaml`, ni el SHA fijado por web. Las operaciones sin esquema canónico se inventarían si se añadieran unilateralmente: se registran en la [propuesta separada de contratos](propuestas/contratos-web-pendientes.md), pendiente de acuerdo. Véanse el [estado por módulo](../02-producto/reconciliacion-frontend-20261022.md) y el [manual de recorridos](../04-guias-y-referencia/recorridos-web.md).

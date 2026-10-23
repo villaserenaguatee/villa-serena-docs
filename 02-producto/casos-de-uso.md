@@ -1,5 +1,7 @@
 # Casos de Uso del Sistema
 
+> Reconciliación 22/10/2026: [decisiones posteriores, estado implementado y límites del contrato](reconciliacion-frontend-20261022.md). Los estados «Pendiente» anteriores no certifican implementación; portal web y Android coexisten. No se reintroducen campos retirados del MVP.
+
 Describe los 19 casos de uso fundamentales que modelan las interacciones entre los usuarios (cliente, recepcionista, personal de servicio) y el sistema Villa Serena.
 
 ---
@@ -54,7 +56,7 @@ Los IDs UC-09 y UC-12 no se utilizan.
 | Mantenimiento/Limpieza (MYL) | Humano | Sección 3.4 |
 | Administrador | Humano | Sección 3.1 |
 | Sistema | Procesos automáticos | Sección 4 |
-| Stripe | Sistema externo | Sección 4 |
+| Recurrente | Sistema externo | Sección 4 |
 | Canal externo | Sistema externo | Sección 4 |
 
 ---
@@ -64,19 +66,19 @@ Los IDs UC-09 y UC-12 no se utilizan.
 | UC | Nombre | Nivel | Cliente / Huésped | Recepción | Room Service | MYL | Admin | Sistema / externos |
 |---|---|---|---|---|---|---|---|---|
 | UC-01 | Buscar disponibilidad | 1 | ● | ● | | | | |
-| UC-02 | Crear reserva | 1 | ● | ● | | | | Stripe, Sistema |
-| UC-10 | Cancelar reserva | 1 | | ● | | | | Stripe, Sistema |
+| UC-02 | Crear reserva | 1 | ● | ● | | | | Recurrente, Sistema |
+| UC-10 | Cancelar reserva | 1 | | ● | | | | Recurrente, Sistema |
 | UC-14 | Consultar el calendario Gantt | 1 | | ● | | | | |
-| UC-05 | Procesar pago en línea | 1 | ● | | | | | Stripe, Sistema |
+| UC-05 | Procesar pago en línea | 1 | ● | | | | | Recurrente, Sistema |
 | UC-20 | Emitir e imprimir la factura | 1 | ○ | ● | | | | Sistema |
 | UC-11 | Acceder a la app (OTP) | 1 | ● | | | | | |
 | UC-03 | Realizar check-in | 1 | | ● | | | | Sistema |
-| UC-04 | Realizar check-out | 1 | ● | ● | | | | Sistema, Stripe |
+| UC-04 | Realizar check-out | 1 | ● | ● | | | | Sistema, Recurrente |
 | UC-06 | Gestionar pedido de Room Service | 1 | ● | | ● | | | Sistema |
 | UC-13 | Atender solicitud de limpieza o artículos | 1 | ● | | | ● | | Sistema |
 | UC-07 | Limpiar una habitación | 1 | | ○ | | ● | | Sistema |
 | UC-08 | Gestionar incidencia de mantenimiento | 1 | | ● | | ● | ○ | Sistema |
-| UC-15 | Cancelar reservas web sin pago | 1 | | | | | | Sistema, Stripe |
+| UC-15 | Cancelar reservas web sin pago | 1 | | | | | | Sistema, Recurrente |
 | UC-16 | Recibir reserva de un canal externo | 1 | | ○ | | | ○ | **Canal** (principal) |
 | UC-17 | Configurar tarifas dinámicas | 1 | | | | | ● | |
 | UC-19 | Gestionar personal (y turnos, Nivel 2) | 1 / 2 | | | | | ● | |
@@ -122,7 +124,7 @@ Los IDs UC-09 y UC-12 no se utilizan.
 
 | Campo | Contenido |
 |---|---|
-| Actores | Cliente (web) o Recepcionista (principal) · Stripe y Sistema (secundarios, solo web) |
+| Actores | Cliente (web) o Recepcionista (principal) · Recurrente y Sistema (secundarios, solo web) |
 | Historias | HU-HUE-05, HU-HUE-06, HU-HUE-07, HU-REC-01, HU-REC-04, HU-REC-07 |
 | Nivel | 1 |
 | Precondiciones | El actor hizo UC-01 y eligió un tipo de habitación. |
@@ -131,7 +133,7 @@ Los IDs UC-09 y UC-12 no se utilizan.
 
 **Flujo principal (web pública)**
 
-1. El cliente ingresa los 6 datos del huésped principal: nombre completo, correo, teléfono, nacionalidad, tipo y número de documento.
+1. El cliente ingresa los datos MVP del huésped principal: nombre completo, correo, teléfono y DPI; nacionalidad opcional en el contrato, sin solicitarla en el formulario.
    El cliente puede indicar además **Hora estimada de llegada**, opcional en `HH:mm` local de `America/Guatemala`, tanto al reservar por tipo como por oferta. Omitida o `null` queda sin indicar; no cambia el check-in ni se completan reservas históricas.
 
 2. El sistema muestra el resumen: tipo, fechas, noches, huéspedes y total.
@@ -139,7 +141,7 @@ Los IDs UC-09 y UC-12 no se utilizan.
 4. El sistema **revalida la disponibilidad**.
 5. El sistema busca al huésped por su correo: si ya existe, usa ese perfil sin cambiar sus datos; si no, lo crea.
 6. El sistema crea la reserva `PENDIENTE_PAGO` (canal `DIRECTO_WEB`, código único, precio fijo) y la cuenta `ABIERTA` con el cargo por alojamiento.
-7. El cliente paga en Stripe (**UC-05**).
+7. El cliente paga en Recurrente (**UC-05**).
 8. Al aprobarse el pago, la reserva pasa a `CONFIRMADA` y se envía el correo de confirmación con el código y el enlace de la app.
 
 **Flujos alternativos**
@@ -153,7 +155,7 @@ Los IDs UC-09 y UC-12 no se utilizan.
   3. El sistema muestra la tarifa de cada noche y el total.
   4. El sistema revalida la disponibilidad y crea la reserva directamente `CONFIRMADA` (canal `RECEPCION`) con la cuenta `ABIERTA`. **No se cobra por adelantado.**
   5. Se envía el correo de confirmación.
-- **A5 (después de crearla) — El cliente se equivocó:** no puede cambiarla. Si ya pagó, pide a Recepción que la cancele (UC-10) y se crea otra; si no pagó, se cancela sola a los 30 minutos.
+- **A5 (después de crearla) — El cliente se equivocó:** no puede cambiarla. Si ya pagó, pide a Recepción que la cancele (UC-10) y se crea otra; si no pagó, se aplica la revisión del plazo de UC-15, sin asumir cancelación mientras el resultado del pago sea incierto.
 
 **Postcondiciones:** existe una reserva `CONFIRMADA` (o `PENDIENTE_PAGO` en espera de pago) con su cuenta, y la disponibilidad se redujo.
 
@@ -163,7 +165,7 @@ Los IDs UC-09 y UC-12 no se utilizan.
 
 | Campo | Contenido |
 |---|---|
-| Actores | Recepcionista (principal) · Stripe y Sistema (secundarios) |
+| Actores | Recepcionista (principal) · Recurrente y Sistema (secundarios) |
 | Historias | HU-REC-05, HU-CM-02 |
 | Nivel | 1 |
 | Precondiciones | La reserva está `CONFIRMADA` y **no** viene de un canal externo. |
@@ -174,17 +176,17 @@ Los IDs UC-09 y UC-12 no se utilizan.
 
 1. El recepcionista abre el detalle de la reserva (UC-14 o búsqueda) y elige "Cancelar".
 2. El sistema muestra qué pasará con el dinero, sin cálculos parciales:
-   - 48 horas o más antes de las 15:00 del día de llegada y pagada en línea → **reembolso total** por Stripe.
+   - 48 horas o más antes de las 15:00 del día de llegada y pagada en línea → **reembolso total** por Recurrente.
    - Menos de 48 horas → **sin reembolso**.
    - Reserva sin pagos (creada en Recepción) → nada que reembolsar.
 3. El recepcionista escribe el motivo (obligatorio) y confirma.
-4. Si corresponde, el sistema solicita el reembolso a Stripe y el pago pasa a `REEMBOLSADO`.
+4. Si corresponde, el sistema solicita el reembolso a Recurrente y el pago pasa a `REEMBOLSADO`.
 5. La reserva pasa a `CANCELADA`, la cuenta se cierra tal como está y se liberan el cupo y la habitación asignada. Se registra fecha, hora, responsable y motivo.
 
 **Flujos alternativos**
 
 - **A1 — Huésped que no llegó:** se cancela con el motivo "No se presentó". Como faltan menos de 48 horas, no hay reembolso.
-- **A2 (paso 4) — Stripe rechaza el reembolso:** la reserva **no** se cancela y se muestra el error. Recepción puede volver a intentarlo.
+- **A2 (paso 4) — Recurrente rechaza el reembolso:** la reserva **no** se cancela y se muestra el error. Recepción puede volver a intentarlo.
 - **A3 (paso 1) — Reserva de canal externo:** no aparece la opción de cancelar; si se intenta por otra vía, el sistema responde "Las reservas de canal no se cancelan desde el sistema". Si el huésped no llega, la reserva queda `CONFIRMADA` (limitación aceptada).
 - **A4 (paso 1) — Reserva `PENDIENTE_PAGO` u otro estado:** la opción no aparece y el backend lo rechaza.
 - **A5 — Cambiar fechas, tipo o huéspedes:** no se modifica; se cancela con este caso y se crea otra reserva (UC-02, A4).
@@ -229,7 +231,7 @@ Los IDs UC-09 y UC-12 no se utilizan.
 
 | Campo | Contenido |
 |---|---|
-| Actores | Cliente (pago de la reserva) o Huésped (pago del saldo) · Stripe · Sistema |
+| Actores | Cliente (pago de la reserva) o Huésped (pago del saldo) · Recurrente · Sistema |
 | Historias | HU-HUE-06, HU-HUE-16 |
 | Nivel | 1 |
 | Precondiciones | Reserva `PENDIENTE_PAGO` (web) o reserva `EN_ESTADIA` con saldo mayor que cero, dentro de la ventana del check-out: de las 00:00 a las 12:00 del día de salida (app). |
@@ -238,25 +240,25 @@ Los IDs UC-09 y UC-12 no se utilizan.
 
 **Flujo principal**
 
-1. El sistema registra un pago `PENDIENTE` y abre la sesión de Stripe por el total de la reserva (web) o por el saldo de la cuenta (app).
-2. El actor paga en la página de Stripe (modo prueba). El sistema nunca ve los datos de la tarjeta.
-3. Stripe envía el aviso (webhook) de pago aprobado.
-4. El sistema verifica la firma y que el aviso no se haya procesado antes.
+1. El sistema registra un pago `PENDIENTE` y abre la sesión de Recurrente por el total de la reserva (web) o por el saldo de la cuenta (app).
+2. El actor paga en la página de Recurrente (modo prueba). El sistema nunca ve los datos de la tarjeta.
+3. Recurrente envía el aviso (webhook) de pago aprobado.
+4. El sistema verifica firma e idempotencia y consulta Recurrente para conciliar estado pagado, monto, GTQ e identificación del pago antes de aprobarlo. El backend también puede confirmar mediante su proceso de conciliación.
 5. El pago pasa a `APROBADO`.
 6. Si era el pago de la reserva, la reserva pasa a `CONFIRMADA` (UC-02, paso 8).
-7. El actor vuelve al sitio o a la app y ve el resultado.
+7. El actor vuelve al sitio o a la app y consulta el estado real del API; el retorno no confirma el pago ni la reserva.
 
 **Flujos alternativos**
 
-- **A1 (paso 2) — Tarjeta rechazada o el actor cierra la página:** el pago sigue `PENDIENTE`; puede reintentar con el mismo enlace mientras la reserva siga `PENDIENTE_PAGO`. La página de retorno muestra "pago no completado" con la opción de reintentar.
-- **A2 — La sesión vence sin pago:** el pago pasa a `FALLIDO` (en la reserva web, a los 30 minutos, con UC-15).
-- **A3 (paso 4) — Aviso repetido:** se responde bien a Stripe y no se procesa de nuevo.
+- **A1 (paso 2) — Tarjeta rechazada o el actor cierra la página:** cerrar la página no prueba rechazo. Solo se continúa el checkout abierto cuando el backend autoriza `CONTINUAR` y proporciona su enlace. Iniciar o reintentar requiere `INICIAR`/`REINTENTAR`; procesamiento, confirmación pendiente o incertidumbre obligan a esperar y consultar el estado, sin crear otro cobro. La página de retorno muestra el estado que confirma el API.
+- **A2 — Vencimiento confirmado sin pago:** el pago pasa a `FALLIDO` según el estado comprobado por el servidor (UC-15). Al cumplirse el plazo de 30 minutos, el backend consulta y concilia el estado: confirma si el pago está aprobado y solo cancela tras comprobar el vencimiento sin pago. Si hay procesamiento o no se puede verificar, conserva el cupo y reintenta la consulta; el plazo por sí solo no acredita cancelación.
+- **A3 (paso 4) — Aviso repetido:** se responde bien a Recurrente y no se procesa de nuevo.
 - **A4 (paso 4) — Firma inválida:** el aviso se rechaza y no cambia nada.
 - **A5 (paso 7) — El actor vuelve antes de que llegue el aviso:** la página muestra "pago en proceso".
 
 **Postcondiciones:** el pago queda `APROBADO` una sola vez, o `FALLIDO` si la sesión venció.
 
-**Limitación aceptada:** en la app no se controla que el huésped abra dos sesiones de pago del saldo a la vez (documento 07, sección 5.3).
+**Antecedente histórico, sustituido:** el plan no controlaba dos sesiones simultáneas de saldo (documento 07, sección 5.3). El contrato vigente protege la reutilización del checkout y rechaza otro intento cuando está pagado o en procesamiento. Solo se continúa el checkout abierto cuando el backend autoriza `CONTINUAR` y proporciona su enlace. Iniciar o reintentar requiere `INICIAR`/`REINTENTAR`; procesamiento, confirmación pendiente o incertidumbre obligan a esperar y consultar el estado, sin crear otro cobro.
 
 ---
 
@@ -362,7 +364,7 @@ Los IDs UC-09 y UC-12 no se utilizan.
 
 | Campo | Contenido |
 |---|---|
-| Actores | Recepcionista o Huésped (principal) · Sistema · Stripe (pago desde la app) |
+| Actores | Recepcionista o Huésped (principal) · Sistema · Recurrente (pago desde la app) |
 | Historias | HU-REC-06, HU-REC-13, HU-REC-14, HU-REC-15, HU-HUE-15, HU-HUE-16, HU-HUE-17 |
 | Nivel | 1 |
 | Precondiciones | Reserva `EN_ESTADIA` sin pedidos `EN_CAMINO`. |
@@ -388,7 +390,7 @@ Los IDs UC-09 y UC-12 no se utilizan.
 - **A1 — Check-out desde la app:**
   1. Entre las 00:00 del día de salida y las 12:00, el huésped elige "Hacer check-out".
   2. Si tiene pedidos `NUEVO` o `EN_PREPARACION`, se le avisa que se cancelarán sin cargo y debe aceptarlo.
-  3. Si hay saldo, lo paga con Stripe (**UC-05**); si ya es Q 0.00, se salta este paso.
+  3. Si hay saldo, lo paga con Recurrente (**UC-05**); si ya es Q 0.00, se salta este paso.
   4. Indica su NIT o CF y el nombre del comprador, y confirma; el sistema hace el paso 5.
   5. La app muestra la pantalla final con la factura (se puede abrir el PDF).
 - **A2 (paso 5) — La habitación tiene una incidencia sin resolver que impide su uso:** pasa a `FUERA_DE_SERVICIO` en lugar de `SUCIA`.
@@ -537,7 +539,7 @@ Los IDs UC-09 y UC-12 no se utilizan.
 
 | Campo | Contenido |
 |---|---|
-| Actores | Sistema (principal) · Stripe |
+| Actores | Sistema (principal) · Recurrente |
 | Historias | HU-HUE-06 |
 | Nivel | 1 |
 | Precondiciones | Proceso programado del backend. |
@@ -547,14 +549,14 @@ Los IDs UC-09 y UC-12 no se utilizan.
 **Flujo principal**
 
 1. El sistema busca las reservas `PENDIENTE_PAGO` creadas hace más de 30 minutos.
-2. Para cada una, consulta su sesión en Stripe.
-3. Si no está pagada: la reserva pasa a `CANCELADA`, la cuenta a `CERRADA`, el pago a `FALLIDO` y se liberan el cupo y la habitación asignada.
+2. Para cada una, consulta su sesión en Recurrente.
+3. Si el backend confirma el vencimiento sin pago: la reserva pasa a `CANCELADA`, la cuenta a `CERRADA`, el pago a `FALLIDO` y se liberan el cupo y la habitación asignada. Si está en procesamiento o no se puede verificar, conserva el cupo y vuelve a consultar; no cancela por la sola antigüedad.
 
 **Flujos alternativos**
 
 - **A1 (paso 2) — La sesión ya estaba pagada:** la reserva se confirma en lugar de cancelarse (R4) y se envía el correo de confirmación.
 
-**Postcondiciones:** no quedan reservas apartadas sin pago.
+**Postcondiciones:** las reservas pagadas comprobadas se confirman y las vencidas sin pago comprobado se cancelan. Los estados inciertos o en procesamiento conservan su cupo hasta poder conciliarse.
 
 ---
 
@@ -573,7 +575,7 @@ Los IDs UC-09 y UC-12 no se utilizan.
 
 **Flujo principal**
 
-1. El canal envía a la API: canal y clave, identificador externo, tipo de habitación, fechas, huéspedes, los 6 datos del huésped principal y el monto en quetzales.
+1. El canal envía a la API: canal y clave, identificador externo, tipo de habitación, fechas, huéspedes, los datos vigentes del huésped principal según contrato y origen y el monto en quetzales.
 2. El sistema compara la clave con su hash.
 3. Valida los datos (1 a 30 noches, sin fechas pasadas, a no más de 365 días, capacidad, tipo activo).
 4. Verifica que no exista ya una reserva con ese identificador externo en ese canal.
@@ -646,7 +648,7 @@ Los IDs UC-09 y UC-12 no se utilizan.
 - **A1 (paso 1) — Correo de otro empleado:** error; no se crea.
 - **A2 (paso 1) — Rol Mantenimiento/Limpieza sin área:** no se permite.
 - **A3 — Editar:** nombre, teléfono, rol y área, con la misma regla de área.
-- **A4 — Desactivar o reactivar:** el empleado `INACTIVO` no puede iniciar sesión ni renovar su sesión; una sesión abierta le dura hasta que vence su token (máximo 15 minutos). El Administrador no puede desactivarse ni cambiarse el rol a sí mismo. No se revisa el trabajo en curso.
+- **A4 — Desactivar o reactivar:** el empleado `INACTIVO` no puede iniciar sesión ni renovar su sesión. La política anterior permitía conservar el acceso hasta vencer el JWT; es un antecedente histórico. El API inspeccionado comprueba la vigencia del empleado en cada petición. La reconciliación de esta política sigue pendiente en API #78, según RN-PER-014, sin debilitar los controles implementados. El Administrador no puede desactivarse ni cambiarse el rol a sí mismo. No se revisa el trabajo en curso.
 - **A5 — Restablecer contraseña:** se genera otra contraseña temporal (mostrada una vez); la anterior deja de funcionar.
 - **A6 (Nivel 2) — Turnos:** define turnos (pueden cruzar la medianoche) y los asigna por fecha a empleados `ACTIVO` que no sean Administradores, sin traslapes. Hay una vista semanal. Son solo informativos.
 

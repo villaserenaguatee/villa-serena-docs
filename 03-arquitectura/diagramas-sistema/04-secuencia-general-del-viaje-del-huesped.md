@@ -1,5 +1,7 @@
 # 04 — Secuencia general del viaje del huésped
 
+> Reconciliación 22/10/2026: [flujos y decisiones actuales](../../02-producto/reconciliacion-frontend-20261022.md). El nombre histórico del archivo se conserva. El portal web complementa Android; el retorno no confirma pagos y subir documentos no realiza check-in.
+
 **Vista:** Secuencia · **Alcance del plan:** Hito.
 
 Una vista temporal compacta de la experiencia completa y sus participantes.
@@ -9,7 +11,7 @@ sequenceDiagram
   actor C as Cliente / huésped
   participant W as Web + BFF
   participant S as API Spring
-  participant X as Stripe
+  participant X as Recurrente
   actor R as Recepción
   participant A as App Android
   actor O as Personal de operación
@@ -56,11 +58,11 @@ sequenceDiagram
 ## Reglas y límites
 
 - Los mensajes resumen casos de uso; no son una lista exhaustiva de endpoints.
-- La operación del personal pasa por el BFF; el huésped llama al API directamente.
+- La operación del personal y del portal web del huésped pasa por el BFF. Esta secuencia representa Android para la estadía: solo ese cliente llama directamente al API y usa push Expo; no excluye el portal web.
 
 ## Referencias
 
-- [01 §4](../01%20-%20Alcance%20del%20Proyecto.md)
-- [12 UC-02,03,04,06,11,13,20](../12%20-%20Casos%20de%20Uso.md)
+- [01 §4](../../02-producto/alcance-y-decisiones.md)
+- [12 UC-02,03,04,06,11,13,20](../../02-producto/casos-de-uso.md)
 
 [Índice de diagramas](README.md) · [Cobertura de historias](COBERTURA.md) · [Anterior](03-actividad-general-de-la-reserva-a-la-siguiente-llegada.md) · [Siguiente](05-actividad-disponibilidad-y-tarifa.md)
