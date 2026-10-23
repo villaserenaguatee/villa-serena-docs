@@ -1,14 +1,16 @@
-# OBJ-INT — Integración y prueba del flujo completo
+# OBJ-INT — Integración y prueba del flujo completo (referencia histórica)
+
+> **Guion histórico sustituido para el MVP (`v0.1.0`):** este documento conserva los 18 pasos originales del plan inicial (que combinaban capacidades de `v0.1.0`, `v0.2.0` y `v0.3.0`, usaban Stripe y fijaban las fechas vencidas del 9 y 10 de octubre). Para validar el flujo vigente de `v0.1.0` con **Recurrente**, consulta el **[Guion de Validación del Flujo MVP (`v0.1.0`) con Recurrente](../validacion-mvp-v0-1-0.md)** y el **[Roadmap por versiones](../../01-metodologia/roadmap-versiones.md)**.
 
 | Dato | Valor |
 |---|---|
 | Objetivo | Integración (documento 13, sección 7) |
 | Repositorios | Todos |
-| Responsables iniciales | Los 6 integrantes (3 h cada uno) |
-| Calendario | **Viernes 9:** integración y corrección de errores. **Sábado 10:** ensayo y demostración |
-| Depende de | Que los objetivos 0 a 4 estén integrados en `develop` (o lo más avanzados posible) |
+| Responsables iniciales | Los 6 integrantes (el compromiso antiguo de 3 h por persona fue retirado en #13) |
+| Calendario | **Histórico (vencido):** viernes 9 y sábado 10 de octubre. La fecha del ensayo vigente la acuerda el equipo según disponibilidad |
+| Depende de | Que los objetivos del MVP (`v0.1.0`) estén integrados |
 
-> **Contexto de integración:** los repositorios necesarios se sincronizan con `develop`, preservando los cambios locales según AGENTS.md. La guía 16 describe el arranque del entorno.
+> **Contexto de integración:** los repositorios necesarios se sincronizan con su rama de integración, preservando los cambios locales según AGENTS.md. La [guía de arranque local](../arranque-local.md) describe el encendido del entorno.
 
 ## 1. Cómo se organiza el viernes 9
 

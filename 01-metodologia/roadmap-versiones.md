@@ -32,6 +32,7 @@ Para evitar el agotamiento y la parálisis por exceso de alcance, el desarrollo 
   * Sin soporte para pasaportes complejos: formulario simple con cédula/DPI o documento universal.
   * Sin abonos, anticipos ni pagos parciales (pago único total).
   * Sin modificación de reservas existentes (se cancela y crea una nueva).
+* **Guion reproducible de integración:** consulta el [Guion de Validación del Flujo MVP (`v0.1.0`) con Recurrente](../04-guias-y-referencia/validacion-mvp-v0-1-0.md).
 
 ---
 
