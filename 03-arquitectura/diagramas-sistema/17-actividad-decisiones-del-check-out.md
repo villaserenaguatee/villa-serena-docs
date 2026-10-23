@@ -46,10 +46,10 @@ flowchart TB
 
 ## Referencias
 
-- [10 RN-RES-015,021,022](../10%20-%20Reglas%20de%20Negocio.md)
-- [10 RN-APP-008](../10%20-%20Reglas%20de%20Negocio.md)
-- [10 RN-RS-011](../10%20-%20Reglas%20de%20Negocio.md)
-- [12 UC-04](../12%20-%20Casos%20de%20Uso.md)
+- [10 RN-RES-015,021,022](../../02-producto/reglas-de-negocio.md#3-reservas--rn-res)
+- [10 RN-APP-008](../../02-producto/reglas-de-negocio.md#13-app-y-acceso-del-huésped--rn-app)
+- [10 RN-RS-011](../../02-producto/reglas-de-negocio.md#8-room-service--rn-rs)
+- [12 UC-04](../../02-producto/casos-de-uso.md#uc-04--realizar-check-out)
 
 **Historias vinculadas:** `HU-HUE-16`, `HU-REC-14`.
 

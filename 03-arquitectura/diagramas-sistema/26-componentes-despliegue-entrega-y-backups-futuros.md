@@ -54,8 +54,8 @@ flowchart LR
 
 ## Referencias
 
-- [14 §§3.2,9,10,11](../14%20-%20Tecnologias%20y%20Arquitectura.md)
-- [01 §6](../01%20-%20Alcance%20del%20Proyecto.md)
-- [CONTRIBUTING §§2,5](../CONTRIBUTING.md)
+- [14 §§3.2,9,10,11](../arquitectura-sistema.md#32-después-del-hito-vps)
+- [01 §6](../../02-producto/alcance-y-decisiones.md#6-infraestructura-y-despliegue-compartido)
+- [CONTRIBUTING §§2,5](../../CONTRIBUTING.md#2-crear-una-rama)
 
 [Índice de diagramas](README.md) · [Cobertura de historias](COBERTURA.md) · [Anterior](25-actividad-las-cinco-historias-opcionales.md)
