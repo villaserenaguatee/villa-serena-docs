@@ -291,3 +291,18 @@ test('event shape permits backend type fallback, does not require body id, and r
   assert.equal(event.additionalProperties, true);
   assert.equal(definitions.EventoStripe, undefined);
 });
+
+test('fotos de tipos de habitación exigen ADMIN, JPG/PNG hasta 5 MiB y ejemplos públicos en CDN sin MinIO', () => {
+  const upload = contract.paths['/api/v1/archivos/imagenes'].post;
+  const associate = contract.paths['/api/v1/admin/tipos-habitacion/{id}/fotos'].put;
+  assert.deepEqual(upload.security, [{ bearerAuth: [] }]);
+  assert.deepEqual(associate.security, [{ bearerAuth: [] }]);
+  assert.deepEqual(associate['x-autorizacion'].roles, ['ADMIN']);
+  assert.ok(definitions.SubirImagenPeticion.properties.uso.enum.includes('TIPO_HABITACION'));
+  assert.match(upload.description, /JPG\/PNG hasta 5 MiB/);
+  assert.match(associate.description, /exactamente una principal/);
+  assert.deepEqual(definitions.ImagenSubida.required, ['clave']);
+  assert.deepEqual(definitions.FotoCatalogo.required, ['clave', 'url', 'principal', 'orden']);
+  assert.match(definitions.FotoCatalogo.examples[0].url, /^https:\/\/d13s29erv78l4g\.cloudfront\.net\/tipos\//);
+  assert.doesNotMatch(definitions.UrlFoto.description, /\bMinIO\b/i);
+});

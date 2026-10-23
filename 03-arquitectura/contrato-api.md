@@ -163,4 +163,12 @@ Este es un inventario inicial obtenido del [código de API en 9396c82](https://g
 | Nacionalidad | API #55 / PR #56 ya integradas en `dev`. | El canónico incluye el cambio; al revisar, la copia de la web aún exigía nacionalidad. Eliminar la copia YAML y generar tipos desde docs en la tarea de adopción de web. |
 | Pagos | [ADR-017](adr/ADR-017-pasarela-recurrente.md) acuerda Recurrente; la base del contrato aún describe Stripe. | Reconciliar rutas, firmas, DTO y transición con la implementación de pagos, sin sustituir nombres a ciegas. |
 
+### Fotos de tipos de habitación con S3 y CloudFront (docs #37)
+
+El flujo de galería de tipos de habitación (`HU-ADM-03`) utiliza dos operaciones del contrato canónico:
+- `POST /api/v1/archivos/imagenes` (`multipart/form-data`, `uso=TIPO_HABITACION`, exclusivo `ADMIN`, `JPG`/`PNG` reales hasta 5 MiB): escribe el objeto bajo `tipos/` en el bucket público de assets y devuelve `ImagenSubida` (`{ clave }`).
+- `PUT /api/v1/admin/tipos-habitacion/{id}/fotos` (`FotosTipoPeticion`, exclusivo `ADMIN`): valida las claves bajo `tipos/`, exige exactamente una foto con `principal: true`, guarda el orden y devuelve `TipoHabitacionAdmin` con `FotoCatalogo[]` (`clave`, `url`, `principal`, `orden`).
+
+Se actualizaron los ejemplos de este flujo en [`openapi.yaml`](../openapi.yaml) para usar el dominio CDN (`https://d13s29erv78l4g.cloudfront.net/tipos/...`) en lugar de `localhost:9000` / MinIO, conservando intactos los esquemas y nombres de campos. El estado por componente (infraestructura AWS + política IAM `tipos/*` verificadas; implementación en [API #82](https://github.com/villaserenaguatee/villa-serena-api/issues/82) e integración en [web #69](https://github.com/villaserenaguatee/villa-serena-web/issues/69) pendientes) y el checklist de verificación están en la [guía operativa de fotos de tipos de habitación](../04-guias-y-referencia/fotos-tipos-habitacion.md).
+
 Los documentos de `04-guias-y-referencia/historico` e `historial-prompts` conservan referencias antiguas al contrato en API como parte del historial. Para trabajo nuevo se aplica esta guía y el YAML de docs.
