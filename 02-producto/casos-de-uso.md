@@ -98,7 +98,7 @@ Los IDs UC-09 y UC-12 no se utilizan.
 | Actores | Cliente o Recepcionista |
 | Historias | HU-HUE-03, HU-HUE-04, HU-REC-03 |
 | Nivel | 1 |
-| Precondiciones | Existen tipos de habitación activos con habitaciones activas y precio base. |
+| Precondiciones | Existen tipos de habitación activos con habitaciones activas y precio base (y, en el portal de ofertas, ofertas comerciales con habitaciones elegibles configuradas). |
 | Estados (07) | Ninguno (solo consulta) |
 | Reglas (10) | RN-HAB-001, RN-RES-002, RN-RES-005, RN-RES-006, RN-RES-007, RN-RES-008, RN-TAR-001, RN-TAR-002, RN-TAR-005, RN-TAR-006, RN-TAR-007, RN-TAR-008, RN-TAR-009 |
 
@@ -106,9 +106,9 @@ Los IDs UC-09 y UC-12 no se utilizan.
 
 1. El actor indica fecha de entrada, fecha de salida y número de huéspedes.
 2. El sistema valida: de 1 a 30 noches, sin fechas pasadas, salida posterior a la entrada y entrada a no más de 365 días.
-3. El sistema toma los tipos **activos** con capacidad suficiente.
-4. Para cada tipo y noche, calcula la disponibilidad: habitaciones activas no `FUERA_DE_SERVICIO` − reservas `PENDIENTE_PAGO`, `CONFIRMADA` o `EN_ESTADIA` del tipo (con o sin habitación).
-5. Muestra solo los tipos con disponibilidad en **todas** las noches, con el precio de cada noche (base × temporada × fin de semana, redondeado a 2 decimales) y el total en quetzales.
+3. El sistema toma los tipos **activos** (o las ofertas elegibles de tipos activos) con capacidad suficiente.
+4. Para cada tipo y noche, calcula la disponibilidad: habitaciones activas no `FUERA_DE_SERVICIO` − reservas `PENDIENTE_PAGO`, `CONFIRMADA` o `EN_ESTADIA` del tipo (con o sin habitación). En la búsqueda por oferta comercial (`/api/v1/publico/ofertas/disponibilidad`), comprueba además que exista al menos una habitación elegible (`catalog_offer_rooms`) libre en todas las noches e informa `inventarioCompartido` cuando aplique.
+5. Muestra solo las opciones con disponibilidad en **todas** las noches: en cotizaciones por tipo, con el precio de cada noche (`room_types.base_price` × temporada × fin de semana, redondeado a 2 decimales); en cotizaciones por oferta comercial, con el precio fijo por noche de la oferta (`catalog_offers.base_price`, `temporada: null`, `finDeSemana: false`), y el total en quetzales.
 
 **Flujos alternativos**
 
@@ -605,7 +605,7 @@ Los IDs UC-09 y UC-12 no se utilizan.
 | Actores | Administrador |
 | Historias | HU-ADM-03, HU-ADM-06, HU-ADM-07 |
 | Nivel | 1 |
-| Precondiciones | Existen tipos de habitación con precio base. |
+| Precondiciones | Existen tipos de habitación con precio base (`room_types.base_price`). |
 | Estados (07) | Ninguno |
 | Reglas (10) | RN-HAB-009, RN-HAB-010, RN-TAR-002, RN-TAR-003, RN-TAR-004, RN-TAR-007, RN-TAR-011, RN-TAR-012 |
 
@@ -614,15 +614,15 @@ Los IDs UC-09 y UC-12 no se utilizan.
 1. El Administrador crea una temporada: nombre, fechas, porcentaje de ajuste (positivo o negativo) y si aplica a todos los tipos o a algunos.
 2. El sistema valida que la fecha de fin no sea anterior a la de inicio, que el ajuste sea mayor a −100 % y que no se traslape con otra temporada del mismo tipo.
 3. El Administrador define el ajuste de fin de semana de cada tipo (por defecto 0 %), que aplica a las noches de viernes y sábado.
-4. Los cambios aplican a las búsquedas y reservas **nuevas**.
+4. Los cambios aplican a las búsquedas y reservas **nuevas** cotizadas por tipo (`/api/v1/publico/disponibilidad` y Recepción). Las ofertas comerciales (`/api/v1/publico/ofertas`) mantienen su propio `catalog_offers.base_price` fijo por noche hasta que se administren en `API #83`.
 
 **Flujos alternativos**
 
 - **A1 (paso 2) — Temporada traslapada:** se muestra la temporada en conflicto y no se guarda.
 - **A2 (pasos 2 y 3) — Ajuste de −100 % o menos:** no se guarda.
-- **A3 — Editar o eliminar una temporada, o cambiar el precio base:** solo afecta reservas nuevas.
+- **A3 — Editar o eliminar una temporada, o cambiar el precio base del tipo:** solo afecta reservas nuevas cotizadas por tipo.
 
-**Postcondiciones:** tarifas vigentes configuradas; las reservas existentes conservan su precio. No hay vista previa de tarifas.
+**Postcondiciones:** tarifas vigentes por tipo configuradas; las reservas existentes conservan su precio. No hay vista previa de tarifas.
 
 ---
 
