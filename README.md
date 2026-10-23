@@ -52,6 +52,7 @@ villa-serena-docs/
 
 ### [04 · Guías y Referencia Operativa](04-guias-y-referencia/)
 * **[Guía de Arranque Local](04-guias-y-referencia/arranque-local.md):** Pasos para levantar el ecosistema completo con Docker Compose.
+* **[Guion de Validación del Flujo MVP (`v0.1.0`) con Recurrente](04-guias-y-referencia/validacion-mvp-v0-1-0.md):** Precondiciones, clasificación respecto al `OBJ-INT` histórico, los 10 pasos de prueba del MVP y plantilla de registro de evidencias.
 * **[Pagos con Recurrente](04-guias-y-referencia/arranque-local.md#42-probar-pagos-con-recurrente):** Configuración local de Sandbox y webhook. La [guía de Stripe CLI](04-guias-y-referencia/stripe-cli.md) se conserva como referencia histórica.
 * **[Diseño de Integración con Canales](04-guias-y-referencia/integracion-canales.md):** Simulación de ingesta de reservas externas.
 
