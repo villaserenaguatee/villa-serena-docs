@@ -139,7 +139,7 @@ Para evitar que el equipo o los agentes asuman que editar tipos o habitaciones e
 |---|---|---|---|
 | **CRUD de tipos de habitación (`room_types`) y sus fotos** | Implementado (`GET/POST/PUT /api/v1/admin/tipos-habitacion`, `PATCH .../estado`, `PUT .../fotos`) con auditoría en `administration_audit`. | Pantalla administrativa conectada vía BFF para tipos y subida/asociación de fotos (ver [guía de fotos](fotos-tipos-habitacion.md) y [`HU-ADM-03`](../02-producto/historias-de-usuario/HU%20-%20Administrador.md)). | `API #82`: alinear permisos de lectura o vistas compartidas si Recepción o Administración requieren cruces adicionales sin abrir rutas de otro rol. |
 | **CRUD de habitaciones físicas (`rooms`)** | Implementado (`GET/POST/PUT /api/v1/admin/habitaciones`, `PATCH .../estado`), validando unicidad de número y ausencia de reservas activas al cambiar tipo o desactivar (`RN-HAB-007`). | Pantalla administrativa de habitaciones físicas conectada vía BFF. | `web #69`: reflejar con claridad en la UI de Administración la diferencia entre habitación física, tipo operativo y oferta comercial publicada. |
-| **Catálogo público y reserva por oferta (`catalog_offers`, `catalog_offer_rooms`, `room_features`)** | Implementado en lectura y reserva pública (`GET /api/v1/publico/ofertas`, `GET /api/v1/publico/ofertas/disponibilidad`, `POST /api/v1/publico/ofertas/{slug}/reservas`). Las ofertas actuales provienen de migraciones/datos de catálogo (`V17`, `V22`, `V24`). | El portal público consume `/api/v1/publico/ofertas` y `/api/v1/publico/ofertas/disponibilidad` como vitrina principal de reserva. | **`API #83` y `web #69`:** aún **no existen endpoints `/api/v1/admin/ofertas`** en `openapi.yaml` ni pantalla ADMIN publicada para crear/editar `catalog_offers`, su `base_price`, `room_features` o `catalog_offer_rooms`. |
+| **Catálogo público y reserva por oferta (`catalog_offers`, `catalog_offer_rooms`, `room_features`)** | Implementado en lectura y reserva pública (`GET /api/v1/publico/ofertas`, `GET /api/v1/publico/ofertas/disponibilidad`, `POST /api/v1/publico/ofertas/{slug}/reservas`). Las ofertas actuales provienen de migraciones/datos de catálogo (`V17`, `V22`, `V24`). | El portal público consume `/api/v1/publico/ofertas` y `/api/v1/publico/ofertas/disponibilidad` como vitrina principal de reserva. | **`API #83` y `web #69`:** la base auditada no disponía de endpoints `/api/v1/admin/ofertas` ni pantalla ADMIN publicada para crear/editar `catalog_offers`, su `base_price`, `room_features` o `catalog_offer_rooms`. |
 | **Sincronización o separación explícita entre `room_types` y `catalog_offers`** | `room_types.base_price` y `catalog_offers.base_price` viven separados; insertar en `rooms` no inserta en `catalog_offer_rooms`. | Si `ADMIN` cambia el precio de un tipo o agrega una habitación en el panel, la vitrina de ofertas públicas no cambia su precio fijo ni sus habitaciones elegibles hasta que se administre la oferta. | **`API #83`:** definir e implementar el contrato administrativo de ofertas y vínculo de habitaciones elegibles. **`API #84`:** pruebas de regresión de disponibilidad/catálogo entre tipos y ofertas. |
 
 > **Nota sobre trabajo local no publicado:** cualquier ajuste en ramas locales o worktrees de `villa-serena-api` o `villa-serena-web` que aún no esté integrado en `dev`/`main` ni fijado en `api-contract.json` no se considera parte del comportamiento desplegado. Antes de exponer controles de edición de ofertas en la web, debe aprobarse su contrato en `openapi.yaml` y completarse `API #83`.
@@ -159,3 +159,70 @@ Para comprobar el comportamiento actual y validar futuras entregas de `API #82`,
 3. **Ofertas comerciales (`/api/v1/publico/ofertas`):**
    - Verificar que `GET /api/v1/publico/ofertas` devuelve cada oferta con su `slug`, `apiTypeId`, `price` (`catalog_offers.base_price`) y `bookable` sin publicar notas internas (`pendingFeatures`).
    - Verificar que `GET /api/v1/publico/ofertas/disponibilidad` exige tanto cupo en el `room_type_id` como al menos una habitación elegible en `catalog_offer_rooms` libre durante todas las noches del rango, e informa `inventarioCompartido` cuando aplica.
+
+## 6. Ampliación de ofertas para revisión con API #83
+
+La PR API #97 integrada en `develop` incorporó las operaciones básicas de tipos y
+habitaciones. Esa entrega no implementó la gestión de `catalog_offers`,
+`catalog_offer_rooms` ni `room_features`. La ampliación siguiente completa ese
+bloque como propuesta coordinada de contrato e implementación; no acredita
+publicación en producción ni una pantalla de Administración conectada.
+
+### Operaciones propuestas
+
+| Método y ruta | Uso |
+|---|---|
+| `GET /api/v1/admin/ofertas` | Consultar ofertas y borradores con sus vínculos y cantidades reales. |
+| `GET /api/v1/admin/ofertas/{slug}` | Recuperar todos los campos editables, galería del tipo y cantidades. |
+| `POST /api/v1/admin/ofertas/{slug}` | Crear la oferta; devuelve 201 y rechaza slug existente con 409. |
+| `PUT /api/v1/admin/ofertas/{slug}` | Reemplazar contenido, precio, publicación y vínculos de forma atómica. |
+| `PATCH /api/v1/admin/ofertas/{slug}/publicacion` | Cambiar solo publicación; permite retirar ofertas anteriores sin completar de nuevo sus atributos. |
+| `GET /api/v1/admin/habitaciones/{id}/caracteristicas` | Leer características registradas; `{}` si todavía no hay registro. |
+| `PUT /api/v1/admin/habitaciones/{id}/caracteristicas` | Registrar capacidad, superficie, camas y características físicas. |
+
+Todas exigen ADMIN. Los registros históricos incompletos omiten atributos no registrados; no se inventan medidas ni se exponen notas internas. Las unidades se crean por las operaciones existentes de
+habitaciones y no se incorporan automáticamente a una oferta.
+
+La oferta recibe tipo, nombre, descripción, piso, capacidad, superficie, un mapa
+de tipos de cama a cantidades, características, preferencias, precio por noche,
+publicación, orden e IDs de habitaciones. El slug es estable; no se elimina el
+historial para renombrarlo. El esquema exacto está en `GuardarOfertaAdminPeticion`
+del contrato. Un PUT es un reemplazo completo, no una edición parcial.
+
+Para mantener la promesa de piso del catálogo actual, las unidades vinculadas
+comparten el piso anunciado y acreditan camas, superficie y características;
+pueden tener capacidad mayor a la oferta, pero esta no supera la del tipo. Una
+publicación necesita tipo activo, al menos una unidad activa acreditada y galería
+del tipo. Las características físicas comprometidas con reservas activas no se
+pueden reemplazar. Los cambios dejan procedencia y auditoría administrativa.
+
+`publicada=false` conserva la oferta y sus vínculos, pero la excluye del catálogo,
+de la disponibilidad y de nuevas reservas. `bookable` sigue siendo elegibilidad,
+no publicación. No se borran ni recalculan reservas anteriores. Sus noches, total
+y snapshot se mantienen. El número de unidades vinculadas y el total del tipo se
+calculan desde las filas, incluyendo inactivas; no son disponibilidad por fechas.
+
+La fuente de precio por oferta continúa siendo `catalog_offers.base_price`; el
+registro administrativo `precioPorNoche`, el `price` público y la cotización usan
+ese mismo importe. `room_types.base_price` sigue rigiendo el recorrido por tipo;
+no se sincronizan automáticamente dos productos que tienen cotizaciones distintas.
+No se añaden recargos ni cambios de pagos. La creación revalida el contenido tras
+bloquear el tipo para no usar una cotización leída antes de una edición concurrente.
+
+Las fotos se cargan y asocian mediante API #82. El catálogo resuelve principal,
+orden y URLs desde la galería del tipo al consultar; una oferta no mantiene una
+copia de objetos ni reconstruye URLs de S3. Los registros históricos sin galería
+del tipo conservan sus referencias ilustrativas anteriores. La forma de las
+respuestas públicas no cambia y el frontend debe conservar el diseño aprobado.
+
+### Verificación del bloque
+
+Las pruebas API usan PostgreSQL temporal, Flyway y almacenamiento de prueba.
+Comprueban una tarjeta por oferta aunque haya varias unidades, edición y recarga,
+fotos compartidas, publicación, vínculos inválidos sin escritura parcial,
+permisos, precio de cotización, reserva real por oferta, conservación del snapshot
+y agotamiento de unidades en un rango. El recorrido con S3/CloudFront real y la
+interfaz de web #69 deben verificarse por separado; no se dan por ejecutados aquí.
+
+Después de la revisión e integración, cada consumidor debe fijar el SHA completo
+de docs y regenerar sus tipos; no se copia el YAML al API o al frontend.

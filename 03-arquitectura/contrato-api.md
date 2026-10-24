@@ -179,3 +179,12 @@ Los documentos de `04-guias-y-referencia/historico` e `historial-prompts` conser
 Web main `e0587c3013dbea7c68c494c4dd4329b37db720eb` consume este contrato en `77225a11d06daf576a404e2a557185868bd49c56`. Ya retiró su copia YAML y nacionalidad obligatoria del MVP; el inventario inicial anterior es histórico y no describe por sí mismo main actual. La hora pública y el detalle de Recepción, los estados de checkout y la recuperación por intento están adoptados. El DTO de alta de Recepción sigue sin hora estimada.
 
 Esta reconciliación modifica documentos narrativos, no `openapi.yaml`, ni el SHA fijado por web. Las operaciones sin esquema canónico se inventarían si se añadieran unilateralmente: se registran en la [propuesta separada de contratos](propuestas/contratos-web-pendientes.md), pendiente de acuerdo. Véanse el [estado por módulo](../02-producto/reconciliacion-frontend-20261022.md) y el [manual de recorridos](../04-guias-y-referencia/recorridos-web.md).
+
+## Propuesta coordinada de ofertas administrativas API 83
+
+La ampliación `docs/83-contrato-ofertas-admin` añade el contrato administrativo de
+ofertas y características físicas descrito en la
+[guía de gestión de habitaciones](../04-guias-y-referencia/admin-habitaciones-ofertas-tipos.md#6-ampliación-de-ofertas-para-revisión-con-api-83).
+Reutiliza galería por tipo y mantiene separados precio operativo por tipo y precio
+comercial por oferta. Su revisión debe coordinarse con la PR del API y web #69;
+no autoriza rediseñar el catálogo ni declara validado un despliegue.
