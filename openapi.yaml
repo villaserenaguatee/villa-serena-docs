@@ -8596,6 +8596,295 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /api/v1/admin/ofertas:
+    get:
+      tags:
+        - admin
+      operationId: listarOfertasAdmin
+      summary: Consultar ofertas publicadas y borradores
+      security:
+        - bearerAuth: []
+      x-historias:
+        - HU-ADM-03
+        - HU-ADM-04
+      x-autorizacion:
+        roles:
+          - ADMIN
+        nivel: 1
+      responses:
+        '200':
+          description: Consultar ofertas publicadas y borradores
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OfertaAdmin'
+                maxItems: 100000
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      description: >-
+        Conserva snapshots y precios de reservas existentes. Los borradores no aparecen en consultas públicas ni
+        se pueden reservar. bookable continúa indicando elegibilidad general, no publicación ni disponibilidad
+        por fechas. Las vinculaciones son atómicas y las cantidades se derivan de registros; no se duplican
+        tarjetas por unidad. Las escrituras dejan auditoría administrativa. Una oferta ajena al tipo, piso o
+        atributos de sus unidades se rechaza sin guardar parcialmente.
+  /api/v1/admin/ofertas/{slug}:
+    parameters:
+      - name: slug
+        in: path
+        required: true
+        schema:
+          type: string
+          maxLength: 80
+          pattern: ^[a-z0-9]+(?:-[a-z0-9]+)*$
+    get:
+      tags:
+        - admin
+      operationId: detalleOfertaAdmin
+      summary: Consultar oferta y cantidades derivadas
+      security:
+        - bearerAuth: []
+      x-historias:
+        - HU-ADM-03
+        - HU-ADM-04
+      x-autorizacion:
+        roles:
+          - ADMIN
+        nivel: 1
+      responses:
+        '200':
+          description: Consultar oferta y cantidades derivadas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfertaAdmin'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      description: >-
+        Conserva snapshots y precios de reservas existentes. Los borradores no aparecen en consultas públicas ni
+        se pueden reservar. bookable continúa indicando elegibilidad general, no publicación ni disponibilidad
+        por fechas. Las vinculaciones son atómicas y las cantidades se derivan de registros; no se duplican
+        tarjetas por unidad. Las escrituras dejan auditoría administrativa. Una oferta ajena al tipo, piso o
+        atributos de sus unidades se rechaza sin guardar parcialmente.
+    post:
+      tags:
+        - admin
+      operationId: crearOfertaAdmin
+      summary: Crear oferta con slug inmutable
+      security:
+        - bearerAuth: []
+      x-historias:
+        - HU-ADM-03
+        - HU-ADM-04
+      x-autorizacion:
+        roles:
+          - ADMIN
+        nivel: 1
+      responses:
+        '201':
+          description: Crear oferta con slug inmutable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfertaAdmin'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuardarOfertaAdminPeticion'
+      description: >-
+        Conserva snapshots y precios de reservas existentes. Los borradores no aparecen en consultas públicas ni
+        se pueden reservar. bookable continúa indicando elegibilidad general, no publicación ni disponibilidad
+        por fechas. Las vinculaciones son atómicas y las cantidades se derivan de registros; no se duplican
+        tarjetas por unidad. Las escrituras dejan auditoría administrativa. Una oferta ajena al tipo, piso o
+        atributos de sus unidades se rechaza sin guardar parcialmente.
+    put:
+      tags:
+        - admin
+      operationId: actualizarOfertaAdmin
+      summary: Reemplazar contenido publicación precio y vínculos de oferta
+      security:
+        - bearerAuth: []
+      x-historias:
+        - HU-ADM-03
+        - HU-ADM-04
+      x-autorizacion:
+        roles:
+          - ADMIN
+        nivel: 1
+      responses:
+        '200':
+          description: Reemplazar contenido publicación precio y vínculos de oferta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfertaAdmin'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuardarOfertaAdminPeticion'
+      description: >-
+        Conserva snapshots y precios de reservas existentes. Los borradores no aparecen en consultas públicas ni
+        se pueden reservar. bookable continúa indicando elegibilidad general, no publicación ni disponibilidad
+        por fechas. Las vinculaciones son atómicas y las cantidades se derivan de registros; no se duplican
+        tarjetas por unidad. Las escrituras dejan auditoría administrativa. Una oferta ajena al tipo, piso o
+        atributos de sus unidades se rechaza sin guardar parcialmente.
+  /api/v1/admin/habitaciones/{id}/caracteristicas:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+    get:
+      tags:
+        - admin
+      operationId: consultarCaracteristicasHabitacionAdmin
+      summary: Consultar características físicas registradas
+      security:
+        - bearerAuth: []
+      x-historias:
+        - HU-ADM-03
+        - HU-ADM-04
+      x-autorizacion:
+        roles:
+          - ADMIN
+        nivel: 1
+      responses:
+        '200':
+          description: Consultar características físicas registradas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaracteristicasHabitacionAdmin'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      description: >-
+        No modifica piso ni tipo. El registro conserva procedencia administrativa. Rechaza cambios de
+        características con reservas activas asignadas (409 RESERVAS_ACTIVAS).
+    put:
+      tags:
+        - admin
+      operationId: guardarCaracteristicasHabitacionAdmin
+      summary: Registrar características físicas sin afectar reservas activas
+      security:
+        - bearerAuth: []
+      x-historias:
+        - HU-ADM-03
+        - HU-ADM-04
+      x-autorizacion:
+        roles:
+          - ADMIN
+        nivel: 1
+      responses:
+        '200':
+          description: Registrar características físicas sin afectar reservas activas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaracteristicasHabitacionAdmin'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CaracteristicasHabitacionPeticion'
+      description: >-
+        No modifica piso ni tipo. El registro conserva procedencia administrativa. Rechaza cambios de
+        características con reservas activas asignadas (409 RESERVAS_ACTIVAS).
+
+  /api/v1/admin/ofertas/{slug}/publicacion:
+    parameters:
+      - name: slug
+        in: path
+        required: true
+        schema: {type: string, maxLength: 80, pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$'}
+    patch:
+      tags: [admin]
+      operationId: cambiarPublicacionOfertaAdmin
+      summary: Publicar o despublicar sin reemplazar contenido ni vínculos
+      description: >-
+        ADMIN puede despublicar una oferta anterior aunque su contenido requiera revisión.
+        Para publicar exige tipo activo, galería y al menos una unidad activa acreditada.
+        Conserva vínculos, historial y precios de reservas; deja auditoría administrativa.
+      security: [{bearerAuth: []}]
+      x-historias: [HU-ADM-03, HU-ADM-04]
+      x-autorizacion: {roles: [ADMIN], nivel: 1}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PublicacionOfertaPeticion'}
+      responses:
+        '200':
+          description: Oferta actualizada
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/OfertaAdmin'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+
 components:
   securitySchemes:
     bearerAuth:
@@ -8756,6 +9045,248 @@ components:
             detalles: []
 
   schemas:
+    PublicacionOfertaPeticion:
+      type: object
+      additionalProperties: false
+      required: [publicada]
+      properties:
+        publicada: {type: boolean}
+    CaracteristicasHabitacionPeticion:
+      type: object
+      additionalProperties: false
+      required:
+        - capacidad
+        - superficieM2
+        - camas
+        - caracteristicas
+      properties:
+        capacidad:
+          type: integer
+          minimum: 1
+        superficieM2:
+          type: number
+          minimum: 0.01
+        camas:
+          type: object
+          minProperties: 1
+          maxProperties: 20
+          propertyNames:
+            type: string
+            minLength: 1
+            maxLength: 40
+          additionalProperties:
+            type: integer
+            minimum: 1
+            maximum: 30
+        caracteristicas:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 200
+          maxItems: 100
+    CaracteristicasHabitacionAdmin:
+      type: object
+      additionalProperties: false
+      description: >-
+        Sin características registradas devuelve un objeto vacío. Los registros históricos incompletos
+        omiten atributos no registrados; no se inventan valores. piso procede de rooms y no es editable aquí.
+      properties:
+        piso: {type: integer, minimum: 1}
+        capacidad: {type: integer, minimum: 1}
+        superficieM2: {type: number, minimum: 0.01}
+        camas:
+          type: object
+          additionalProperties: {type: integer, minimum: 1}
+        caracteristicas:
+          type: array
+          items: {type: string}
+    GuardarOfertaAdminPeticion:
+      type: object
+      additionalProperties: false
+      required:
+        - tipoHabitacionId
+        - nombre
+        - descripcion
+        - piso
+        - capacidad
+        - superficieM2
+        - camas
+        - caracteristicas
+        - preferencias
+        - precioPorNoche
+        - publicada
+        - orden
+        - habitacionIds
+      properties:
+        tipoHabitacionId:
+          $ref: '#/components/schemas/Id'
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 100
+        descripcion:
+          type: string
+          minLength: 1
+          maxLength: 4000
+        piso:
+          type: integer
+          minimum: 1
+        capacidad:
+          type: integer
+          minimum: 1
+        superficieM2:
+          type: number
+          minimum: 0.01
+        camas:
+          type: object
+          minProperties: 1
+          maxProperties: 20
+          propertyNames:
+            type: string
+            minLength: 1
+            maxLength: 40
+          additionalProperties:
+            type: integer
+            minimum: 1
+            maximum: 30
+        caracteristicas:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 200
+          maxItems: 100
+        preferencias:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 100
+          maxItems: 30
+        precioPorNoche:
+          type: number
+          exclusiveMinimum: 0
+          multipleOf: 0.01
+          maximum: 9999999999.99
+        publicada:
+          type: boolean
+        orden:
+          type: integer
+          minimum: 0
+        habitacionIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/Id'
+          maxItems: 1000
+          uniqueItems: true
+      description: >-
+        Creación o reemplazo completo. No admite cupo manual ni fotos independientes: las unidades se vinculan por
+        ID real y la galería pertenece al tipo. Todas las vinculadas deben acreditar el mismo piso, camas,
+        superficie y características; su capacidad debe cubrir la oferta sin superar el tipo. El precio propio de
+        la oferta es el utilizado en catálogo y cotización. Para publicar exige tipo activo, fotos y al menos una
+        unidad activa acreditada.
+    OfertaAdmin:
+      type: object
+      additionalProperties: false
+      required:
+        - slug
+        - tipoHabitacionId
+        - nombre
+        - descripcion
+        - piso
+        - capacidad
+        - superficieM2
+        - camas
+        - caracteristicas
+        - preferencias
+        - precioPorNoche
+        - publicada
+        - orden
+        - habitacionIds
+        - cantidadHabitaciones
+        - cantidadHabitacionesTipo
+        - fotos
+      properties:
+        slug:
+          type: string
+          minLength: 1
+          maxLength: 80
+        tipoHabitacionId:
+          $ref: '#/components/schemas/Id'
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 100
+        descripcion:
+          type: string
+          minLength: 1
+          maxLength: 4000
+        piso:
+          type: integer
+          minimum: 1
+        capacidad:
+          type: integer
+          minimum: 1
+        superficieM2:
+          type: number
+          minimum: 0.01
+        camas:
+          type: object
+          minProperties: 1
+          maxProperties: 20
+          propertyNames:
+            type: string
+            minLength: 1
+            maxLength: 40
+          additionalProperties:
+            type: integer
+            minimum: 1
+            maximum: 30
+        caracteristicas:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 200
+          maxItems: 100
+        preferencias:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 100
+          maxItems: 30
+        precioPorNoche:
+          type: number
+          exclusiveMinimum: 0
+          multipleOf: 0.01
+          maximum: 9999999999.99
+        publicada:
+          type: boolean
+        orden:
+          type: integer
+          minimum: 0
+        habitacionIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/Id'
+          maxItems: 1000
+          uniqueItems: true
+        cantidadHabitaciones:
+          type: integer
+          minimum: 0
+          description: Número de vínculos físicos, no disponibilidad por fechas.
+        cantidadHabitacionesTipo:
+          type: integer
+          minimum: 0
+          description: Total real de rooms del tipo, incluyendo inactivas.
+        fotos:
+          type: array
+          items:
+            $ref: '#/components/schemas/FotoCatalogo'
+          maxItems: 1000
+
     # ------------------------------------------------------------------
     # Error
     # ------------------------------------------------------------------
