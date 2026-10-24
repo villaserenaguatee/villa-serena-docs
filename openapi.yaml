@@ -4652,6 +4652,39 @@ paths:
           schema:
             $ref: "#/components/schemas/Id"
           example: 1
+  /api/v1/incidencias/habitaciones:
+    get:
+      tags:
+        - incidencias
+      operationId: listarHabitacionesIncidencias
+      summary: Catálogo mínimo de habitaciones para reportes de incidencias
+      description: |
+        HU-MYL-06 · HU-REC-17.
+        Catálogo mínimo de habitaciones operativas activas (id, número, piso) para reportar incidencias desde Recepción o Mantenimiento y Limpieza de cualquier área.
+      security:
+        - bearerAuth: []
+      x-historias:
+        - HU-MYL-06
+        - HU-REC-17
+      x-autorizacion:
+        roles:
+          - RECEPCION
+          - MANTENIMIENTO_LIMPIEZA
+        nivel: 1
+        condiciones: Accesible a Recepción y al personal de Mantenimiento y Limpieza de cualquier área (Limpieza, Mantenimiento o Ambas).
+      responses:
+        "200":
+          description: Catálogo de habitaciones operativas para reportar incidencias.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HabitacionOperativa"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
   /api/v1/incidencias/{id}:
     get:
       tags:
