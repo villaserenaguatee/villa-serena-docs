@@ -15,6 +15,8 @@
 | Gestión ampliada | `/api/v1/gestion/{tipo}` para activos/preventivos/órdenes/gastos y servicios operativos existentes | Envoltorio id/clave/version/datos y auditoría; permisos dependen de recurso | Inventariar cada DTO y transición con pruebas; insumos/compras/movimientos ya son canónicos y no se vuelven a inventar. |
 | Catálogos legacy | `/api/v1/admin/catalogos/tipos`, habitaciones, personal y temporadas | Datos básicos y perfiles versionados existentes | Plan de compatibilidad con operaciones canónicas: API #58/#82/#83/#84 y #92, sin sustituir datos ni respuestas silenciosamente. |
 
+La propuesta detallada de API #94 está en [Chat: edición, eliminación y preferencias](chat-edicion-eliminacion-preferencias.md). Sigue pendiente de aprobación y no cambia el OpenAPI vigente.
+
 ## No confundir propuesta con implementación
 
 - API #88–#93 cubren operaciones canónicas ya aprobadas, aún ausentes en el backend inspeccionado; no requieren inventar DTO adicionales desde web.
