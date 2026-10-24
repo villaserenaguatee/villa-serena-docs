@@ -2,7 +2,7 @@
 
 > Estado 22/10/2026: frontend publicado en Vercel, HTTP mediante BFF y API independiente; el diseño VPS anterior se conserva como antecedente/propuesta, no como topología acreditada. El portal web complementa Android, sin trasladar push Expo al navegador. Véase [reconciliación](../02-producto/reconciliacion-frontend-20261022.md) y docs #38.
 
-> Conciliación con la [PR #36](https://github.com/villaserenaguatee/villa-serena-docs/pull/36), todavía pendiente de integración: almacenamiento definido por [ADR-007](https://github.com/villaserenaguatee/villa-serena-docs/blob/5dcd7a26ea01a0063375aa18df8fe792e4270301/03-arquitectura/adr/ADR-007-almacenamiento-r2-s3.md): R2 en `dev`, S3 en `prod` y `local` mínimo sin nube. Los comandos y variables vigentes están en [ENTORNOS del API](https://github.com/villaserenaguatee/villa-serena-api/blob/dev/docs/ENTORNOS.md); los diseños de despliegue y backups de otras secciones no acreditan aprovisionamiento.
+> Almacenamiento definido por [ADR-007](adr/ADR-007-almacenamiento-r2-s3.md): R2 en `dev`, S3 en `prod` y `local` mínimo sin nube. Los comandos y variables vigentes están en [ENTORNOS del API](https://github.com/villaserenaguatee/villa-serena-api/blob/dev/docs/ENTORNOS.md); los diseños de despliegue y backups de otras secciones no acreditan aprovisionamiento.
 
 Este documento describe la arquitectura global, topología de servicios, patrón BFF, seguridad (JWT y CORS) y stack tecnológico oficial para el ecosistema de **Villa Serena**.
 
