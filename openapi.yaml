@@ -9010,6 +9010,204 @@ paths:
         '404': {$ref: '#/components/responses/NotFound'}
         '409': {$ref: '#/components/responses/Conflict'}
 
+  /api/v1/admin/hotel/editorial/{idioma}:
+    get:
+      tags:
+        - admin
+      operationId: consultarBorradorEditorial
+      summary: Consultar borrador editorial
+      description: >-
+        ADMIN. Hotel configurado. 409 CONTENIDO_CAMBIADO conserva borrador y publicación anteriores. Guardar no
+        publica. Publicar exige revisión vigente y persiste versión inmutable; repetir esa publicación es
+        idempotente.
+      parameters:
+        - name: idioma
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - es
+              - en
+      security:
+        - bearerAuth: []
+      x-autorizacion:
+        roles:
+          - ADMIN
+        nivel: 1
+      responses:
+        '200':
+          description: 'Documento del idioma solicitado. Borrador inexistente: revisión 0 y lista vacía.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EditorialSitio'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: HOTEL_NO_CONFIGURADO o CONTENIDO_NO_PUBLICADO.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    put:
+      tags:
+        - admin
+      operationId: guardarBorradorEditorial
+      summary: Guardar borrador editorial
+      description: >-
+        ADMIN. Hotel configurado. 409 CONTENIDO_CAMBIADO conserva borrador y publicación anteriores. Guardar no
+        publica. Publicar exige revisión vigente y persiste versión inmutable; repetir esa publicación es
+        idempotente.
+      parameters:
+        - name: idioma
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - es
+              - en
+      security:
+        - bearerAuth: []
+      x-autorizacion:
+        roles:
+          - ADMIN
+        nivel: 1
+      responses:
+        '200':
+          description: 'Documento del idioma solicitado. Borrador inexistente: revisión 0 y lista vacía.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EditorialSitio'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: HOTEL_NO_CONFIGURADO o CONTENIDO_NO_PUBLICADO.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '503':
+          description: ALMACEN_NO_DISPONIBLE. No se modificó el borrador ni la versión publicada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuardarEditorialPeticion'
+  /api/v1/admin/hotel/editorial/{idioma}/publicacion:
+    post:
+      tags:
+        - admin
+      operationId: publicarEditorial
+      summary: Publicar borrador editorial
+      description: >-
+        ADMIN. Hotel configurado. 409 CONTENIDO_CAMBIADO conserva borrador y publicación anteriores. Guardar no
+        publica. Publicar exige revisión vigente y persiste versión inmutable; repetir esa publicación es
+        idempotente.
+      parameters:
+        - name: idioma
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - es
+              - en
+      security:
+        - bearerAuth: []
+      x-autorizacion:
+        roles:
+          - ADMIN
+        nivel: 1
+      responses:
+        '200':
+          description: 'Documento del idioma solicitado. Borrador inexistente: revisión 0 y lista vacía.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EditorialSitio'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: HOTEL_NO_CONFIGURADO o CONTENIDO_NO_PUBLICADO.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '503':
+          description: ALMACEN_NO_DISPONIBLE. No se modificó el borrador ni la versión publicada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicarEditorialPeticion'
+  /api/v1/publico/hotel/editorial/{idioma}:
+    get:
+      tags:
+        - publico
+      operationId: consultarEditorialPublicado
+      summary: Consultar contenido editorial publicado
+      description: >-
+        Solo versión publicada. 404 CONTENIDO_NO_PUBLICADO si no existe; nunca devuelve borrador ni traduce otro
+        idioma.
+      parameters:
+        - name: idioma
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - es
+              - en
+      security: []
+      x-autorizacion:
+        roles: []
+        nivel: 1
+      responses:
+        '200':
+          description: 'Documento del idioma solicitado. Borrador inexistente: revisión 0 y lista vacía.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EditorialSitio'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: HOTEL_NO_CONFIGURADO o CONTENIDO_NO_PUBLICADO.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 components:
   securitySchemes:
     bearerAuth:
@@ -9170,6 +9368,169 @@ components:
             detalles: []
 
   schemas:
+    ElementoEditorial:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+      description: >-
+        Texto plano. Títulos, subtítulos y botones hasta 200 caracteres; otros textos hasta 4000. Imagen exige fotoClave; botón exige texto y destino; los demás exigen texto. Prohibidos HTML,
+        controles y campos ajenos al tipo.
+      properties:
+        id:
+          type: string
+          enum:
+            - inicio.titulo
+            - inicio.descripcion
+            - inicio.boton
+            - habitaciones.subtitulo
+            - habitaciones.titulo
+            - habitaciones.boton
+            - estancias.subtitulo
+            - estancias.titulo
+            - estancias.descripcion
+            - estancias.romantica
+            - estancias.descanso
+            - estancias.familiar
+            - estancias.negocios
+            - estancias.bienestar
+            - servicios.subtitulo
+            - servicios.titulo
+            - nosotros.subtitulo
+            - nosotros.titulo
+            - nosotros.descripcion
+            - nosotros.boton
+            - nosotros-page.subtitulo
+            - nosotros-page.titulo
+            - nosotros-page.descripcion
+            - nosotros-page.imagen
+            - nosotros-page.cierre.titulo
+            - nosotros-page.cierre.boton
+            - historia.subtitulo
+            - historia.titulo
+            - historia.descripcion
+            - historia.imagen
+            - mision-vision.mision.subtitulo
+            - mision-vision.mision.titulo
+            - mision-vision.mision.descripcion
+            - mision-vision.vision.subtitulo
+            - mision-vision.vision.titulo
+            - mision-vision.vision.descripcion
+            - valores.subtitulo
+            - valores.titulo
+            - valores.item1.titulo
+            - valores.item1.descripcion
+            - valores.item2.titulo
+            - valores.item2.descripcion
+            - valores.item3.titulo
+            - valores.item3.descripcion
+            - valores.item4.titulo
+            - valores.item4.descripcion
+            - valores.item5.titulo
+            - valores.item5.descripcion
+            - por-que.subtitulo
+            - por-que.titulo
+            - por-que.descripcion
+            - por-que.item1.titulo
+            - por-que.item1.descripcion
+            - por-que.item2.titulo
+            - por-que.item2.descripcion
+            - por-que.item3.titulo
+            - por-que.item3.descripcion
+            - por-que.item4.titulo
+            - por-que.item4.descripcion
+            - galeria-hotel.titulo
+            - contacto.subtitulo
+            - contacto.titulo
+            - ayuda.titulo
+            - pie.descripcion
+        texto:
+          type: string
+          minLength: 1
+          maxLength: 4000
+        fotoClave:
+          type: string
+          maxLength: 255
+          pattern: ^hotel/[0-9a-f-]{36}\.(jpg|png)$
+          description: Referencia HOTEL asociada a la galería y presente en almacenamiento; nunca URL externa.
+        destino:
+          type: string
+          enum:
+            - /catalogo
+            - /nosotros
+            - /reservar/habitaciones
+            - /#habitaciones
+            - /#servicios
+            - /#contacto
+    GuardarEditorialPeticion:
+      type: object
+      additionalProperties: false
+      required:
+        - revision
+        - elementos
+      properties:
+        revision:
+          type: integer
+          format: int64
+          minimum: 0
+        elementos:
+          type: array
+          minItems: 1
+          maxItems: 64
+          items:
+            $ref: '#/components/schemas/ElementoEditorial'
+          description: >-
+            Documento completo del idioma, ids únicos. Elementos omitidos conservan textos anteriores en Web; sin
+            traducción automática.
+    PublicarEditorialPeticion:
+      type: object
+      additionalProperties: false
+      required:
+        - revision
+      properties:
+        revision:
+          type: integer
+          format: int64
+          minimum: 1
+    EditorialSitio:
+      type: object
+      additionalProperties: false
+      required:
+        - idioma
+        - revision
+        - revisionPublicada
+        - elementos
+      properties:
+        fotografias:
+          type: object
+          readOnly: true
+          additionalProperties:
+            type: string
+            format: uri
+          description: Mapa de claves HOTEL referenciadas a sus URL públicas, calculadas por el servidor.
+        idioma:
+          type: string
+          enum:
+            - es
+            - en
+        revision:
+          type: integer
+          format: int64
+          minimum: 0
+        revisionPublicada:
+          type: integer
+          format: int64
+          minimum: 0
+        actualizadoEn:
+          type: string
+          format: date-time
+        publicadoEn:
+          type: string
+          format: date-time
+        elementos:
+          type: array
+          items:
+            $ref: '#/components/schemas/ElementoEditorial'
     PublicacionOfertaPeticion:
       type: object
       additionalProperties: false

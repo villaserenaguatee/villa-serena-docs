@@ -1,0 +1,94 @@
+{
+  "inicio": [
+    "titulo",
+    "descripcion",
+    "boton"
+  ],
+  "habitaciones": [
+    "subtitulo",
+    "titulo",
+    "boton"
+  ],
+  "estancias": [
+    "subtitulo",
+    "titulo",
+    "descripcion",
+    "romantica",
+    "descanso",
+    "familiar",
+    "negocios",
+    "bienestar"
+  ],
+  "servicios": [
+    "subtitulo",
+    "titulo"
+  ],
+  "nosotros": [
+    "subtitulo",
+    "titulo",
+    "descripcion",
+    "boton"
+  ],
+  "nosotros-page": [
+    "subtitulo",
+    "titulo",
+    "descripcion",
+    "imagen",
+    "cierre.titulo",
+    "cierre.boton"
+  ],
+  "historia": [
+    "subtitulo",
+    "titulo",
+    "descripcion",
+    "imagen"
+  ],
+  "mision-vision": [
+    "mision.subtitulo",
+    "mision.titulo",
+    "mision.descripcion",
+    "vision.subtitulo",
+    "vision.titulo",
+    "vision.descripcion"
+  ],
+  "valores": [
+    "subtitulo",
+    "titulo",
+    "item1.titulo",
+    "item1.descripcion",
+    "item2.titulo",
+    "item2.descripcion",
+    "item3.titulo",
+    "item3.descripcion",
+    "item4.titulo",
+    "item4.descripcion",
+    "item5.titulo",
+    "item5.descripcion"
+  ],
+  "por-que": [
+    "subtitulo",
+    "titulo",
+    "descripcion",
+    "item1.titulo",
+    "item1.descripcion",
+    "item2.titulo",
+    "item2.descripcion",
+    "item3.titulo",
+    "item3.descripcion",
+    "item4.titulo",
+    "item4.descripcion"
+  ],
+  "galeria-hotel": [
+    "titulo"
+  ],
+  "contacto": [
+    "subtitulo",
+    "titulo"
+  ],
+  "ayuda": [
+    "titulo"
+  ],
+  "pie": [
+    "descripcion"
+  ]
+}

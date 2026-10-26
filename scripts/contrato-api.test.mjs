@@ -392,3 +392,22 @@ test('galería HOTEL reutiliza operaciones y protege cambios sin exigir revisió
   assert.equal(path.delete,undefined);
   assert.ok(definitions.SubirImagenPeticion.properties.uso.enum.includes('HOTEL'));
 });
+
+test('editorial separa borrador ADMIN y publicación pública por idioma con revisión', () => {
+  const draft=contract.paths['/api/v1/admin/hotel/editorial/{idioma}'];
+  const publish=contract.paths['/api/v1/admin/hotel/editorial/{idioma}/publicacion'].post;
+  const publicRead=contract.paths['/api/v1/publico/hotel/editorial/{idioma}'].get;
+  assert.deepEqual(draft.put['x-autorizacion'].roles,['ADMIN']);
+  assert.deepEqual(publish['x-autorizacion'].roles,['ADMIN']);
+  assert.deepEqual(publicRead.security,[]);
+  assert.deepEqual(publicRead.parameters[0].schema.enum,['es','en']);
+  assert.ok(draft.put.responses['409']);
+  assert.ok(publish.responses['409']);
+  assert.match(publicRead.description,/nunca devuelve borrador/);
+  assert.deepEqual(definitions.GuardarEditorialPeticion.required,['revision','elementos']);
+  assert.equal(definitions.PublicarEditorialPeticion.properties.revision.minimum,1);
+  assert.equal(definitions.ElementoEditorial.additionalProperties,false);
+  assert.ok(!definitions.ElementoEditorial.properties.destino.enum.some(url=>url.startsWith('http')));
+  assert.ok(!definitions.ElementoEditorial.properties.id.enum.some(id=>/precio|cancelacion|nit|correo/.test(id)));
+  assert.ok(definitions.EditorialSitio.properties.fotografias.readOnly);
+});
