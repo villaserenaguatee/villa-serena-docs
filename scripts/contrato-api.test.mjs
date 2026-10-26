@@ -359,3 +359,21 @@ test('detecta ruta correcta, ruta inexistente, archivo movido, URL codificada, d
     rmSync(directory, { recursive: true, force: true });
   }
 });
+
+test('inicialización del hotel tiene creación y repetición sin campos de fotos o facturación', () => {
+  const operation=contract.paths['/api/v1/admin/hotel/inicializacion'].post;
+  assert.equal(operation.operationId,'inicializarHotelAdmin');
+  assert.deepEqual(operation['x-autorizacion'].roles,['ADMIN']);
+  assert.deepEqual(Object.keys(operation.responses).sort(),['200','201','400','401','403','409']);
+  const input=definitions.InicializarHotelPeticion;
+  assert.equal(input.additionalProperties,false);
+  assert.deepEqual(input.required,[ 'nombre','descripcion','direccion','telefono','correo','nombreComercial','razonSocial','nit','direccionFiscal']);
+  assert.deepEqual(Object.keys(input.properties),input.required);
+  assert.equal(input.properties.descripcion.maxLength,4000);
+  assert.match(operation.description,/Idempotencia natural/);
+  assert.deepEqual(contract['x-permisos']['POST /api/v1/admin/hotel/inicializacion'].roles,['ADMIN']);
+});
+test('GET y PUT del hotel documentan ausencia sin inicialización implícita', () => {
+  for(const method of ['get','put']) assert.match(contract.paths['/api/v1/admin/hotel'][method].responses['404'].description,/HOTEL_NO_CONFIGURADO/);
+  assert.match(contract.paths['/api/v1/admin/hotel'].put.description,/Solo actualiza una configuración existente/);
+});

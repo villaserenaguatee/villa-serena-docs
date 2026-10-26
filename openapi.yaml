@@ -7189,7 +7189,7 @@ paths:
         - admin
       operationId: consultarHotelAdmin
       summary: Consultar datos generales y fiscales
-      description: HU-ADM-08
+      description: HU-ADM-08. Devuelve 404 HOTEL_NO_CONFIGURADO si falta la configuración.
       security:
         - bearerAuth: []
       x-historias:
@@ -7230,6 +7230,12 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "404":
+          description: HOTEL_NO_CONFIGURADO. Inicializar mediante la operación específica.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
     put:
       tags:
         - admin
@@ -7241,7 +7247,7 @@ paths:
 
         Todos los datos fiscales obligatorios, validar NIT. No modificar serie/correlativo ni horarios fijos
         15:00/12:00. Política generada de 48 h antes de 15:00 llegada; no editable. No altera facturas
-        anteriores.
+        anteriores. Solo actualiza una configuración existente; si falta responde 404 HOTEL_NO_CONFIGURADO.
       security:
         - bearerAuth: []
       x-historias:
@@ -7255,7 +7261,7 @@ paths:
         nivel: 1
         condiciones: Todos los datos fiscales obligatorios, validar NIT. No modificar serie/correlativo ni horarios
           fijos 15:00/12:00. Política generada de 48 h antes de 15:00 llegada; no editable. No altera facturas
-          anteriores.
+          anteriores. Solo actualiza una configuración existente; si falta responde 404 HOTEL_NO_CONFIGURADO.
       responses:
         "200":
           description: Actualizar datos del hotel.
@@ -7285,6 +7291,12 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "404":
+          description: HOTEL_NO_CONFIGURADO. Inicializar mediante la operación específica.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         "409":
           $ref: "#/components/responses/Conflict"
       requestBody:
@@ -7306,6 +7318,56 @@ paths:
               fotos:
                 - clave: hotel/foto-demo.jpg
                   orden: 0
+  /api/v1/admin/hotel/inicializacion:
+    post:
+      tags: [admin]
+      operationId: inicializarHotelAdmin
+      summary: Inicializar el hotel sin sobrescribir una configuración existente
+      description: >-
+        HU-ADM-08. Inicialización atómica por ADMIN. Crea únicamente hotel_configuration.id=1.
+        No altera fotografías, facturas ni series/correlativos. Idempotencia natural por los nueve
+        campos normalizados: 201 al crear, 200 sin cambios si coinciden con la configuración actual,
+        409 HOTEL_YA_CONFIGURADO si difieren. No requiere Idempotency-Key; un reenvío después de editar
+        la configuración puede devolver 409. No reinicia ni sustituye datos existentes.
+      security:
+        - bearerAuth: []
+      x-historias: [HU-ADM-08]
+      x-requisitos: [RF-ADM-006, RF-FAC-005]
+      x-autorizacion:
+        roles: [ADMIN]
+        nivel: 1
+        condiciones: Inicializar sin sobrescribir configuración, fotografías ni series de facturación.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InicializarHotelPeticion'
+      responses:
+        '201':
+          description: Configuración creada; ninguna otra entidad fue modificada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HotelAdmin'
+        '200':
+          description: Los datos normalizados coinciden; configuración devuelta sin cambios.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HotelAdmin'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: HOTEL_YA_CONFIGURADO. Hay una configuración con datos distintos; no se sobrescribe.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/v1/admin/indicadores:
     get:
       tags:
@@ -12765,6 +12827,53 @@ components:
       examples:
         - clave: hotel/foto-demo.jpg
           orden: 0
+    InicializarHotelPeticion:
+      type: object
+      additionalProperties: false
+      description: >-
+        Solo datos generales y fiscales aprobados. Se recortan espacios de los nueve campos y se normaliza
+        el NIT (dígito verificador, K mayúscula). CF no es válido para el emisor. No admite fotos, series,
+        correlativos, horarios ni políticas. No contiene datos fiscales por defecto.
+      required: [nombre, descripcion, direccion, telefono, correo, nombreComercial, razonSocial, nit, direccionFiscal]
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 150
+        descripcion:
+          type: string
+          minLength: 1
+          maxLength: 4000
+        direccion:
+          type: string
+          minLength: 1
+          maxLength: 255
+        telefono:
+          type: string
+          minLength: 1
+          maxLength: 30
+        correo:
+          type: string
+          minLength: 1
+          maxLength: 150
+          format: email
+        nombreComercial:
+          type: string
+          minLength: 1
+          maxLength: 150
+        razonSocial:
+          type: string
+          minLength: 1
+          maxLength: 150
+        nit:
+          type: string
+          minLength: 1
+          maxLength: 20
+          pattern: '^[0-9]+-?[0-9Kk]$'
+        direccionFiscal:
+          type: string
+          minLength: 1
+          maxLength: 255
     HotelAdminPeticion:
       type: object
       additionalProperties: false
@@ -15787,6 +15896,13 @@ x-permisos:
     requisitos:
       - RF-ADM-006
       - RF-FAC-005
+    origen: PROPUESTA_NUEVA
+  POST /api/v1/admin/hotel/inicializacion:
+    roles: [ADMIN]
+    nivel: 1
+    condiciones: Creación atómica o repetición sin cambios; 409 ante datos distintos. Sin efectos en fotos/facturación.
+    historias: [HU-ADM-08]
+    requisitos: [RF-ADM-006, RF-FAC-005]
     origen: PROPUESTA_NUEVA
   GET /api/v1/admin/indicadores:
     roles:
