@@ -377,3 +377,18 @@ test('GET y PUT del hotel documentan ausencia sin inicialización implícita', (
   for(const method of ['get','put']) assert.match(contract.paths['/api/v1/admin/hotel'][method].responses['404'].description,/HOTEL_NO_CONFIGURADO/);
   assert.match(contract.paths['/api/v1/admin/hotel'].put.description,/Solo actualiza una configuración existente/);
 });
+
+test('galería HOTEL reutiliza operaciones y protege cambios sin exigir revisión fiscal', () => {
+  const path=contract.paths['/api/v1/admin/hotel'];
+  assert.ok(path.get.responses['200'].headers.ETag);
+  assert.ok(path.put.responses['200'].headers.ETag);
+  const revision=path.put.parameters.find(p=>p.name==='If-Match');
+  assert.equal(revision.in,'header');
+  assert.equal(revision.required,false);
+  assert.match(revision.description,/GALERIA_CAMBIADA/);
+  assert.ok(!definitions.HotelAdminPeticion.required.includes('fotos'));
+  assert.equal(definitions.HotelAdminPeticion.properties.fotos.type,'array');
+  assert.match(definitions.HotelAdminPeticion.properties.fotos.description,/sin borrar objetos/);
+  assert.equal(path.delete,undefined);
+  assert.ok(definitions.SubirImagenPeticion.properties.uso.enum.includes('HOTEL'));
+});

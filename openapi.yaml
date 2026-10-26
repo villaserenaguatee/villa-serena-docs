@@ -5579,6 +5579,12 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "409":
           $ref: "#/components/responses/Conflict"
+        "503":
+          description: ALMACEN_NO_DISPONIBLE. No se guardaron cambios en la galería.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
       requestBody:
         required: true
         content:
@@ -7204,6 +7210,11 @@ paths:
       responses:
         "200":
           description: Consultar datos generales y fiscales.
+          headers:
+            ETag:
+              description: Revisión fuerte de la galería; conservar las comillas y enviar como If-Match para cambiar fotos.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -7240,6 +7251,13 @@ paths:
       tags:
         - admin
       operationId: editarHotelAdmin
+      parameters:
+        - name: If-Match
+          in: header
+          required: false
+          description: Obligatorio solo si cambia la galería. Debe coincidir con el ETag de la consulta administrativa vigente. Sin revisión o con revisión obsoleta, 409 GALERIA_CAMBIADA y ningún cambio.
+          schema:
+            type: string
       summary: Actualizar datos del hotel
       description: >-
         HU-ADM-08
@@ -7247,7 +7265,8 @@ paths:
 
         Todos los datos fiscales obligatorios, validar NIT. No modificar serie/correlativo ni horarios fijos
         15:00/12:00. Política generada de 48 h antes de 15:00 llegada; no editable. No altera facturas
-        anteriores. Solo actualiza una configuración existente; si falta responde 404 HOTEL_NO_CONFIGURADO.
+        anteriores. Omitir fotos conserva la galería sin exigir If-Match. Si se envía una lista distinta,
+        requiere revisión vigente; nunca se aplica parcialmente un cambio conflictivo. Solo actualiza una configuración existente; si falta responde 404 HOTEL_NO_CONFIGURADO.
       security:
         - bearerAuth: []
       x-historias:
@@ -7265,6 +7284,11 @@ paths:
       responses:
         "200":
           description: Actualizar datos del hotel.
+          headers:
+            ETag:
+              description: Revisión fuerte de la galería resultante.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -7299,6 +7323,12 @@ paths:
                 $ref: '#/components/schemas/Error'
         "409":
           $ref: "#/components/responses/Conflict"
+        "503":
+          description: ALMACEN_NO_DISPONIBLE. No se guardaron cambios en la galería.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
       requestBody:
         required: true
         content:
@@ -12887,7 +12917,6 @@ components:
         - razonSocial
         - nit
         - direccionFiscal
-        - fotos
       properties:
         nombre:
           type: string
@@ -12919,6 +12948,7 @@ components:
           type: string
           minLength: 1
         fotos:
+          description: Omitir conserva las fotos. Null no es válido. Lista vacía retira todas las asociaciones, sin borrar objetos. Cambiar claves u orden requiere If-Match vigente; claves y órdenes únicos. Las claves nuevas deben ser HOTEL y existir en almacenamiento público.
           type: array
           items:
             $ref: "#/components/schemas/FotoHotelPeticion"
