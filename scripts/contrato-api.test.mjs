@@ -411,3 +411,18 @@ test('editorial separa borrador ADMIN y publicación pública por idioma con rev
   assert.ok(!definitions.ElementoEditorial.properties.id.enum.some(id=>/precio|cancelacion|nit|correo/.test(id)));
   assert.ok(definitions.EditorialSitio.properties.fotografias.readOnly);
 });
+
+
+test('correo personal es contacto opcional nullable, sin cambiar el identificador laboral ni permitir editarlo', () => {
+  const contract = load(readFileSync(new URL('../openapi.yaml', import.meta.url), 'utf8'));
+  for (const name of ['EmpleadoAdmin', 'CrearEmpleadoPeticion', 'EditarEmpleadoPeticion']) {
+    const dto = contract.components.schemas[name];
+    assert.ok(!dto.required?.includes('correoPersonal'));
+    assert.deepEqual(dto.properties.correoPersonal.type, ['string', 'null']);
+    assert.equal(dto.properties.correoPersonal.format, 'email');
+    assert.equal(dto.properties.correoPersonal.maxLength, 150);
+  }
+  assert.ok(contract.components.schemas.CrearEmpleadoPeticion.required.includes('correo'));
+  assert.equal(contract.components.schemas.EditarEmpleadoPeticion.properties.correo, undefined);
+  assert.equal(contract.components.schemas.LoginPeticion.properties.correoPersonal, undefined);
+});

@@ -12648,6 +12648,12 @@ components:
         correo:
           type: string
           format: email
+          description: Correo laboral, identificador de autenticación. No se modifica mediante PATCH.
+        correoPersonal:
+          type: [string, "null"]
+          format: email
+          maxLength: 150
+          description: Contacto personal opcional. No se utiliza para autenticación ni recuperación. En PATCH, omitir conserva el valor y null lo elimina.
         telefono:
           type: string
           minLength: 1
@@ -12682,6 +12688,12 @@ components:
         correo:
           type: string
           format: email
+          description: Correo laboral, identificador de autenticación. No se modifica mediante PATCH.
+        correoPersonal:
+          type: [string, "null"]
+          format: email
+          maxLength: 150
+          description: Contacto personal opcional. No se utiliza para autenticación ni recuperación. En PATCH, omitir conserva el valor y null lo elimina.
         telefono:
           type: string
           minLength: 1
@@ -12706,6 +12718,11 @@ components:
         nombreCompleto:
           type: string
           minLength: 1
+        correoPersonal:
+          type: [string, "null"]
+          format: email
+          maxLength: 150
+          description: Contacto personal opcional. No se utiliza para autenticación ni recuperación. En PATCH, omitir conserva el valor y null lo elimina.
         telefono:
           type: string
           minLength: 1
