@@ -5579,6 +5579,12 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "409":
           $ref: "#/components/responses/Conflict"
+        "503":
+          description: ALMACEN_NO_DISPONIBLE. No se guardaron cambios en la galería.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
       requestBody:
         required: true
         content:
@@ -7189,7 +7195,7 @@ paths:
         - admin
       operationId: consultarHotelAdmin
       summary: Consultar datos generales y fiscales
-      description: HU-ADM-08
+      description: HU-ADM-08. Devuelve 404 HOTEL_NO_CONFIGURADO si falta la configuración.
       security:
         - bearerAuth: []
       x-historias:
@@ -7204,6 +7210,11 @@ paths:
       responses:
         "200":
           description: Consultar datos generales y fiscales.
+          headers:
+            ETag:
+              description: Revisión fuerte de la galería; conservar las comillas y enviar como If-Match para cambiar fotos.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -7230,10 +7241,23 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "404":
+          description: HOTEL_NO_CONFIGURADO. Inicializar mediante la operación específica.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
     put:
       tags:
         - admin
       operationId: editarHotelAdmin
+      parameters:
+        - name: If-Match
+          in: header
+          required: false
+          description: Obligatorio solo si cambia la galería. Debe coincidir con el ETag de la consulta administrativa vigente. Sin revisión o con revisión obsoleta, 409 GALERIA_CAMBIADA y ningún cambio.
+          schema:
+            type: string
       summary: Actualizar datos del hotel
       description: >-
         HU-ADM-08
@@ -7241,7 +7265,8 @@ paths:
 
         Todos los datos fiscales obligatorios, validar NIT. No modificar serie/correlativo ni horarios fijos
         15:00/12:00. Política generada de 48 h antes de 15:00 llegada; no editable. No altera facturas
-        anteriores.
+        anteriores. Omitir fotos conserva la galería sin exigir If-Match. Si se envía una lista distinta,
+        requiere revisión vigente; nunca se aplica parcialmente un cambio conflictivo. Solo actualiza una configuración existente; si falta responde 404 HOTEL_NO_CONFIGURADO.
       security:
         - bearerAuth: []
       x-historias:
@@ -7255,10 +7280,15 @@ paths:
         nivel: 1
         condiciones: Todos los datos fiscales obligatorios, validar NIT. No modificar serie/correlativo ni horarios
           fijos 15:00/12:00. Política generada de 48 h antes de 15:00 llegada; no editable. No altera facturas
-          anteriores.
+          anteriores. Solo actualiza una configuración existente; si falta responde 404 HOTEL_NO_CONFIGURADO.
       responses:
         "200":
           description: Actualizar datos del hotel.
+          headers:
+            ETag:
+              description: Revisión fuerte de la galería resultante.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -7285,8 +7315,20 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "404":
+          description: HOTEL_NO_CONFIGURADO. Inicializar mediante la operación específica.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         "409":
           $ref: "#/components/responses/Conflict"
+        "503":
+          description: ALMACEN_NO_DISPONIBLE. No se guardaron cambios en la galería.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
       requestBody:
         required: true
         content:
@@ -7306,6 +7348,56 @@ paths:
               fotos:
                 - clave: hotel/foto-demo.jpg
                   orden: 0
+  /api/v1/admin/hotel/inicializacion:
+    post:
+      tags: [admin]
+      operationId: inicializarHotelAdmin
+      summary: Inicializar el hotel sin sobrescribir una configuración existente
+      description: >-
+        HU-ADM-08. Inicialización atómica por ADMIN. Crea únicamente hotel_configuration.id=1.
+        No altera fotografías, facturas ni series/correlativos. Idempotencia natural por los nueve
+        campos normalizados: 201 al crear, 200 sin cambios si coinciden con la configuración actual,
+        409 HOTEL_YA_CONFIGURADO si difieren. No requiere Idempotency-Key; un reenvío después de editar
+        la configuración puede devolver 409. No reinicia ni sustituye datos existentes.
+      security:
+        - bearerAuth: []
+      x-historias: [HU-ADM-08]
+      x-requisitos: [RF-ADM-006, RF-FAC-005]
+      x-autorizacion:
+        roles: [ADMIN]
+        nivel: 1
+        condiciones: Inicializar sin sobrescribir configuración, fotografías ni series de facturación.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InicializarHotelPeticion'
+      responses:
+        '201':
+          description: Configuración creada; ninguna otra entidad fue modificada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HotelAdmin'
+        '200':
+          description: Los datos normalizados coinciden; configuración devuelta sin cambios.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HotelAdmin'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: HOTEL_YA_CONFIGURADO. Hay una configuración con datos distintos; no se sobrescribe.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/v1/admin/indicadores:
     get:
       tags:
@@ -8918,6 +9010,204 @@ paths:
         '404': {$ref: '#/components/responses/NotFound'}
         '409': {$ref: '#/components/responses/Conflict'}
 
+  /api/v1/admin/hotel/editorial/{idioma}:
+    get:
+      tags:
+        - admin
+      operationId: consultarBorradorEditorial
+      summary: Consultar borrador editorial
+      description: >-
+        ADMIN. Hotel configurado. 409 CONTENIDO_CAMBIADO conserva borrador y publicación anteriores. Guardar no
+        publica. Publicar exige revisión vigente y persiste versión inmutable; repetir esa publicación es
+        idempotente.
+      parameters:
+        - name: idioma
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - es
+              - en
+      security:
+        - bearerAuth: []
+      x-autorizacion:
+        roles:
+          - ADMIN
+        nivel: 1
+      responses:
+        '200':
+          description: 'Documento del idioma solicitado. Borrador inexistente: revisión 0 y lista vacía.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EditorialSitio'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: HOTEL_NO_CONFIGURADO o CONTENIDO_NO_PUBLICADO.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    put:
+      tags:
+        - admin
+      operationId: guardarBorradorEditorial
+      summary: Guardar borrador editorial
+      description: >-
+        ADMIN. Hotel configurado. 409 CONTENIDO_CAMBIADO conserva borrador y publicación anteriores. Guardar no
+        publica. Publicar exige revisión vigente y persiste versión inmutable; repetir esa publicación es
+        idempotente.
+      parameters:
+        - name: idioma
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - es
+              - en
+      security:
+        - bearerAuth: []
+      x-autorizacion:
+        roles:
+          - ADMIN
+        nivel: 1
+      responses:
+        '200':
+          description: 'Documento del idioma solicitado. Borrador inexistente: revisión 0 y lista vacía.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EditorialSitio'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: HOTEL_NO_CONFIGURADO o CONTENIDO_NO_PUBLICADO.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '503':
+          description: ALMACEN_NO_DISPONIBLE. No se modificó el borrador ni la versión publicada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuardarEditorialPeticion'
+  /api/v1/admin/hotel/editorial/{idioma}/publicacion:
+    post:
+      tags:
+        - admin
+      operationId: publicarEditorial
+      summary: Publicar borrador editorial
+      description: >-
+        ADMIN. Hotel configurado. 409 CONTENIDO_CAMBIADO conserva borrador y publicación anteriores. Guardar no
+        publica. Publicar exige revisión vigente y persiste versión inmutable; repetir esa publicación es
+        idempotente.
+      parameters:
+        - name: idioma
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - es
+              - en
+      security:
+        - bearerAuth: []
+      x-autorizacion:
+        roles:
+          - ADMIN
+        nivel: 1
+      responses:
+        '200':
+          description: 'Documento del idioma solicitado. Borrador inexistente: revisión 0 y lista vacía.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EditorialSitio'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: HOTEL_NO_CONFIGURADO o CONTENIDO_NO_PUBLICADO.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '503':
+          description: ALMACEN_NO_DISPONIBLE. No se modificó el borrador ni la versión publicada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicarEditorialPeticion'
+  /api/v1/publico/hotel/editorial/{idioma}:
+    get:
+      tags:
+        - publico
+      operationId: consultarEditorialPublicado
+      summary: Consultar contenido editorial publicado
+      description: >-
+        Solo versión publicada. 404 CONTENIDO_NO_PUBLICADO si no existe; nunca devuelve borrador ni traduce otro
+        idioma.
+      parameters:
+        - name: idioma
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - es
+              - en
+      security: []
+      x-autorizacion:
+        roles: []
+        nivel: 1
+      responses:
+        '200':
+          description: 'Documento del idioma solicitado. Borrador inexistente: revisión 0 y lista vacía.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EditorialSitio'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: HOTEL_NO_CONFIGURADO o CONTENIDO_NO_PUBLICADO.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 components:
   securitySchemes:
     bearerAuth:
@@ -9078,6 +9368,169 @@ components:
             detalles: []
 
   schemas:
+    ElementoEditorial:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+      description: >-
+        Texto plano. Títulos, subtítulos y botones hasta 200 caracteres; otros textos hasta 4000. Imagen exige fotoClave; botón exige texto y destino; los demás exigen texto. Prohibidos HTML,
+        controles y campos ajenos al tipo.
+      properties:
+        id:
+          type: string
+          enum:
+            - inicio.titulo
+            - inicio.descripcion
+            - inicio.boton
+            - habitaciones.subtitulo
+            - habitaciones.titulo
+            - habitaciones.boton
+            - estancias.subtitulo
+            - estancias.titulo
+            - estancias.descripcion
+            - estancias.romantica
+            - estancias.descanso
+            - estancias.familiar
+            - estancias.negocios
+            - estancias.bienestar
+            - servicios.subtitulo
+            - servicios.titulo
+            - nosotros.subtitulo
+            - nosotros.titulo
+            - nosotros.descripcion
+            - nosotros.boton
+            - nosotros-page.subtitulo
+            - nosotros-page.titulo
+            - nosotros-page.descripcion
+            - nosotros-page.imagen
+            - nosotros-page.cierre.titulo
+            - nosotros-page.cierre.boton
+            - historia.subtitulo
+            - historia.titulo
+            - historia.descripcion
+            - historia.imagen
+            - mision-vision.mision.subtitulo
+            - mision-vision.mision.titulo
+            - mision-vision.mision.descripcion
+            - mision-vision.vision.subtitulo
+            - mision-vision.vision.titulo
+            - mision-vision.vision.descripcion
+            - valores.subtitulo
+            - valores.titulo
+            - valores.item1.titulo
+            - valores.item1.descripcion
+            - valores.item2.titulo
+            - valores.item2.descripcion
+            - valores.item3.titulo
+            - valores.item3.descripcion
+            - valores.item4.titulo
+            - valores.item4.descripcion
+            - valores.item5.titulo
+            - valores.item5.descripcion
+            - por-que.subtitulo
+            - por-que.titulo
+            - por-que.descripcion
+            - por-que.item1.titulo
+            - por-que.item1.descripcion
+            - por-que.item2.titulo
+            - por-que.item2.descripcion
+            - por-que.item3.titulo
+            - por-que.item3.descripcion
+            - por-que.item4.titulo
+            - por-que.item4.descripcion
+            - galeria-hotel.titulo
+            - contacto.subtitulo
+            - contacto.titulo
+            - ayuda.titulo
+            - pie.descripcion
+        texto:
+          type: string
+          minLength: 1
+          maxLength: 4000
+        fotoClave:
+          type: string
+          maxLength: 255
+          pattern: ^hotel/[0-9a-f-]{36}\.(jpg|png)$
+          description: Referencia HOTEL asociada a la galería y presente en almacenamiento; nunca URL externa.
+        destino:
+          type: string
+          enum:
+            - /catalogo
+            - /nosotros
+            - /reservar/habitaciones
+            - /#habitaciones
+            - /#servicios
+            - /#contacto
+    GuardarEditorialPeticion:
+      type: object
+      additionalProperties: false
+      required:
+        - revision
+        - elementos
+      properties:
+        revision:
+          type: integer
+          format: int64
+          minimum: 0
+        elementos:
+          type: array
+          minItems: 1
+          maxItems: 64
+          items:
+            $ref: '#/components/schemas/ElementoEditorial'
+          description: >-
+            Documento completo del idioma, ids únicos. Elementos omitidos conservan textos anteriores en Web; sin
+            traducción automática.
+    PublicarEditorialPeticion:
+      type: object
+      additionalProperties: false
+      required:
+        - revision
+      properties:
+        revision:
+          type: integer
+          format: int64
+          minimum: 1
+    EditorialSitio:
+      type: object
+      additionalProperties: false
+      required:
+        - idioma
+        - revision
+        - revisionPublicada
+        - elementos
+      properties:
+        fotografias:
+          type: object
+          readOnly: true
+          additionalProperties:
+            type: string
+            format: uri
+          description: Mapa de claves HOTEL referenciadas a sus URL públicas, calculadas por el servidor.
+        idioma:
+          type: string
+          enum:
+            - es
+            - en
+        revision:
+          type: integer
+          format: int64
+          minimum: 0
+        revisionPublicada:
+          type: integer
+          format: int64
+          minimum: 0
+        actualizadoEn:
+          type: string
+          format: date-time
+        publicadoEn:
+          type: string
+          format: date-time
+        elementos:
+          type: array
+          items:
+            $ref: '#/components/schemas/ElementoEditorial'
     PublicacionOfertaPeticion:
       type: object
       additionalProperties: false
@@ -12195,6 +12648,12 @@ components:
         correo:
           type: string
           format: email
+          description: Correo laboral, identificador de autenticación. No se modifica mediante PATCH.
+        correoPersonal:
+          type: [string, "null"]
+          format: email
+          maxLength: 150
+          description: Contacto personal opcional. No se utiliza para autenticación ni recuperación. En PATCH, omitir conserva el valor y null lo elimina.
         telefono:
           type: string
           minLength: 1
@@ -12229,6 +12688,12 @@ components:
         correo:
           type: string
           format: email
+          description: Correo laboral, identificador de autenticación. No se modifica mediante PATCH.
+        correoPersonal:
+          type: [string, "null"]
+          format: email
+          maxLength: 150
+          description: Contacto personal opcional. No se utiliza para autenticación ni recuperación. En PATCH, omitir conserva el valor y null lo elimina.
         telefono:
           type: string
           minLength: 1
@@ -12253,6 +12718,11 @@ components:
         nombreCompleto:
           type: string
           minLength: 1
+        correoPersonal:
+          type: [string, "null"]
+          format: email
+          maxLength: 150
+          description: Contacto personal opcional. No se utiliza para autenticación ni recuperación. En PATCH, omitir conserva el valor y null lo elimina.
         telefono:
           type: string
           minLength: 1
@@ -12765,6 +13235,53 @@ components:
       examples:
         - clave: hotel/foto-demo.jpg
           orden: 0
+    InicializarHotelPeticion:
+      type: object
+      additionalProperties: false
+      description: >-
+        Solo datos generales y fiscales aprobados. Se recortan espacios de los nueve campos y se normaliza
+        el NIT (dígito verificador, K mayúscula). CF no es válido para el emisor. No admite fotos, series,
+        correlativos, horarios ni políticas. No contiene datos fiscales por defecto.
+      required: [nombre, descripcion, direccion, telefono, correo, nombreComercial, razonSocial, nit, direccionFiscal]
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 150
+        descripcion:
+          type: string
+          minLength: 1
+          maxLength: 4000
+        direccion:
+          type: string
+          minLength: 1
+          maxLength: 255
+        telefono:
+          type: string
+          minLength: 1
+          maxLength: 30
+        correo:
+          type: string
+          minLength: 1
+          maxLength: 150
+          format: email
+        nombreComercial:
+          type: string
+          minLength: 1
+          maxLength: 150
+        razonSocial:
+          type: string
+          minLength: 1
+          maxLength: 150
+        nit:
+          type: string
+          minLength: 1
+          maxLength: 20
+          pattern: '^[0-9]+-?[0-9Kk]$'
+        direccionFiscal:
+          type: string
+          minLength: 1
+          maxLength: 255
     HotelAdminPeticion:
       type: object
       additionalProperties: false
@@ -12778,7 +13295,6 @@ components:
         - razonSocial
         - nit
         - direccionFiscal
-        - fotos
       properties:
         nombre:
           type: string
@@ -12810,6 +13326,7 @@ components:
           type: string
           minLength: 1
         fotos:
+          description: Omitir conserva las fotos. Null no es válido. Lista vacía retira todas las asociaciones, sin borrar objetos. Cambiar claves u orden requiere If-Match vigente; claves y órdenes únicos. Las claves nuevas deben ser HOTEL y existir en almacenamiento público.
           type: array
           items:
             $ref: "#/components/schemas/FotoHotelPeticion"
@@ -15787,6 +16304,13 @@ x-permisos:
     requisitos:
       - RF-ADM-006
       - RF-FAC-005
+    origen: PROPUESTA_NUEVA
+  POST /api/v1/admin/hotel/inicializacion:
+    roles: [ADMIN]
+    nivel: 1
+    condiciones: Creación atómica o repetición sin cambios; 409 ante datos distintos. Sin efectos en fotos/facturación.
+    historias: [HU-ADM-08]
+    requisitos: [RF-ADM-006, RF-FAC-005]
     origen: PROPUESTA_NUEVA
   GET /api/v1/admin/indicadores:
     roles:
