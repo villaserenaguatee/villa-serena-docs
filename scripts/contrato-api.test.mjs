@@ -13,6 +13,31 @@ const schema = {
   paths: { '/api/v1/prueba': { get: { operationId: 'prueba', responses: { 200: { description: 'OK' } } } } },
 };
 
+test('contacto público conserva UUID, DTO mínimos y errores de reintento/configuración', () => {
+  const { paths, components } = load(readFileSync(new URL('../openapi.yaml', import.meta.url), 'utf8'));
+  const post = paths['/api/v1/publico/contacto'].post;
+  const get = paths['/api/v1/publico/contacto/{id}'].get;
+  for (const op of [post, get]) assert.deepEqual(op.security, []);
+  assert.deepEqual(post.parameters[0], {
+    name: 'Idempotency-Key', in: 'header', required: true,
+    description: 'UUID aleatorio guardado antes de enviar; no sustituirlo tras un resultado desconocido.',
+    schema: { type: 'string', format: 'uuid' },
+  });
+  for (const code of ['200', '400', '409', '413', '429', '503']) assert.ok(post.responses[code]);
+  assert.ok(get.responses['404']);
+  const request = components.schemas.ContactoPublicoPeticion;
+  assert.deepEqual(request.required, ['nombre', 'correo', 'mensaje']);
+  assert.equal(request.properties.correo.format, 'email');
+  assert.equal(request.properties.mensaje.maxLength, 5000);
+  const result = components.schemas.ContactoPublicoResultado;
+  assert.equal(result.additionalProperties, false);
+  assert.deepEqual(Object.keys(result.properties).sort(), ['estado', 'id']);
+  assert.deepEqual(result.properties.estado.enum, ['ENVIANDO', 'ENVIADO', 'FALLIDO', 'INCIERTO']);
+  assert.match(post.description, /CONTACTO_NO_DISPONIBLE/);
+  assert.match(post.description, /rollback/);
+  assert.match(get.description, /sin iniciar SMTP/);
+});
+
 test('detecta rutas y métodos faltantes y adicionales sin tratar parámetros como operaciones', () => {
   const expected = { paths: { '/a': { get: {}, parameters: [] }, '/b': { post: {} } } };
   const actual = { paths: { '/a': { get: {}, post: {} } } };

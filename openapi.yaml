@@ -319,6 +319,106 @@ paths:
   # ====================================================================
   # /publico — web pública sin sesión (HU-HUE-01 a HU-HUE-06)
   # ====================================================================
+  /api/v1/publico/contacto:
+    post:
+      tags: [publico]
+      operationId: enviarContactoPublico
+      summary: Enviar una consulta al buzón operativo del hotel
+      description: |
+        Sin sesión. El servidor fija destinatario y remitente; el correo del visitante se usa
+        solo como Reply-To validado. No se envía acuse al visitante ni se crea reserva o sesión.
+        Conservar un UUID antes de enviar y reutilizarlo ante reintentos. La huella usa nombre,
+        correo y mensaje tras trim, con comparación exacta, sin cambiar mayúsculas.
+        Misma clave y otros datos: 409 CONTACTO_DATOS_DISTINTOS. Misma clave y datos en ENVIADO,
+        ENVIANDO o INCIERTO: consultar/devolver ese estado sin otro envío. FALLIDO permite un
+        reintento explícito con la misma clave y datos; no hay reintento automático del Outbox.
+        Antes de confirmar un nuevo intento SMTP se exige un destinatario operativo válido;
+        si falta o es inválido, 503 CONTACTO_NO_DISPONIBLE y rollback del nuevo intento, sin SMTP.
+        Los intentos previos no reenviables se pueden consultar/devolver aun sin configuración.
+        ENVIADO significa aceptación SMTP, nunca confirmación de entrega al buzón.
+        Límite existente: 3 POST por IP remota en 900 segundos; no confiar en X-Forwarded-For.
+      security: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: UUID aleatorio guardado antes de enviar; no sustituirlo tras un resultado desconocido.
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ContactoPublicoPeticion'}
+            example:
+              nombre: Visitante Ejemplo
+              correo: visitante@example.test
+              mensaje: Consulta de prueba aislada; no enviar a un buzón real.
+      responses:
+        '200':
+          description: Estado persistido del intento; revisar estado antes de ofrecer reenvío.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ContactoPublicoResultado'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '409':
+          description: CONTACTO_DATOS_DISTINTOS; la referencia pertenece a otros datos.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+        '413':
+          description: CONTENIDO_DEMASIADO_GRANDE; cuerpo superior al límite global de 8 MiB.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [codigo, mensaje]
+                properties:
+                  codigo: {type: string, const: CONTENIDO_DEMASIADO_GRANDE}
+                  mensaje: {type: string}
+        '429':
+          description: LIMITE_SOLICITUDES; esperar antes de volver a intentar.
+          headers:
+            Retry-After:
+              description: Espera en segundos (ventana de 900 segundos).
+              schema: {type: integer, minimum: 1}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+        '503':
+          description: CONTACTO_NO_DISPONIBLE; no se confirmó un nuevo intento ni se inició SMTP.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              example:
+                codigo: CONTACTO_NO_DISPONIBLE
+                mensaje: El envío de mensajes no está disponible temporalmente.
+                detalles: []
+  /api/v1/publico/contacto/{id}:
+    get:
+      tags: [publico]
+      operationId: consultarContactoPublico
+      summary: Consultar únicamente el estado de una consulta
+      description: |
+        Sin sesión; el UUID actúa como referencia de acceso. No revelar nombres, correos,
+        mensajes, destinatario operativo, remitente, credenciales, diagnósticos SMTP ni huellas.
+        No listar ni buscar mensajes. ENVIANDO por más de dos minutos pasa a INCIERTO al consultar,
+        sin iniciar SMTP. Funciona aunque el envío esté deshabilitado por configuración.
+        El UUID no prueba identidad ni entrega. Web conserva la referencia en sessionStorage,
+        usa el BFF y consulta ante respuesta perdida, sin generar otra clave automáticamente.
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        '200':
+          description: Solo referencia y estado; respuesta no almacenable en caché.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ContactoPublicoResultado'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '404': {$ref: '#/components/responses/NotFound'}
   /api/v1/publico/hotel:
     get:
       tags: [publico]
@@ -9368,6 +9468,40 @@ components:
             detalles: []
 
   schemas:
+    ContactoPublicoPeticion:
+      type: object
+      required: [nombre, correo, mensaje]
+      description: Campos no blancos. Nombre y correo no admiten CR/LF; espacios exteriores se eliminan al calcular la huella y preparar el mensaje.
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 150
+          pattern: '^[^\r\n]+$'
+        correo:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 150
+          pattern: '^[^\r\n]+$'
+        mensaje:
+          type: string
+          minLength: 1
+          maxLength: 5000
+          description: Texto del visitante, escapado al renderizar el correo; no se interpreta como HTML.
+    ContactoPublicoResultado:
+      type: object
+      additionalProperties: false
+      required: [id, estado]
+      properties:
+        id: {type: string, format: uuid}
+        estado:
+          type: string
+          enum: [ENVIANDO, ENVIADO, FALLIDO, INCIERTO]
+          description: >-
+            ENVIANDO: intento persistido antes de SMTP. ENVIADO: SMTP aceptó el mensaje.
+            FALLIDO: fallo previo al envío o conexión/autenticación rechazada, reintento explícito permitido.
+            INCIERTO: no se pudo confirmar el resultado SMTP; consultar sin reenviar.
     ElementoEditorial:
       type: object
       additionalProperties: false
