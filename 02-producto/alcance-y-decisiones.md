@@ -257,7 +257,7 @@ ALC-MYL-10 (repuestos de mantenimiento) deja de estar excluido: docs #21 conserv
 | F2-02 | Domótica, apertura por NFC o Bluetooth, Wi-Fi automático |
 | F2-03 | Reservar turnos en spa, gimnasio o canchas |
 | F2-04 | Chat en tiempo real con recepción |
-| F2-06 | Crear reservas desde la app: pendiente de implementación verificada; consultar reservas no equivale a crearlas. No forma parte de Docs #63 |
+| F2-06 | Crear reservas desde la app: implementación integrada en móvil PR #29 (`main` 9dfea50); pendiente de aceptación y prueba de extremo a extremo en teléfono. Se conserva al incorporar al personal, pero su aceptación no forma parte de Docs #63 |
 | F2-07 | Versión iOS de la app |
 | F2-08 | Certificación real de facturas ante la SAT (FEL) |
 | F2-09 | Programa de fidelidad y pago con puntos |

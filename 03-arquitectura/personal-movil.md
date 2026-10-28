@@ -76,12 +76,14 @@ firmadas se renuevan consultando de nuevo el detalle.
 
 ## Reservas y evidencia revisada
 
-En móvil `main` **8aef9ee**, `app/reservas.tsx` y `lib/api/huesped.ts` consultan
-reservas existentes. No se encontró pantalla ni llamada de creación de reservas
-en el código de la app de esa revisión. La existencia de tipos generados para
-reservar y de una web pública funcional no demuestra reserva nativa. F2-06 se
-mantiene separada hasta revisar e implementar un flujo móvil de creación, sin
-declararlo resuelto por este cambio.
+La revisión inicial de móvil `main` **8aef9ee** solo encontró consulta de reservas.
+Posteriormente se integraron [PR #28](https://github.com/villaserenaguatee/villa-serena-movil/pull/28)
+(portal del huésped y diseño) y [PR #29](https://github.com/villaserenaguatee/villa-serena-movil/pull/29)
+(creación nativa). En `main` **9dfea50**, `app/acceso.tsx` y `lib/api/huesped.ts`
+incluyen disponibilidad pública, verificación de correo y creación de reservas.
+La PR móvil #27 conserva estos cambios al incorporar al personal. F2-06 cuenta
+ahora con implementación integrada, cuya aceptación y prueba de reserva/pago en
+teléfono se siguen por separado; Docs #63 no acredita ese flujo de extremo a extremo.
 
 ## Comprobación y adopción
 
