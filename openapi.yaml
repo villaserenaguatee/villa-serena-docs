@@ -5,7 +5,7 @@ info:
   summary: Contrato del API del PMS del hotel ficticio Villa Serena.
   description: |
     Contrato entre el backend (Spring), la web (Next.js, a través del BFF) y la
-    app del huésped (Expo). La fuente de verdad es villa-serena-docs/openapi.yaml.
+    app Android del huésped y personal operativo (Expo, Docs #63). La fuente de verdad es villa-serena-docs/openapi.yaml.
     API, web y app consumen este contrato desde docs sin copias YAML locales.
     Los cambios se registran como issues de docs y se revisan con los consumidores afectados.
 
@@ -4508,6 +4508,17 @@ paths:
       tags:
         - incidencias
       operationId: reportarIncidencia
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          description: >-
+            Referencia de reintento de 16 a 100 caracteres. Android operativo la guarda
+            junto con los datos antes de enviar y la conserva ante un resultado incierto.
+            Reutilizar la misma clave y datos devuelve el reporte original; otros datos causan conflicto.
+          schema:
+            type: string
+            pattern: '^[a-zA-Z0-9_-]{16,100}$'
       summary: Reportar daño de habitación
       description: >-
         HU-MYL-06 · HU-REC-17
@@ -14513,6 +14524,12 @@ x-websocket:
       valor: <ticket del BFF>
       duracionSegundos: 60
       unSoloUso: true
+    appPersonal:
+      encabezado: ticket
+      origen: POST /api/v1/auth/ws-ticket por HTTP autenticado directo a Spring
+      duracionSegundos: 60
+      unSoloUso: true
+      descripcion: Android operativo conserva el JWT en SecureStore; no lo envía en CONNECT. Roles, áreas y destinos no cambian.
   reglas:
     - Validar autenticación en CONNECT y autorización en cada SUBSCRIBE.
     - Prohibir suscripciones arbitrarias y SEND del cliente a /topic o /user/queue.

@@ -13,6 +13,21 @@ const schema = {
   paths: { '/api/v1/prueba': { get: { operationId: 'prueba', responses: { 200: { description: 'OK' } } } } },
 };
 
+test('Android operativo conserva ticket de personal, roles por destino y reintentos de incidencias', () => {
+  const contract = load(readFileSync(new URL('../openapi.yaml', import.meta.url), 'utf8'));
+  const ws = contract['x-websocket'];
+  assert.equal(ws.connect.appPersonal.encabezado, 'ticket');
+  assert.equal(ws.connect.appPersonal.unSoloUso, true);
+  assert.equal(ws.connect.appPersonal.duracionSegundos, 60);
+  assert.deepEqual(ws.destinos['/topic/pedidos'].roles, ['ROOM_SERVICE']);
+  assert.deepEqual(ws.destinos['/user/queue/pedidos'].roles, ['HUESPED']);
+  const report = contract.paths['/api/v1/incidencias'].post;
+  assert.ok(report.parameters.some(p => p.name === 'Idempotency-Key' && p.in === 'header'));
+  assert.deepEqual(report['x-autorizacion'].roles, ['RECEPCION', 'MANTENIMIENTO_LIMPIEZA']);
+  assert.deepEqual(contract.paths['/api/v1/incidencias/{id}/resolver'].post['x-autorizacion'].areasMyl, ['MANTENIMIENTO', 'AMBAS']);
+  assert.deepEqual(contract.paths['/api/v1/limpieza/habitaciones'].get['x-autorizacion'].areasMyl, ['LIMPIEZA', 'AMBAS']);
+});
+
 test('detecta rutas y métodos faltantes y adicionales sin tratar parámetros como operaciones', () => {
   const expected = { paths: { '/a': { get: {}, parameters: [] }, '/b': { post: {} } } };
   const actual = { paths: { '/a': { get: {}, post: {} } } };

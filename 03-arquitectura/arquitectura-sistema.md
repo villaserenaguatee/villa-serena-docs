@@ -40,7 +40,7 @@ Confirmadas por el catedrático. No se sustituyen.
 | **Recurrente** | Pasarela de pagos local en Quetzales (reemplaza a Stripe; ver [ADR-017](adr/ADR-017-pasarela-recurrente.md)) | Hito |
 | **Facturación + impresora** | Factura de demostración impresa desde Recepción | Hito |
 | **API REST, BFF y CORS** | Patrones de arquitectura | Hito |
-| **React Native** | App del huésped (Expo) | Hito |
+| **React Native** | App del huésped y personal operativo (Expo, Docs #63) | Hito |
 | **Grafana** | Monitoreo; en el hito, **en local con Docker** | Hito |
 | **Cloudflare** | DNS y almacenamiento R2 en `dev` (compatible con S3) | Desarrollo y dominio |
 | **Vercel + AWS (EC2, API Gateway, S3, CloudFront, SSM)** | Vercel aloja `villa-serena-web` (`villaserenaguate.org`); AWS aloja `villa-serena-api` y PostgreSQL 17 en EC2 ARM64 detrás de HTTP API Gateway (`api.villaserenaguate.org`) + VPC Link + Cloud Map, y archivos en S3 + CloudFront | Despliegue |
@@ -163,7 +163,7 @@ Grafana (Docker en dev) ─────muestra──────────► 
 
 | Tecnología | Uso |
 |---|---|
-| **React Native + Expo SDK 54** + **Expo Router** | App del huésped |
+| **React Native + Expo SDK 54** + **Expo Router** | Huésped y personal operativo (Docs #63) |
 | **Expo Go (SDK 54)** | Pruebas rápidas (todo excepto push). Se instala desde expo.dev/go |
 | **Development build** (`expo-dev-client`) vía EAS | Pruebas con notificaciones push |
 | **EAS Build** | APK para entregar |
@@ -260,12 +260,15 @@ Cómo se implementa la sesión de la web. No agrega funcionalidad: deja por escr
 | Panel del personal y portal web del huésped | Navegador → BFF → Spring | Cookies httpOnly de la sesión correspondiente; permisos y titularidad validados por Spring |
 | WebSocket del panel | Navegador → **Spring directo**, con el ticket de 60 segundos que entrega el BFF | Ticket |
 | App del huésped (API y WebSocket) | App → **Spring directo** | JWT del huésped |
+| Android del personal operativo (Docs #63) | App → **Spring directo**, sin BFF | HTTP con JWT en SecureStore; STOMP con ticket de un uso solicitado por HTTP |
 | Webhook de Recurrente y API del canal | Servicio externo → **Spring directo** | Firma Svix / clave del canal |
 
 - El portal web del huésped tiene sesión mediante el BFF y cookies httpOnly. Android llama directamente al API y utiliza SecureStore; no utiliza el BFF. La exclusividad anterior de la app es un antecedente sustituido por la coexistencia de ambos clientes.
 - El reenviador genérico del BFF (`/api/...` → `/api/v1/...`) **bloquea** las rutas del webhook de Recurrente y de la API del canal.
 
-**2. Inicio de sesión del personal**
+Android operativo añade correo/contraseña y `/auth/yo`, cambio de contraseña temporal y cierre de sesión mediante los mismos endpoints. La identidad por rol/área se confirma en servidor antes de operar; no se decodifica un JWT local como autoridad. Ver [personal móvil](personal-movil.md).
+
+**2. Inicio de sesión del personal (web)**
 
 1. El navegador envía correo y contraseña al BFF.
 2. El BFF llama a Spring, recibe el token de acceso y el refresh, y los guarda en **cookies httpOnly, Secure (fuera de localhost), SameSite=Lax, path=/**. Nunca los devuelve en el cuerpo de la respuesta.

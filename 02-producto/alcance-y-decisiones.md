@@ -56,7 +56,7 @@ La entrega se organiza por el [roadmap vigente](../01-metodologia/roadmap-versio
 | D-03 | **Idioma: español** | Toda la interfaz (web y app) en español |
 | D-04 | **Pagos con Recurrente en Sandbox** | Checkout alojado en GTQ, sin dinero real; el backend verifica el pago por webhook o conciliación, nunca por la vuelta del navegador. Véase el [contrato vigente](../03-arquitectura/contrato-api.md) |
 | D-05 | **Channel Manager simulado** | Solo se **reciben** reservas de un canal simulado a través de una API. La conexión real con Booking o Expedia es Fase 2 |
-| D-06 | **Personal en web privada; huésped en portal web y app Android** | Recepción, Room Service, Mantenimiento/Limpieza y Administrador usan la **web privada**. El huésped principal accede al **portal web (`/portal`)** en `v0.1.0` y a la **app Android** en `v0.2.0` (que incorpora notificaciones push Expo/FCM) |
+| D-06 | **Web privada y Android operativo; huésped en portal web y Android** | La web privada se conserva para todo el personal. Docs #63 amplía Android a **Room Service y Mantenimiento/Limpieza** (LIMPIEZA, MANTENIMIENTO y AMBAS), con sus permisos existentes; ADMIN y RECEPCION siguen en web. El huésped conserva portal web y Android. Alcance y estado de entrega en [personal móvil](../03-arquitectura/personal-movil.md) |
 | D-07 | **Reserva sin cuenta** | El cliente reserva en la web pública sin crear cuenta ni contraseña (verifica su correo antes de emitir la reserva) |
 | D-08 | **Acceso del huésped por código al correo (OTP)** | En el portal web (`/login` → `/portal`) y en la **app Android**: correo + código de 6 dígitos (vigencia de 10 minutos, un solo uso), sin contraseña |
 | D-10 | **App Android con React Native + Expo** | TypeScript, Expo SDK 54 (`v0.2.0`). Expo Go sirve para pruebas rápidas; las notificaciones push se prueban con un *development build*, porque Expo Go no las recibe. Se entrega como APK (EAS Build). Ver [arquitectura del sistema](../03-arquitectura/arquitectura-sistema.md) |
@@ -88,7 +88,7 @@ Es la visión completa del producto. El MVP (`v0.1.0`) cubre reserva, pago, chec
    - Recepción también puede crear reservas (`v0.1.0`, se pagan en el check-out), y el **canal simulado** puede enviarlas por la API (`v0.3.0`).
 2. **Check-in (Recepción — `v0.1.0`):** busca la reserva ("Llegan hoy"), asigna una habitación **libre y limpia** y hace el check-in.
 3. **Estadía (portal web en `v0.1.0` / app Android en `v0.2.0`):** el huésped entra con su **correo + código OTP**, ve su estadía y su cuenta; en `v0.2.0` **pide room service** (se carga a su cuenta), **solicita limpieza o artículos** y recibe **notificaciones push**.
-4. **Operación (web privada — `v0.2.0`):** Room Service prepara y entrega los pedidos; Limpieza limpia habitaciones y atiende solicitudes; Mantenimiento resuelve daños.
+4. **Operación (web privada y Android operativo — `v0.2.0`, Docs #63):** Room Service prepara y entrega los pedidos; Limpieza limpia habitaciones y atiende solicitudes; Mantenimiento resuelve daños.
 5. **Check-out (Recepción o portal/app — `v0.1.0` / `v0.2.0`):** se paga el saldo, se indica **NIT o Consumidor Final**, se **emite la factura** (vista de impresión en 80 mm/carta, PDF y envío por correo) y la habitación pasa a **Libre + Sucia**.
 
 ---
@@ -257,7 +257,7 @@ ALC-MYL-10 (repuestos de mantenimiento) deja de estar excluido: docs #21 conserv
 | F2-02 | Domótica, apertura por NFC o Bluetooth, Wi-Fi automático |
 | F2-03 | Reservar turnos en spa, gimnasio o canchas |
 | F2-04 | Chat en tiempo real con recepción |
-| F2-06 | Crear reservas desde la app |
+| F2-06 | Crear reservas desde la app: pendiente de implementación verificada; consultar reservas no equivale a crearlas. No forma parte de Docs #63 |
 | F2-07 | Versión iOS de la app |
 | F2-08 | Certificación real de facturas ante la SAT (FEL) |
 | F2-09 | Programa de fidelidad y pago con puntos |

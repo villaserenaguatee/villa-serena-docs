@@ -8,6 +8,8 @@
 > **Total de historias:** 8 (Nivel 1: 8 · Nivel 2: 0)
 > **Referencias:** 01 — Alcance (sección G)
 
+> **Ampliación Android (Docs #63):** Limpieza y Mantenimiento usan también Android según área para HU-MYL-01 a HU-MYL-08; la web se mantiene. Ver [alcance, permisos y estado](../../03-arquitectura/personal-movil.md).
+
 ---
 
 ## Épica 1: Limpieza

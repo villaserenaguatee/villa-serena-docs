@@ -8,6 +8,8 @@
 > **Total de historias:** 7 (Nivel 1: 7 · Nivel 2: 0)
 > **Referencias:** 01 — Alcance (sección F)
 
+> **Ampliación Android (Docs #63):** Room Service usa también Android para HU-RS-01 a HU-RS-06; la web se mantiene. Ver [alcance, permisos y estado](../../03-arquitectura/personal-movil.md).
+
 ---
 
 ## Épica 1: Gestión de pedidos

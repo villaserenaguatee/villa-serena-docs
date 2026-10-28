@@ -2,6 +2,8 @@
 
 > Reconciliación 22/10/2026: [decisiones posteriores, estado implementado y límites del contrato](reconciliacion-frontend-20261022.md). Los estados «Pendiente» anteriores no certifican implementación; portal web y Android coexisten. No se reintroducen campos retirados del MVP.
 
+Docs #63 añade el cliente Android para ROOM_SERVICE y MANTENIMIENTO_LIMPIEZA sin ampliar permisos de negocio. Las áreas y el empleado a cargo siguen siendo obligatorios; ver [personal móvil](../03-arquitectura/personal-movil.md).
+
 Especifica los permisos detallados de lectura, creación, modificación y anulación por rol para cada uno de los módulos del sistema.
 
 ---
@@ -246,7 +248,7 @@ Solo los **4 eventos** del documento 07 (sección 12). Spring autoriza cada susc
 | Solicitudes nuevas | `MYL` con área `LIMPIEZA` o `AMBAS` |
 | Cambios de habitación | `RECEPCION` y `MYL` con área `LIMPIEZA` o `AMBAS` |
 
-La web se conecta con un ticket de 60 segundos obtenido a través del BFF. La app se conecta con su propio JWT de huésped, sin pasar por el BFF.
+La web se conecta con un ticket de 60 segundos obtenido a través del BFF. En Android, el huésped usa su propio JWT y el personal obtiene un ticket de un uso por HTTP autenticado directo a Spring. No se admite el JWT del personal en CONNECT; no cambian los destinos permitidos.
 
 ### 7.5 Archivos (R2 en dev / Amazon S3 en producción)
 
