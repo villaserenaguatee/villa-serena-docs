@@ -9374,7 +9374,7 @@ components:
       required:
         - id
       description: >-
-        Texto plano. Títulos, subtítulos y botones hasta 200 caracteres; otros textos hasta 4000. Imagen exige fotoClave; botón exige texto y destino; los demás exigen texto. Prohibidos HTML,
+        Texto plano. Títulos, subtítulos y botones hasta 200 caracteres; otros textos hasta 4000. Imagen admite fotoClave o fotoClaves; botón exige texto y destino; los demás exigen texto. Prohibidos HTML,
         controles y campos ajenos al tipo.
       properties:
         id:
@@ -9444,6 +9444,20 @@ components:
             - contacto.titulo
             - ayuda.titulo
             - pie.descripcion
+            - inicio.imagenes
+            - galeria-hotel.imagenes
+            - nosotros.imagen
+            - servicios.spa.imagen
+            - servicios.gimnasio.imagen
+            - servicios.piscina.imagen
+            - servicios.restaurante.imagen
+            - estancias.romantica.imagen
+            - estancias.descanso.imagen
+            - estancias.familiar.imagen
+            - estancias.negocios.imagen
+            - estancias.bienestar.imagen
+            - estancia-digital.imagen
+            - identidad.logo.imagen
         texto:
           type: string
           minLength: 1
@@ -9451,8 +9465,17 @@ components:
         fotoClave:
           type: string
           maxLength: 255
-          pattern: ^hotel/[0-9a-f-]{36}\.(jpg|png)$
-          description: Referencia HOTEL asociada a la galería y presente en almacenamiento; nunca URL externa.
+          pattern: ^hotel/.+\.(jpg|png)$
+          description: Referencia HOTEL existente en almacenamiento; nunca URL externa. Compatible con documentos anteriores. Las claves nuevas deben tener UUID; las claves anteriores registradas en la galeria se conservan.
+        fotoClaves:
+          description: Lista ordenada de claves HOTEL existentes en almacenamiento. No se asocian a la galeria publica al guardar. Maximo 30 para listas y una para posiciones individuales. Lista vacia retira imagenes al publicar, salvo el logo. No combinar con fotoClave, texto ni destino. Nunca elimina archivos.
+          type: array
+          maxItems: 30
+          uniqueItems: true
+          items:
+            type: string
+            maxLength: 255
+            pattern: '^hotel/.+\.(jpg|png)$'
         destino:
           type: string
           enum:
@@ -9476,7 +9499,7 @@ components:
         elementos:
           type: array
           minItems: 1
-          maxItems: 64
+          maxItems: 78
           items:
             $ref: '#/components/schemas/ElementoEditorial'
           description: >-
@@ -13395,6 +13418,15 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/FotoHotelPeticion"
+        editorFotografico:
+          description: Soporta posiciones fotograficas con borradores y publicacion; no inferir compatibilidad de la presencia de ETag.
+          type: boolean
+          readOnly: true
+        revisionGaleria:
+          description: Revision fuerte de fotos identica al ETag, para enviar literalmente en If-Match.
+          type: string
+          pattern: '^"[a-f0-9]{64}"$'
+          readOnly: true
         horaCheckIn:
           type: string
           const: 15:00
