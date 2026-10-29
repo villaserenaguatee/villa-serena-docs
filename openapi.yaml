@@ -9465,8 +9465,8 @@ components:
         fotoClave:
           type: string
           maxLength: 255
-          pattern: ^hotel/[0-9a-f-]{36}\.(jpg|png)$
-          description: Referencia HOTEL existente en almacenamiento; nunca URL externa. Compatible con documentos anteriores.
+          pattern: ^hotel/.+\.(jpg|png)$
+          description: Referencia HOTEL existente en almacenamiento; nunca URL externa. Compatible con documentos anteriores. Las claves nuevas deben tener UUID; las claves anteriores registradas en la galeria se conservan.
         fotoClaves:
           description: Lista ordenada de claves HOTEL existentes en almacenamiento. No se asocian a la galeria publica al guardar. Maximo 30 para listas y una para posiciones individuales. Lista vacia retira imagenes al publicar, salvo el logo. No combinar con fotoClave, texto ni destino. Nunca elimina archivos.
           type: array
@@ -9475,7 +9475,7 @@ components:
           items:
             type: string
             maxLength: 255
-            pattern: '^hotel/[0-9a-f-]{36}\.(jpg|png)$'
+            pattern: '^hotel/.+\.(jpg|png)$'
         destino:
           type: string
           enum:
