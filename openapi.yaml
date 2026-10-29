@@ -13418,6 +13418,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/FotoHotelPeticion"
+        editorFotografico:
+          description: Soporta posiciones fotograficas con borradores y publicacion; no inferir compatibilidad de la presencia de ETag.
+          type: boolean
+          readOnly: true
         revisionGaleria:
           description: Revision fuerte de fotos identica al ETag, para enviar literalmente en If-Match.
           type: string
