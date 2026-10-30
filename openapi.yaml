@@ -9485,6 +9485,7 @@ components:
             - /#habitaciones
             - /#servicios
             - /#contacto
+            - /#buscar
     GuardarEditorialPeticion:
       type: object
       additionalProperties: false
