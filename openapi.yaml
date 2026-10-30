@@ -9858,6 +9858,241 @@ paths:
         '409':
           description: Conflicto de cupos, estado, revisión o política
 
+  /api/v1/estancias/{codigo}/chat:
+    parameters:
+      - name: codigo
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - Chat de Recepción
+      operationId: mensajesChatRecepcion
+      summary: mensajesChatRecepcion
+      description: >-
+        Requiere RECEPCION. Solo sus propios mensajes no eliminados y de una estancia EN_ESTADIA admiten modificación.
+        Nunca se confía en permisos enviados por el cliente.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Operación completada
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MensajeChatRecepcion'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Sin sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Rol no permitido o mensaje de otro autor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Reserva o mensaje no encontrado en esa conversación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Estancia cerrada, mensaje eliminado o revisión obsoleta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags:
+        - Chat de Recepción
+      operationId: enviarMensajeChatRecepcion
+      summary: enviarMensajeChatRecepcion
+      description: >-
+        Requiere RECEPCION. Solo sus propios mensajes no eliminados y de una estancia EN_ESTADIA admiten modificación.
+        Nunca se confía en permisos enviados por el cliente.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnviarMensajeChatRecepcion'
+      responses:
+        '200':
+          description: Operación completada
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - id
+                properties:
+                  id:
+                    type: integer
+                    format: int64
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Sin sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Rol no permitido o mensaje de otro autor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Reserva o mensaje no encontrado en esa conversación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Estancia cerrada, mensaje eliminado o revisión obsoleta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/estancias/{codigo}/chat/{mensajeId}:
+    parameters:
+      - name: codigo
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: mensajeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    put:
+      tags:
+        - Chat de Recepción
+      operationId: editarMensajeChatRecepcion
+      summary: editarMensajeChatRecepcion
+      description: >-
+        Requiere RECEPCION. Solo sus propios mensajes no eliminados y de una estancia EN_ESTADIA admiten modificación.
+        Nunca se confía en permisos enviados por el cliente.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditarMensajeChatRecepcion'
+      responses:
+        '200':
+          description: Operación completada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MensajeChatRecepcion'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Sin sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Rol no permitido o mensaje de otro autor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Reserva o mensaje no encontrado en esa conversación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Estancia cerrada, mensaje eliminado o revisión obsoleta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Chat de Recepción
+      operationId: eliminarMensajeChatRecepcion
+      summary: eliminarMensajeChatRecepcion
+      description: >-
+        Requiere RECEPCION. Solo sus propios mensajes no eliminados y de una estancia EN_ESTADIA admiten modificación.
+        Nunca se confía en permisos enviados por el cliente.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EliminarMensajeChatRecepcion'
+      responses:
+        '200':
+          description: Operación completada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MensajeChatRecepcion'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Sin sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Rol no permitido o mensaje de otro autor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Reserva o mensaje no encontrado en esa conversación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Estancia cerrada, mensaje eliminado o revisión obsoleta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -10018,6 +10253,83 @@ components:
             detalles: []
 
   schemas:
+    MensajeChatRecepcion:
+      type: object
+      description: >-
+        puedeModificar depende de autor RECEPCION, author_id del JWT, estancia EN_ESTADIA y ausencia de eliminación. No
+        expone author_id. Tras eliminar, texto es vacío, eliminado=true y puedeModificar=false; se conserva el registro
+        privado.
+      required:
+        - id
+        - autor
+        - texto
+        - creadoEn
+        - version
+        - puedeModificar
+        - eliminado
+      properties:
+        id:
+          type: integer
+          format: int64
+        autor:
+          type: string
+          enum:
+            - HUESPED
+            - RECEPCION
+        texto:
+          type: string
+        creadoEn:
+          type: string
+          format: date-time
+        version:
+          type: integer
+          format: int64
+          minimum: 0
+        puedeModificar:
+          type: boolean
+        eliminado:
+          type: boolean
+        editadoEn:
+          type: string
+          format: date-time
+    EnviarMensajeChatRecepcion:
+      type: object
+      required:
+        - clave
+        - texto
+      properties:
+        clave:
+          type: string
+          format: uuid
+        texto:
+          type: string
+          minLength: 1
+          maxLength: 2000
+          pattern: \S
+    EditarMensajeChatRecepcion:
+      type: object
+      required:
+        - texto
+        - version
+      properties:
+        texto:
+          type: string
+          minLength: 1
+          maxLength: 2000
+          pattern: \S
+        version:
+          type: integer
+          format: int64
+          minimum: 0
+    EliminarMensajeChatRecepcion:
+      type: object
+      required:
+        - version
+      properties:
+        version:
+          type: integer
+          format: int64
+          minimum: 0
     Experiencia:
       type: object
       additionalProperties: false
