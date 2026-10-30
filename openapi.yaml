@@ -13148,6 +13148,12 @@ components:
             - type: string
               minLength: 1
             - type: "null"
+        fotoUrl:
+          description: URL pública de la fotografía MENU configurada por el API; nula si no hay fotografía. Campo adicional compatible con consumidores anteriores. No concede acceso a archivos privados.
+          anyOf:
+            - type: string
+              format: uri
+            - type: "null"
         disponibilidad:
           $ref: "#/components/schemas/DisponibilidadMenu"
         estado:
