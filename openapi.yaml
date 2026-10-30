@@ -10093,6 +10093,122 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /api/v1/estancias/chat-preferencias:
+    get:
+      tags:
+        - Chat de Recepción
+      operationId: preferenciasChatRecepcion
+      summary: preferenciasChatRecepcion
+      description: >-
+        Preferencias privadas del empleado autenticado. No se aceptan IDs de empleado del cliente. Eliminar una
+        conversación solo la retira de su lista, sin borrar mensajes ni afectar al huésped u otro empleado.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Operación completada
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PreferenciaChatRecepcion'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Sin sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Requiere RECEPCION
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Reserva no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Estancia no iniciada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/estancias/{codigo}/chat-preferencias:
+    parameters:
+      - name: codigo
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      tags:
+        - Chat de Recepción
+      operationId: guardarPreferenciasChatRecepcion
+      summary: guardarPreferenciasChatRecepcion
+      description: >-
+        Preferencias privadas del empleado autenticado. No se aceptan IDs de empleado del cliente. Eliminar una
+        conversación solo la retira de su lista, sin borrar mensajes ni afectar al huésped u otro empleado.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CambiarPreferenciaChatRecepcion'
+      responses:
+        '200':
+          description: Operación completada
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - codigo
+                properties:
+                  codigo:
+                    type: string
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Sin sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Requiere RECEPCION
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Reserva no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Estancia no iniciada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -10253,6 +10369,53 @@ components:
             detalles: []
 
   schemas:
+    PreferenciaChatRecepcion:
+      type: object
+      required:
+        - codigo
+        - favorita
+        - archivada
+        - eliminada
+        - ultimoId
+        - noLeidos
+      properties:
+        codigo:
+          type: string
+        favorita:
+          type: boolean
+        archivada:
+          type: boolean
+        eliminada:
+          type: boolean
+        ultimoId:
+          type: integer
+          format: int64
+          minimum: 0
+        noLeidos:
+          type: integer
+          format: int64
+          minimum: 0
+    CambiarPreferenciaChatRecepcion:
+      type: object
+      description: >-
+        favorita y archivada requieren valor. leido requiere hasta; nunca se adelanta más allá del último mensaje
+        existente. El marcador no retrocede. eliminar no borra mensajes.
+      required:
+        - accion
+      properties:
+        accion:
+          type: string
+          enum:
+            - favorita
+            - archivada
+            - eliminar
+            - leido
+        valor:
+          type: boolean
+        hasta:
+          type: integer
+          format: int64
+          minimum: 0
     MensajeChatRecepcion:
       type: object
       description: >-

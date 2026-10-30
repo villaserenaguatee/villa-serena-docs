@@ -8,4 +8,6 @@ Eliminar conserva la fila y su texto privado, marca `deleted_at` e incrementa la
 
 La migración V36 agrega tres columnas a `stay_messages`, sin cambiar sus filas anteriores. Los bloqueos siguen el orden reserva → mensaje, de modo que el cierre de estancia y los cambios del mensaje no se intercalen de forma insegura. No se cambia el manejo de documentos de check-in, pagos ni otros módulos.
 
-Dependencia de publicación: contrato → API → Web #139. Las PR permanecen en borrador, sin fusión ni despliegue automático autorizado. Las carpetas de chat no se implementan ni se simulan en esta corrección; la Web conserva su manejo de indisponibilidad.
+Favoritos, archivados, eliminación de la lista y marcador de lectura se guardan por empleado y reserva. No cambian mensajes ni preferencias de otras personas. Los no leídos cuentan mensajes de huéspedes no eliminados posteriores al marcador personal. El marcador avanza como máximo hasta el último ID existente y nunca retrocede. No hay datos iniciales ni preferencias ficticias.
+
+Dependencia de publicación: contrato → API → Web #139. Las PR permanecen en borrador, sin fusión ni despliegue automático autorizado. La Web conserva su manejo de indisponibilidad para versiones anteriores del API.
