@@ -9462,6 +9462,20 @@ components:
           type: string
           minLength: 1
           maxLength: 4000
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 80
+          description: Solo en estancias.romantica, estancias.descanso, estancias.familiar, estancias.negocios y estancias.bienestar. Nombre visible sin cambiar el ID; texto conserva la descripción. Texto plano sin HTML ni controles.
+        ofertaSlugs:
+          type: array
+          maxItems: 3
+          uniqueItems: true
+          items:
+            type: string
+            minLength: 1
+            maxLength: 100
+          description: Solo en los cinco IDs de estancia. Referencias ordenadas a ofertas existentes, publicadas y de categoría activa. Cero a tres sin duplicados; admite reutilizar ofertas entre estancias. Ausencia conserva recomendaciones por preferencias anteriores; lista vacía retira recomendaciones de esa estancia. Fotografías, precios y datos provienen del catálogo vigente, nunca se copian ni modifican. Guardar no publica; revalidar asociaciones al publicar.
         fotoClave:
           type: string
           maxLength: 255
