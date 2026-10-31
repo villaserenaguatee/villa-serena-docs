@@ -8894,6 +8894,66 @@ paths:
         por fechas. Las vinculaciones son atómicas y las cantidades se derivan de registros; no se duplican
         tarjetas por unidad. Las escrituras dejan auditoría administrativa. Una oferta ajena al tipo, piso o
         atributos de sus unidades se rechaza sin guardar parcialmente.
+  /api/v1/admin/habitaciones/{id}/fotos:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+    get:
+      tags: [admin]
+      operationId: consultarFotosHabitacionAdmin
+      summary: Consultar fotografías de una habitación física
+      security:
+        - bearerAuth: []
+      x-autorizacion:
+        roles: [ADMIN]
+        nivel: 1
+      responses:
+        '200':
+          description: Galería individual de la habitación.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FotosHabitacionRespuesta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [admin]
+      operationId: actualizarFotosHabitacionAdmin
+      summary: Sustituir la galería de una habitación física
+      description: Las fotografías son independientes de las de su categoría. Entre 1 y 30 fotografías JPG/PNG cargadas con uso HABITACION; exactamente una principal. La operación es transaccional.
+      security:
+        - bearerAuth: []
+      x-autorizacion:
+        roles: [ADMIN]
+        nivel: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FotosTipoPeticion'
+      responses:
+        '200':
+          description: Galería individual actualizada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FotosHabitacionRespuesta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/v1/admin/habitaciones/{id}/caracteristicas:
     parameters:
       - name: id
@@ -14483,6 +14543,17 @@ components:
         - clave: tipos/suite-demo.jpg
           principal: true
           orden: 0
+    FotosHabitacionRespuesta:
+      type: object
+      additionalProperties: false
+      required: [habitacionId, fotos]
+      properties:
+        habitacionId:
+          $ref: '#/components/schemas/Id'
+        fotos:
+          type: array
+          items:
+            $ref: '#/components/schemas/FotoCatalogo'
     FotosTipoPeticion:
       type: object
       additionalProperties: false
@@ -15161,6 +15232,7 @@ components:
           enum:
             - HOTEL
             - TIPO_HABITACION
+            - HABITACION
             - MENU
             - AMENIDAD
             - INCIDENCIA
