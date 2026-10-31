@@ -2,7 +2,7 @@
 
 El chat conserva el envío existente y agrega edición y eliminación lógica para Recepción. Las rutas del personal exigen RECEPCION. `puedeModificar` solo es verdadero cuando el mensaje fue enviado por ese empleado, su autor es RECEPCION, la reserva sigue EN_ESTADIA y el mensaje no está eliminado. Compartir el rol no permite modificar mensajes de otro empleado. Los mensajes de huéspedes tampoco se pueden modificar desde Recepción.
 
-PUT y DELETE requieren la revisión `version` recibida al consultar. Una revisión obsoleta responde 409, un autor ajeno 403 y un mensaje que no pertenece a esa conversación 404. Al finalizar la estancia, el historial es de solo lectura. No se agrega una ventana temporal que no existía como regla del hotel.
+PUT requiere la revisión `version` recibida al consultar. DELETE la comprueba cuando el cliente envía un cuerpo; admite cuerpo ausente para conservar la compatibilidad con la Web publicada. La Web actualizada siempre envía la revisión. Los permisos y el estado se comprueban también en solicitudes sin cuerpo. Una revisión obsoleta responde 409, un autor ajeno 403 y un mensaje que no pertenece a esa conversación 404. Al finalizar la estancia, el historial es de solo lectura. No se agrega una ventana temporal que no existía como regla del hotel.
 
 Eliminar conserva la fila y su texto privado, marca `deleted_at` e incrementa la versión. Las consultas del personal y del huésped dejan de devolver el texto eliminado. Repetir una eliminación ya completada no elimina registros ni produce otra modificación. Editar conserva la fecha original y registra `editadoEn`. El huésped no obtiene permisos nuevos de edición o eliminación.
 
