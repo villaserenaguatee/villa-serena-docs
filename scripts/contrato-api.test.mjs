@@ -412,6 +412,39 @@ test('editorial separa borrador ADMIN y publicación pública por idioma con rev
   assert.ok(definitions.EditorialSitio.properties.fotografias.readOnly);
 });
 
+test('ejemplos editoriales ES/EN usan ids del catálogo, campos de su tipo y destinos permitidos', () => {
+  const base='/api/v1/admin/hotel/editorial/{idioma}';
+  const json=m=>m.content['application/json'];
+  const values=m=>m.examples?Object.values(m.examples).map(e=>e.value):[m.example];
+  const draft=contract.paths[base], publish=contract.paths[`${base}/publicacion`].post;
+  const publicRead=contract.paths['/api/v1/publico/hotel/editorial/{idioma}'].get;
+  const docs=[draft.get.responses['200'],draft.put.responses['200'],publish.responses['200'],publicRead.responses['200']].flatMap(r=>values(json(r)));
+  const requests=values(json(draft.put.requestBody));
+  const {id,destino,fotoClaves}=definitions.ElementoEditorial.properties;
+  for (const doc of [...docs,...requests]) {
+    const ids=doc.elementos.map(e=>e.id);
+    assert.equal(new Set(ids).size,ids.length);
+    for (const e of doc.elementos) {
+      assert.ok(id.enum.includes(e.id),e.id);
+      const fields=Object.keys(e).filter(k=>k!=='id').sort().join();
+      if (/\.imagen(es)?$/.test(e.id)) {
+        assert.equal(fields,'fotoClaves');
+        for (const clave of e.fotoClaves) {
+          assert.match(clave,new RegExp(fotoClaves.items.pattern));
+          if (doc.fotografias) assert.ok(doc.fotografias[clave],clave);
+        }
+      } else if (e.id.endsWith('.boton')) {
+        assert.equal(fields,'destino,texto');
+        assert.ok(destino.enum.includes(e.destino));
+      } else assert.equal(fields,'texto');
+    }
+  }
+  assert.deepEqual(values(json(publicRead.responses['200'])).map(d=>d.idioma),['es','en']);
+  assert.deepEqual(Object.keys(json(draft.put.requestBody).examples),['es','en']);
+  assert.ok(values(json(publicRead.responses['200'])).every(d=>d.revision===d.revisionPublicada&&!('actualizadoEn' in d)));
+  assert.ok(json(publish.requestBody).example.revision>=definitions.PublicarEditorialPeticion.properties.revision.minimum);
+});
+
 
 test('correo personal es contacto opcional nullable, sin cambiar el identificador laboral ni permitir editarlo', () => {
   const contract = load(readFileSync(new URL('../openapi.yaml', import.meta.url), 'utf8'));
