@@ -8994,6 +8994,66 @@ paths:
         por fechas. Las vinculaciones son atómicas y las cantidades se derivan de registros; no se duplican
         tarjetas por unidad. Las escrituras dejan auditoría administrativa. Una oferta ajena al tipo, piso o
         atributos de sus unidades se rechaza sin guardar parcialmente.
+  /api/v1/admin/habitaciones/{id}/fotos:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+    get:
+      tags: [admin]
+      operationId: consultarFotosHabitacionAdmin
+      summary: Consultar fotografías de una habitación física
+      security:
+        - bearerAuth: []
+      x-autorizacion:
+        roles: [ADMIN]
+        nivel: 1
+      responses:
+        '200':
+          description: Galería individual de la habitación.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FotosHabitacionRespuesta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [admin]
+      operationId: actualizarFotosHabitacionAdmin
+      summary: Sustituir la galería de una habitación física
+      description: Las fotografías son independientes de las de su categoría. Entre 1 y 30 fotografías JPG/PNG cargadas con uso HABITACION; exactamente una principal. La operación es transaccional.
+      security:
+        - bearerAuth: []
+      x-autorizacion:
+        roles: [ADMIN]
+        nivel: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FotosTipoPeticion'
+      responses:
+        '200':
+          description: Galería individual actualizada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FotosHabitacionRespuesta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/v1/admin/habitaciones/{id}/caracteristicas:
     parameters:
       - name: id
@@ -9308,6 +9368,1007 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /api/v1/admin/experiencias:
+    get:
+      tags:
+        - experiencias
+      operationId: experienciasAdmin
+      summary: experienciasAdmin
+      description: Requiere ADMIN. Las reservas ajenas responden 404; conflictos de revisión, cupo, política, estado o clave reutilizada responden 409.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Operación completada
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Experiencia'
+        '400':
+          description: Datos inválidos
+        '401':
+          description: Sin sesión
+        '403':
+          description: Rol no permitido
+        '404':
+          description: Recurso no encontrado o ajeno
+        '409':
+          description: Conflicto de cupos, estado, revisión o política
+    post:
+      tags:
+        - experiencias
+      operationId: crearExperiencia
+      summary: crearExperiencia
+      description: Requiere ADMIN. Las reservas ajenas responden 404; conflictos de revisión, cupo, política, estado o clave reutilizada responden 409.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigExperiencia'
+      responses:
+        '200':
+          description: Operación completada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Experiencia'
+        '400':
+          description: Datos inválidos
+        '401':
+          description: Sin sesión
+        '403':
+          description: Rol no permitido
+        '404':
+          description: Recurso no encontrado o ajeno
+        '409':
+          description: Conflicto de cupos, estado, revisión o política
+  /api/v1/admin/experiencias/{id}:
+    put:
+      tags:
+        - experiencias
+      operationId: editarExperiencia
+      summary: editarExperiencia
+      description: Requiere ADMIN. Las reservas ajenas responden 404; conflictos de revisión, cupo, política, estado o clave reutilizada responden 409.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigExperiencia'
+      responses:
+        '200':
+          description: Operación completada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Experiencia'
+        '400':
+          description: Datos inválidos
+        '401':
+          description: Sin sesión
+        '403':
+          description: Rol no permitido
+        '404':
+          description: Recurso no encontrado o ajeno
+        '409':
+          description: Conflicto de cupos, estado, revisión o política
+  /api/v1/admin/experiencias/{id}/horarios:
+    get:
+      tags:
+        - experiencias
+      operationId: horariosExperienciaAdmin
+      summary: horariosExperienciaAdmin
+      description: Requiere ADMIN. Las reservas ajenas responden 404; conflictos de revisión, cupo, política, estado o clave reutilizada responden 409.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Operación completada
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HorarioExperiencia'
+        '400':
+          description: Datos inválidos
+        '401':
+          description: Sin sesión
+        '403':
+          description: Rol no permitido
+        '404':
+          description: Recurso no encontrado o ajeno
+        '409':
+          description: Conflicto de cupos, estado, revisión o política
+    post:
+      tags:
+        - experiencias
+      operationId: crearHorarioExperiencia
+      summary: crearHorarioExperiencia
+      description: Requiere ADMIN. Las reservas ajenas responden 404; conflictos de revisión, cupo, política, estado o clave reutilizada responden 409.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigHorarioExperiencia'
+      responses:
+        '200':
+          description: Operación completada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HorarioExperiencia'
+        '400':
+          description: Datos inválidos
+        '401':
+          description: Sin sesión
+        '403':
+          description: Rol no permitido
+        '404':
+          description: Recurso no encontrado o ajeno
+        '409':
+          description: Conflicto de cupos, estado, revisión o política
+  /api/v1/admin/experiencias/{id}/horarios/{horarioId}:
+    put:
+      tags:
+        - experiencias
+      operationId: editarHorarioExperiencia
+      summary: editarHorarioExperiencia
+      description: Requiere ADMIN. Las reservas ajenas responden 404; conflictos de revisión, cupo, política, estado o clave reutilizada responden 409.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: horarioId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigHorarioExperiencia'
+      responses:
+        '200':
+          description: Operación completada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HorarioExperiencia'
+        '400':
+          description: Datos inválidos
+        '401':
+          description: Sin sesión
+        '403':
+          description: Rol no permitido
+        '404':
+          description: Recurso no encontrado o ajeno
+        '409':
+          description: Conflicto de cupos, estado, revisión o política
+  /api/v1/app/reservas/{codigo}/experiencias:
+    get:
+      tags:
+        - experiencias
+      operationId: experienciasHuesped
+      summary: experienciasHuesped
+      description: Requiere HUESPED. Las reservas ajenas responden 404; conflictos de revisión, cupo, política, estado o clave reutilizada responden 409.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: codigo
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Operación completada
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Experiencia'
+        '400':
+          description: Datos inválidos
+        '401':
+          description: Sin sesión
+        '403':
+          description: Rol no permitido
+        '404':
+          description: Recurso no encontrado o ajeno
+        '409':
+          description: Conflicto de cupos, estado, revisión o política
+  /api/v1/app/reservas/{codigo}/experiencias/{id}/disponibilidad:
+    get:
+      tags:
+        - experiencias
+      operationId: disponibilidadExperiencia
+      summary: disponibilidadExperiencia
+      description: Requiere HUESPED. Las reservas ajenas responden 404; conflictos de revisión, cupo, política, estado o clave reutilizada responden 409.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: codigo
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: fecha
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Operación completada
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HorarioExperiencia'
+        '400':
+          description: Datos inválidos
+        '401':
+          description: Sin sesión
+        '403':
+          description: Rol no permitido
+        '404':
+          description: Recurso no encontrado o ajeno
+        '409':
+          description: Conflicto de cupos, estado, revisión o política
+  /api/v1/app/reservas/{codigo}/experiencias/reservas:
+    get:
+      tags:
+        - experiencias
+      operationId: misReservasExperiencias
+      summary: misReservasExperiencias
+      description: Requiere HUESPED. Las reservas ajenas responden 404; conflictos de revisión, cupo, política, estado o clave reutilizada responden 409.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: codigo
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Operación completada
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReservaExperiencia'
+        '400':
+          description: Datos inválidos
+        '401':
+          description: Sin sesión
+        '403':
+          description: Rol no permitido
+        '404':
+          description: Recurso no encontrado o ajeno
+        '409':
+          description: Conflicto de cupos, estado, revisión o política
+    post:
+      tags:
+        - experiencias
+      operationId: reservarExperiencia
+      summary: reservarExperiencia
+      description: Requiere HUESPED. Las reservas ajenas responden 404; conflictos de revisión, cupo, política, estado o clave reutilizada responden 409.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: codigo
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrearReservaExperiencia'
+      responses:
+        '200':
+          description: Operación completada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReservaExperiencia'
+        '400':
+          description: Datos inválidos
+        '401':
+          description: Sin sesión
+        '403':
+          description: Rol no permitido
+        '404':
+          description: Recurso no encontrado o ajeno
+        '409':
+          description: Conflicto de cupos, estado, revisión o política
+  /api/v1/app/reservas/{codigo}/experiencias/reservas/{id}/cancelar:
+    post:
+      tags:
+        - experiencias
+      operationId: cancelarExperiencia
+      summary: cancelarExperiencia
+      description: Requiere HUESPED. Las reservas ajenas responden 404; conflictos de revisión, cupo, política, estado o clave reutilizada responden 409.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: codigo
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelarExperiencia'
+      responses:
+        '200':
+          description: Operación completada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReservaExperiencia'
+        '400':
+          description: Datos inválidos
+        '401':
+          description: Sin sesión
+        '403':
+          description: Rol no permitido
+        '404':
+          description: Recurso no encontrado o ajeno
+        '409':
+          description: Conflicto de cupos, estado, revisión o política
+  /api/v1/app/reservas/{codigo}/experiencias/{id}/consultas:
+    post:
+      tags:
+        - experiencias
+      operationId: consultarExperiencia
+      summary: consultarExperiencia
+      description: Requiere HUESPED. Las reservas ajenas responden 404; conflictos de revisión, cupo, política, estado o clave reutilizada responden 409.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: codigo
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrearConsultaExperiencia'
+      responses:
+        '200':
+          description: Operación completada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsultaExperiencia'
+        '400':
+          description: Datos inválidos
+        '401':
+          description: Sin sesión
+        '403':
+          description: Rol no permitido
+        '404':
+          description: Recurso no encontrado o ajeno
+        '409':
+          description: Conflicto de cupos, estado, revisión o política
+  /api/v1/app/reservas/{codigo}/experiencias/consultas:
+    get:
+      tags:
+        - experiencias
+      operationId: misConsultasExperiencias
+      summary: misConsultasExperiencias
+      description: Requiere HUESPED. Las reservas ajenas responden 404; conflictos de revisión, cupo, política, estado o clave reutilizada responden 409.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: codigo
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Operación completada
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConsultaExperiencia'
+        '400':
+          description: Datos inválidos
+        '401':
+          description: Sin sesión
+        '403':
+          description: Rol no permitido
+        '404':
+          description: Recurso no encontrado o ajeno
+        '409':
+          description: Conflicto de cupos, estado, revisión o política
+  /api/v1/experiencias/reservas:
+    get:
+      tags:
+        - experiencias
+      operationId: reservasExperienciasRecepcion
+      summary: reservasExperienciasRecepcion
+      description: >-
+        Requiere RECEPCION. Las reservas ajenas responden 404; conflictos de revisión, cupo, política, estado o clave reutilizada responden
+        409.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: fecha
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: experienciaId
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: estado
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Operación completada
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReservaExperiencia'
+        '400':
+          description: Datos inválidos
+        '401':
+          description: Sin sesión
+        '403':
+          description: Rol no permitido
+        '404':
+          description: Recurso no encontrado o ajeno
+        '409':
+          description: Conflicto de cupos, estado, revisión o política
+  /api/v1/experiencias/reservas/{id}/decision:
+    post:
+      tags:
+        - experiencias
+      operationId: decidirReservaExperiencia
+      summary: decidirReservaExperiencia
+      description: >-
+        Requiere RECEPCION. Las reservas ajenas responden 404; conflictos de revisión, cupo, política, estado o clave reutilizada responden
+        409.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DecisionExperiencia'
+      responses:
+        '200':
+          description: Operación completada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReservaExperiencia'
+        '400':
+          description: Datos inválidos
+        '401':
+          description: Sin sesión
+        '403':
+          description: Rol no permitido
+        '404':
+          description: Recurso no encontrado o ajeno
+        '409':
+          description: Conflicto de cupos, estado, revisión o política
+  /api/v1/experiencias/consultas:
+    get:
+      tags:
+        - experiencias
+      operationId: consultasExperienciasRecepcion
+      summary: consultasExperienciasRecepcion
+      description: >-
+        Requiere RECEPCION. Las reservas ajenas responden 404; conflictos de revisión, cupo, política, estado o clave reutilizada responden
+        409.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Operación completada
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConsultaExperiencia'
+        '400':
+          description: Datos inválidos
+        '401':
+          description: Sin sesión
+        '403':
+          description: Rol no permitido
+        '404':
+          description: Recurso no encontrado o ajeno
+        '409':
+          description: Conflicto de cupos, estado, revisión o política
+  /api/v1/experiencias/consultas/{id}/respuesta:
+    post:
+      tags:
+        - experiencias
+      operationId: responderConsultaExperiencia
+      summary: responderConsultaExperiencia
+      description: >-
+        Requiere RECEPCION. Las reservas ajenas responden 404; conflictos de revisión, cupo, política, estado o clave reutilizada responden
+        409.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResponderConsultaExperiencia'
+      responses:
+        '200':
+          description: Operación completada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsultaExperiencia'
+        '400':
+          description: Datos inválidos
+        '401':
+          description: Sin sesión
+        '403':
+          description: Rol no permitido
+        '404':
+          description: Recurso no encontrado o ajeno
+        '409':
+          description: Conflicto de cupos, estado, revisión o política
+
+  /api/v1/estancias/{codigo}/chat:
+    parameters:
+      - name: codigo
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - Chat de Recepción
+      operationId: mensajesChatRecepcion
+      summary: mensajesChatRecepcion
+      description: >-
+        Requiere RECEPCION. Solo sus propios mensajes no eliminados y de una estancia EN_ESTADIA admiten modificación.
+        Nunca se confía en permisos enviados por el cliente.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Operación completada
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MensajeChatRecepcion'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Sin sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Rol no permitido o mensaje de otro autor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Reserva o mensaje no encontrado en esa conversación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Estancia cerrada, mensaje eliminado o revisión obsoleta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags:
+        - Chat de Recepción
+      operationId: enviarMensajeChatRecepcion
+      summary: enviarMensajeChatRecepcion
+      description: >-
+        Requiere RECEPCION. Solo sus propios mensajes no eliminados y de una estancia EN_ESTADIA admiten modificación.
+        Nunca se confía en permisos enviados por el cliente.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnviarMensajeChatRecepcion'
+      responses:
+        '200':
+          description: Operación completada
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - id
+                properties:
+                  id:
+                    type: integer
+                    format: int64
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Sin sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Rol no permitido o mensaje de otro autor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Reserva o mensaje no encontrado en esa conversación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Estancia cerrada, mensaje eliminado o revisión obsoleta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/estancias/{codigo}/chat/{mensajeId}:
+    parameters:
+      - name: codigo
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: mensajeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    put:
+      tags:
+        - Chat de Recepción
+      operationId: editarMensajeChatRecepcion
+      summary: editarMensajeChatRecepcion
+      description: >-
+        Requiere RECEPCION. Solo sus propios mensajes no eliminados y de una estancia EN_ESTADIA admiten modificación.
+        Nunca se confía en permisos enviados por el cliente.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditarMensajeChatRecepcion'
+      responses:
+        '200':
+          description: Operación completada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MensajeChatRecepcion'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Sin sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Rol no permitido o mensaje de otro autor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Reserva o mensaje no encontrado en esa conversación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Estancia cerrada, mensaje eliminado o revisión obsoleta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Chat de Recepción
+      operationId: eliminarMensajeChatRecepcion
+      summary: eliminarMensajeChatRecepcion
+      description: >-
+        Requiere RECEPCION. Solo sus propios mensajes no eliminados y de una estancia EN_ESTADIA admiten modificación.
+        Nunca se confía en permisos enviados por el cliente.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EliminarMensajeChatRecepcion'
+      responses:
+        '200':
+          description: Operación completada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MensajeChatRecepcion'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Sin sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Rol no permitido o mensaje de otro autor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Reserva o mensaje no encontrado en esa conversación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Estancia cerrada, mensaje eliminado o revisión obsoleta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/estancias/chat-preferencias:
+    get:
+      tags:
+        - Chat de Recepción
+      operationId: preferenciasChatRecepcion
+      summary: preferenciasChatRecepcion
+      description: >-
+        Preferencias privadas del empleado autenticado. No se aceptan IDs de empleado del cliente. Eliminar una
+        conversación solo la retira de su lista, sin borrar mensajes ni afectar al huésped u otro empleado.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Operación completada
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PreferenciaChatRecepcion'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Sin sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Requiere RECEPCION
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Reserva no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Estancia no iniciada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/estancias/{codigo}/chat-preferencias:
+    parameters:
+      - name: codigo
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      tags:
+        - Chat de Recepción
+      operationId: guardarPreferenciasChatRecepcion
+      summary: guardarPreferenciasChatRecepcion
+      description: >-
+        Preferencias privadas del empleado autenticado. No se aceptan IDs de empleado del cliente. Eliminar una
+        conversación solo la retira de su lista, sin borrar mensajes ni afectar al huésped u otro empleado.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CambiarPreferenciaChatRecepcion'
+      responses:
+        '200':
+          description: Operación completada
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - codigo
+                properties:
+                  codigo:
+                    type: string
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Sin sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Requiere RECEPCION
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Reserva no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Estancia no iniciada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -9502,13 +10563,528 @@ components:
             ENVIANDO: intento persistido antes de SMTP. ENVIADO: SMTP aceptó el mensaje.
             FALLIDO: fallo previo al envío o conexión/autenticación rechazada, reintento explícito permitido.
             INCIERTO: no se pudo confirmar el resultado SMTP; consultar sin reenviar.
+    PreferenciaChatRecepcion:
+      type: object
+      required:
+        - codigo
+        - favorita
+        - archivada
+        - eliminada
+        - ultimoId
+        - noLeidos
+      properties:
+        codigo:
+          type: string
+        favorita:
+          type: boolean
+        archivada:
+          type: boolean
+        eliminada:
+          type: boolean
+        ultimoId:
+          type: integer
+          format: int64
+          minimum: 0
+        noLeidos:
+          type: integer
+          format: int64
+          minimum: 0
+    CambiarPreferenciaChatRecepcion:
+      type: object
+      description: >-
+        favorita y archivada requieren valor. leido requiere hasta; nunca se adelanta más allá del último mensaje
+        existente. El marcador no retrocede. eliminar no borra mensajes.
+      required:
+        - accion
+      properties:
+        accion:
+          type: string
+          enum:
+            - favorita
+            - archivada
+            - eliminar
+            - leido
+        valor:
+          type: boolean
+        hasta:
+          type: integer
+          format: int64
+          minimum: 0
+    MensajeChatRecepcion:
+      type: object
+      description: >-
+        puedeModificar depende de autor RECEPCION, author_id del JWT, estancia EN_ESTADIA y ausencia de eliminación. No
+        expone author_id. Tras eliminar, texto es vacío, eliminado=true y puedeModificar=false; se conserva el registro
+        privado.
+      required:
+        - id
+        - autor
+        - texto
+        - creadoEn
+        - version
+        - puedeModificar
+        - eliminado
+      properties:
+        id:
+          type: integer
+          format: int64
+        autor:
+          type: string
+          enum:
+            - HUESPED
+            - RECEPCION
+        texto:
+          type: string
+        creadoEn:
+          type: string
+          format: date-time
+        version:
+          type: integer
+          format: int64
+          minimum: 0
+        puedeModificar:
+          type: boolean
+        eliminado:
+          type: boolean
+        editadoEn:
+          type: string
+          format: date-time
+    EnviarMensajeChatRecepcion:
+      type: object
+      required:
+        - clave
+        - texto
+      properties:
+        clave:
+          type: string
+          format: uuid
+        texto:
+          type: string
+          minLength: 1
+          maxLength: 2000
+          pattern: \S
+    EditarMensajeChatRecepcion:
+      type: object
+      required:
+        - texto
+        - version
+      properties:
+        texto:
+          type: string
+          minLength: 1
+          maxLength: 2000
+          pattern: \S
+        version:
+          type: integer
+          format: int64
+          minimum: 0
+    EliminarMensajeChatRecepcion:
+      type: object
+      required:
+        - version
+      properties:
+        version:
+          type: integer
+          format: int64
+          minimum: 0
+    Experiencia:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - amenidadId
+        - nombre
+        - descripcion
+        - categoria
+        - activa
+        - modalidad
+        - tarifa
+        - precio
+        - cobro
+        - duracionMinutos
+        - requiereEstadia
+        - cancelable
+        - antelacionCancelacionMinutos
+        - version
+      properties:
+        id:
+          type: integer
+          format: int64
+        amenidadId:
+          type: integer
+          format: int64
+        nombre:
+          type: string
+        descripcion:
+          type: string
+        categoria:
+          type: string
+        fotoUrl:
+          type: string
+        activa:
+          type: boolean
+        modalidad:
+          type: string
+          enum:
+            - INMEDIATA
+            - APROBACION
+            - COORDINACION
+        tarifa:
+          type: string
+          enum:
+            - GRATUITA
+            - POR_PERSONA
+            - POR_RESERVA
+        precio:
+          type: number
+          minimum: 0
+          multipleOf: 0.01
+        cobro:
+          type: string
+          enum:
+            - SIN_CARGO
+            - CUENTA
+            - ANTICIPADO
+        duracionMinutos:
+          type: integer
+          minimum: 1
+          maximum: 1440
+        requiereEstadia:
+          type: boolean
+        cancelable:
+          type: boolean
+        antelacionCancelacionMinutos:
+          type: integer
+          minimum: 0
+        version:
+          type: integer
+          format: int64
+      description: >-
+        Extensión 1:1 de una amenidad existente: nombre, descripción, fotografía y estado provienen de hotel_amenities. Precio y políticas son
+        configuración explícita; no hay valores comerciales de ejemplo. ANTICIPADO solo permite consultas, nunca confirma sin pago.
+    ConfigExperiencia:
+      type: object
+      additionalProperties: false
+      required:
+        - amenidadId
+        - categoria
+        - activa
+        - modalidad
+        - tarifa
+        - precio
+        - cobro
+        - duracionMinutos
+        - requiereEstadia
+        - cancelable
+        - antelacionCancelacionMinutos
+        - version
+      properties:
+        amenidadId:
+          type: integer
+          format: int64
+        categoria:
+          type: string
+          minLength: 1
+          maxLength: 80
+        activa:
+          type: boolean
+        modalidad:
+          type: string
+          enum:
+            - INMEDIATA
+            - APROBACION
+            - COORDINACION
+        tarifa:
+          type: string
+          enum:
+            - GRATUITA
+            - POR_PERSONA
+            - POR_RESERVA
+        precio:
+          type: number
+          minimum: 0
+          multipleOf: 0.01
+        cobro:
+          type: string
+          enum:
+            - SIN_CARGO
+            - CUENTA
+            - ANTICIPADO
+        duracionMinutos:
+          type: integer
+          minimum: 1
+          maximum: 1440
+        requiereEstadia:
+          type: boolean
+        cancelable:
+          type: boolean
+        antelacionCancelacionMinutos:
+          type: integer
+          minimum: 0
+          maximum: 525600
+        version:
+          type: integer
+          format: int64
+          minimum: 0
+    HorarioExperiencia:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - experienciaId
+        - inicio
+        - fin
+        - capacidad
+        - disponibles
+        - activo
+        - version
+      properties:
+        id:
+          type: integer
+          format: int64
+        experienciaId:
+          type: integer
+          format: int64
+        inicio:
+          type: string
+          format: date-time
+        fin:
+          type: string
+          format: date-time
+        capacidad:
+          type: integer
+          minimum: 1
+        disponibles:
+          type: integer
+          minimum: 0
+        activo:
+          type: boolean
+        version:
+          type: integer
+          format: int64
+    ConfigHorarioExperiencia:
+      type: object
+      additionalProperties: false
+      required:
+        - inicio
+        - capacidad
+        - activo
+        - version
+      properties:
+        inicio:
+          type: string
+          format: date-time
+        capacidad:
+          type: integer
+          minimum: 1
+          maximum: 10000
+        activo:
+          type: boolean
+        version:
+          type: integer
+          format: int64
+          minimum: 0
+    ReservaExperiencia:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - referencia
+        - codigoReserva
+        - experienciaId
+        - nombre
+        - categoria
+        - horarioId
+        - inicio
+        - fin
+        - personas
+        - total
+        - moneda
+        - estado
+        - version
+        - cancelable
+      properties:
+        id:
+          type: integer
+          format: int64
+        referencia:
+          type: string
+        codigoReserva:
+          type: string
+        experienciaId:
+          type: integer
+          format: int64
+        nombre:
+          type: string
+        categoria:
+          type: string
+        fotoUrl:
+          type: string
+        horarioId:
+          type: integer
+          format: int64
+        inicio:
+          type: string
+          format: date-time
+        fin:
+          type: string
+          format: date-time
+        personas:
+          type: integer
+          minimum: 1
+        total:
+          type: number
+          minimum: 0
+          multipleOf: 0.01
+        moneda:
+          type: string
+          enum:
+            - GTQ
+        estado:
+          type: string
+          enum:
+            - PENDIENTE
+            - CONFIRMADA
+            - RECHAZADA
+            - CANCELADA
+        motivo:
+          type: string
+        version:
+          type: integer
+          format: int64
+        cargoId:
+          type: integer
+          format: int64
+        nombreHuesped:
+          type: string
+        habitacion:
+          type: string
+        cancelable:
+          type: boolean
+      description: >-
+        Reserva persistente distinta del alojamiento. PENDIENTE y CONFIRMADA consumen cupos. Precio y política de cancelación se fijan al
+        crearla. Cargo único solo al confirmar con cobro CUENTA, reserva EN_ESTADIA y cuenta abierta; cancelación permitida anula el mismo cargo
+        en la misma transacción. Nunca borra archivos. Los campos del huésped/habitación se incluyen solo para Recepción.
+    CrearReservaExperiencia:
+      type: object
+      additionalProperties: false
+      required:
+        - clave
+        - horarioId
+        - personas
+      properties:
+        clave:
+          type: string
+          format: uuid
+        horarioId:
+          type: integer
+          format: int64
+        personas:
+          type: integer
+          minimum: 1
+          maximum: 10000
+    DecisionExperiencia:
+      type: object
+      additionalProperties: false
+      required:
+        - version
+        - accion
+      properties:
+        version:
+          type: integer
+          format: int64
+          minimum: 0
+        accion:
+          type: string
+          enum:
+            - APROBAR
+            - RECHAZAR
+        motivo:
+          type: string
+          maxLength: 500
+    CancelarExperiencia:
+      type: object
+      additionalProperties: false
+      required:
+        - version
+        - motivo
+      properties:
+        version:
+          type: integer
+          format: int64
+          minimum: 0
+        motivo:
+          type: string
+          minLength: 1
+          maxLength: 500
+    ConsultaExperiencia:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - experienciaId
+        - nombre
+        - codigoReserva
+        - comentario
+        - estado
+        - creadaEn
+      properties:
+        id:
+          type: integer
+          format: int64
+        experienciaId:
+          type: integer
+          format: int64
+        nombre:
+          type: string
+        codigoReserva:
+          type: string
+        comentario:
+          type: string
+        respuesta:
+          type: string
+        estado:
+          type: string
+          enum:
+            - ABIERTA
+            - RESPONDIDA
+        creadaEn:
+          type: string
+          format: date-time
+        nombreHuesped:
+          type: string
+    CrearConsultaExperiencia:
+      type: object
+      additionalProperties: false
+      required:
+        - clave
+        - comentario
+      properties:
+        clave:
+          type: string
+          format: uuid
+        comentario:
+          type: string
+          minLength: 1
+          maxLength: 1000
+    ResponderConsultaExperiencia:
+      type: object
+      additionalProperties: false
+      required:
+        - respuesta
+      properties:
+        respuesta:
+          type: string
+          minLength: 1
+          maxLength: 1000
+
     ElementoEditorial:
       type: object
       additionalProperties: false
       required:
         - id
       description: >-
-        Texto plano. Títulos, subtítulos y botones hasta 200 caracteres; otros textos hasta 4000. Imagen exige fotoClave; botón exige texto y destino; los demás exigen texto. Prohibidos HTML,
+        Texto plano. Títulos, subtítulos y botones hasta 200 caracteres; otros textos hasta 4000. Imagen admite fotoClave o fotoClaves; botón exige texto y destino; los demás exigen texto. Prohibidos HTML,
         controles y campos ajenos al tipo.
       properties:
         id:
@@ -9578,15 +11154,52 @@ components:
             - contacto.titulo
             - ayuda.titulo
             - pie.descripcion
+            - inicio.imagenes
+            - galeria-hotel.imagenes
+            - nosotros.imagen
+            - servicios.spa.imagen
+            - servicios.gimnasio.imagen
+            - servicios.piscina.imagen
+            - servicios.restaurante.imagen
+            - estancias.romantica.imagen
+            - estancias.descanso.imagen
+            - estancias.familiar.imagen
+            - estancias.negocios.imagen
+            - estancias.bienestar.imagen
+            - estancia-digital.imagen
+            - identidad.logo.imagen
         texto:
           type: string
           minLength: 1
           maxLength: 4000
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 80
+          description: Solo en estancias.romantica, estancias.descanso, estancias.familiar, estancias.negocios y estancias.bienestar. Nombre visible sin cambiar el ID; texto conserva la descripción. Texto plano sin HTML ni controles.
+        ofertaSlugs:
+          type: array
+          maxItems: 3
+          uniqueItems: true
+          items:
+            type: string
+            minLength: 1
+            maxLength: 100
+          description: Solo en los cinco IDs de estancia. Referencias ordenadas a ofertas existentes, publicadas y de categoría activa. Cero a tres sin duplicados; admite reutilizar ofertas entre estancias. Ausencia conserva recomendaciones por preferencias anteriores; lista vacía retira recomendaciones de esa estancia. Fotografías, precios y datos provienen del catálogo vigente, nunca se copian ni modifican. Guardar no publica; revalidar asociaciones al publicar.
         fotoClave:
           type: string
           maxLength: 255
-          pattern: ^hotel/[0-9a-f-]{36}\.(jpg|png)$
-          description: Referencia HOTEL asociada a la galería y presente en almacenamiento; nunca URL externa.
+          pattern: ^hotel/.+\.(jpg|png)$
+          description: Referencia HOTEL existente en almacenamiento; nunca URL externa. Compatible con documentos anteriores. Las claves nuevas deben tener UUID; las claves anteriores registradas en la galeria se conservan.
+        fotoClaves:
+          description: Lista ordenada de claves HOTEL existentes en almacenamiento. No se asocian a la galeria publica al guardar. Maximo 30 para listas y una para posiciones individuales. Lista vacia retira imagenes al publicar, salvo el logo. No combinar con fotoClave, texto ni destino. Nunca elimina archivos.
+          type: array
+          maxItems: 30
+          uniqueItems: true
+          items:
+            type: string
+            maxLength: 255
+            pattern: '^hotel/.+\.(jpg|png)$'
         destino:
           type: string
           enum:
@@ -9596,6 +11209,7 @@ components:
             - /#habitaciones
             - /#servicios
             - /#contacto
+            - /#buscar
     GuardarEditorialPeticion:
       type: object
       additionalProperties: false
@@ -9610,7 +11224,7 @@ components:
         elementos:
           type: array
           minItems: 1
-          maxItems: 64
+          maxItems: 78
           items:
             $ref: '#/components/schemas/ElementoEditorial'
           description: >-
@@ -13063,6 +14677,17 @@ components:
         - clave: tipos/suite-demo.jpg
           principal: true
           orden: 0
+    FotosHabitacionRespuesta:
+      type: object
+      additionalProperties: false
+      required: [habitacionId, fotos]
+      properties:
+        habitacionId:
+          $ref: '#/components/schemas/Id'
+        fotos:
+          type: array
+          items:
+            $ref: '#/components/schemas/FotoCatalogo'
     FotosTipoPeticion:
       type: object
       additionalProperties: false
@@ -13258,6 +14883,12 @@ components:
           anyOf:
             - type: string
               minLength: 1
+            - type: "null"
+        fotoUrl:
+          description: URL pública de la fotografía MENU configurada por el API; nula si no hay fotografía. Campo adicional compatible con consumidores anteriores. No concede acceso a archivos privados.
+          anyOf:
+            - type: string
+              format: uri
             - type: "null"
         disponibilidad:
           $ref: "#/components/schemas/DisponibilidadMenu"
@@ -13529,6 +15160,15 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/FotoHotelPeticion"
+        editorFotografico:
+          description: Soporta posiciones fotograficas con borradores y publicacion; no inferir compatibilidad de la presencia de ETag.
+          type: boolean
+          readOnly: true
+        revisionGaleria:
+          description: Revision fuerte de fotos identica al ETag, para enviar literalmente en If-Match.
+          type: string
+          pattern: '^"[a-f0-9]{64}"$'
+          readOnly: true
         horaCheckIn:
           type: string
           const: 15:00
@@ -13726,6 +15366,7 @@ components:
           enum:
             - HOTEL
             - TIPO_HABITACION
+            - HABITACION
             - MENU
             - AMENIDAD
             - INCIDENCIA
