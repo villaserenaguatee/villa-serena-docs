@@ -12,6 +12,8 @@ Estas historias son **comunes a todos los empleados** del hotel, sin importar su
 
 El acceso del huésped (correo + código en la app) está en "HU - Cliente y Huesped". El primer Administrador se crea al arrancar únicamente si el bootstrap está habilitado explícitamente, deshabilitado por defecto; no sustituye cuentas existentes ni genera administradores adicionales. Es una tarea técnica, no una historia.
 
+> **Ampliación Android (Docs #63):** HU-EMP-01 y HU-EMP-02 aplican también a Android para ROOM_SERVICE y MANTENIMIENTO_LIMPIEZA. ADMIN/RECEPCION conservan web privada. Ver [alcance, permisos y estado](../../03-arquitectura/personal-movil.md).
+
 ---
 
 ## Épica 1: Acceso del personal

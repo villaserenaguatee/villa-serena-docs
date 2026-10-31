@@ -9,7 +9,7 @@ Para evitar el agotamiento y la parálisis por exceso de alcance, el desarrollo 
 | Versión | Nombre | Enfoque | Complejidad | Estado |
 |---|---|---|---|---|
 | **`v0.1.0`** | **MVP Crítico** | El flujo principal de punta a punta (Reserva $\rightarrow$ Check-in $\rightarrow$ Check-out) | Baja - Media | **En curso** |
-| **`v0.2.0`** | **Operativa & Móvil** | App del huésped, Room Service en vivo y gestión de piso | Media - Alta | Planificada |
+| **`v0.2.0`** | **Operativa & Móvil** | App del huésped y personal operativo, Room Service en vivo y gestión de piso (Docs #63) | Media - Alta | Planificada |
 | **`v0.3.0`** | **Integral & Analítica** | Turnos, inventario compartido, canales externos y métricas | Alta (Opcional) | Futura |
 
 ---
@@ -49,9 +49,9 @@ Para evitar el agotamiento y la parálisis por exceso de alcance, el desarrollo 
      * Creación de pedidos cargados directamente a la cuenta de la habitación.
      * Actualización instantánea en la cocina/recepción vía WebSocket (STOMP).
      * Notificación de estado del pedido (`En preparación` $\rightarrow$ `En camino` $\rightarrow$ `Entregado`).
-  3. **Mantenimiento y Pisos:**
+  3. **Mantenimiento y Pisos (web y Android del personal, Docs #63):**
      * Módulo de limpieza para el personal (habitaciones por limpiar, en limpieza, limpias).
-     * Reporte de incidencias y averías con fotografía subida a almacenamiento de objetos (MinIO / S3).
+     * Reporte de incidencias y averías con fotografía subida a almacenamiento de objetos (R2 dev / S3 prod).
   4. **Recepción Visual:**
      * Vista de calendario interactivo tipo Gantt para supervisión rápida de ocupación.
 

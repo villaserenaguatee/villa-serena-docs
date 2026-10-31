@@ -30,8 +30,8 @@ Define **quién usa el sistema**, **desde dónde**, **cómo entra** y **de qué 
 |---|---|---|---|---|
 | Administrador | `ADMIN` | Web privada | Correo + contraseña | El primero, mediante bootstrap controlado por entorno (`BOOTSTRAP_ADMIN_ENABLED`); los adicionales, desde el panel de Administración o el script explícito de prueba local |
 | Recepcionista | `RECEPCION` | Web privada | Correo + contraseña | Administrador |
-| Room Service | `ROOM_SERVICE` | Web privada | Correo + contraseña | Administrador |
-| Mantenimiento/Limpieza | `MANTENIMIENTO_LIMPIEZA` | Web privada (pensada para el teléfono del empleado) | Correo + contraseña | Administrador |
+| Room Service | `ROOM_SERVICE` | Web privada y Android operativo (Docs #63) | Correo + contraseña | Administrador |
+| Mantenimiento/Limpieza | `MANTENIMIENTO_LIMPIEZA` | Web privada y Android operativo según área (Docs #63) | Correo + contraseña | Administrador |
 | Cliente/Huésped | `HUESPED` | Web pública (Cliente) y app Android (Huésped) | Cliente: sin sesión. Huésped: correo + código de 6 dígitos (OTP) | Su perfil se crea al hacer la primera reserva |
 
 > El **código** del rol se guarda en la base de datos y va en el JWT. Se escribe igual en todo el proyecto.
