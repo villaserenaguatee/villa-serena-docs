@@ -9102,6 +9102,33 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EditorialSitio'
+              examples:
+                borradorEs:
+                  summary: Borrador ES con cambios sin publicar (revisión 3; publicada la 2)
+                  value:
+                    idioma: es
+                    revision: 3
+                    revisionPublicada: 2
+                    actualizadoEn: 2026-10-28T16:40:00Z
+                    publicadoEn: 2026-10-27T22:10:00Z
+                    elementos:
+                      - id: inicio.titulo
+                        texto: Descanso entre volcanes
+                      - id: inicio.boton
+                        texto: Reservar ahora
+                        destino: /#buscar
+                      - id: historia.imagen
+                        fotoClaves:
+                          - hotel/3f6c1a52-8b1e-4c7a-9d2e-5a0b7c4e1f90.jpg
+                    fotografias:
+                      hotel/3f6c1a52-8b1e-4c7a-9d2e-5a0b7c4e1f90.jpg: https://archivos.example.com/hotel/3f6c1a52-8b1e-4c7a-9d2e-5a0b7c4e1f90.jpg
+                sinBorradorEn:
+                  summary: EN sin borrador ni publicación; no se insertan textos
+                  value:
+                    idioma: en
+                    revision: 0
+                    revisionPublicada: 0
+                    elementos: []
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -9147,6 +9174,23 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EditorialSitio'
+              example:
+                idioma: es
+                revision: 4
+                revisionPublicada: 2
+                actualizadoEn: 2026-10-28T16:55:00Z
+                publicadoEn: 2026-10-27T22:10:00Z
+                elementos:
+                  - id: inicio.titulo
+                    texto: Descanso entre volcanes
+                  - id: inicio.boton
+                    texto: Reservar ahora
+                    destino: /#buscar
+                  - id: historia.imagen
+                    fotoClaves:
+                      - hotel/3f6c1a52-8b1e-4c7a-9d2e-5a0b7c4e1f90.jpg
+                fotografias:
+                  hotel/3f6c1a52-8b1e-4c7a-9d2e-5a0b7c4e1f90.jpg: https://archivos.example.com/hotel/3f6c1a52-8b1e-4c7a-9d2e-5a0b7c4e1f90.jpg
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -9173,6 +9217,30 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/GuardarEditorialPeticion'
+            examples:
+              es:
+                summary: Documento ES completo sobre la revisión 3 consultada
+                value:
+                  revision: 3
+                  elementos:
+                    - id: inicio.titulo
+                      texto: Descanso entre volcanes
+                    - id: inicio.boton
+                      texto: Reservar ahora
+                      destino: /#buscar
+                    - id: historia.imagen
+                      fotoClaves:
+                        - hotel/3f6c1a52-8b1e-4c7a-9d2e-5a0b7c4e1f90.jpg
+              en:
+                summary: Primer borrador EN, independiente de ES y sin traducción automática
+                value:
+                  revision: 0
+                  elementos:
+                    - id: inicio.titulo
+                      texto: Rest among volcanoes
+                    - id: inicio.boton
+                      texto: Book now
+                      destino: /#buscar
   /api/v1/admin/hotel/editorial/{idioma}/publicacion:
     post:
       tags:
@@ -9205,6 +9273,23 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EditorialSitio'
+              example:
+                idioma: es
+                revision: 4
+                revisionPublicada: 4
+                actualizadoEn: 2026-10-28T16:55:00Z
+                publicadoEn: 2026-10-28T17:05:00Z
+                elementos:
+                  - id: inicio.titulo
+                    texto: Descanso entre volcanes
+                  - id: inicio.boton
+                    texto: Reservar ahora
+                    destino: /#buscar
+                  - id: historia.imagen
+                    fotoClaves:
+                      - hotel/3f6c1a52-8b1e-4c7a-9d2e-5a0b7c4e1f90.jpg
+                fotografias:
+                  hotel/3f6c1a52-8b1e-4c7a-9d2e-5a0b7c4e1f90.jpg: https://archivos.example.com/hotel/3f6c1a52-8b1e-4c7a-9d2e-5a0b7c4e1f90.jpg
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -9231,6 +9316,8 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/PublicarEditorialPeticion'
+            example:
+              revision: 4
   /api/v1/publico/hotel/editorial/{idioma}:
     get:
       tags:
@@ -9255,11 +9342,43 @@ paths:
         nivel: 1
       responses:
         '200':
-          description: 'Documento del idioma solicitado. Borrador inexistente: revisión 0 y lista vacía.'
+          description: Última versión publicada del idioma solicitado; revision y revisionPublicada coinciden.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/EditorialSitio'
+              examples:
+                es:
+                  summary: Versión ES publicada
+                  value:
+                    idioma: es
+                    revision: 4
+                    revisionPublicada: 4
+                    publicadoEn: 2026-10-28T17:05:00Z
+                    elementos:
+                      - id: inicio.titulo
+                        texto: Descanso entre volcanes
+                      - id: inicio.boton
+                        texto: Reservar ahora
+                        destino: /#buscar
+                      - id: historia.imagen
+                        fotoClaves:
+                          - hotel/3f6c1a52-8b1e-4c7a-9d2e-5a0b7c4e1f90.jpg
+                    fotografias:
+                      hotel/3f6c1a52-8b1e-4c7a-9d2e-5a0b7c4e1f90.jpg: https://archivos.example.com/hotel/3f6c1a52-8b1e-4c7a-9d2e-5a0b7c4e1f90.jpg
+                en:
+                  summary: Versión EN publicada por separado; no sustituye ni traduce ES
+                  value:
+                    idioma: en
+                    revision: 1
+                    revisionPublicada: 1
+                    publicadoEn: 2026-10-28T18:20:00Z
+                    elementos:
+                      - id: inicio.titulo
+                        texto: Rest among volcanoes
+                      - id: inicio.boton
+                        texto: Book now
+                        destino: /#buscar
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
