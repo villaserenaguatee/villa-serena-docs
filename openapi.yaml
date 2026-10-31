@@ -4515,7 +4515,7 @@ paths:
           description: >-
             Referencia de reintento de 16 a 100 caracteres. Android operativo la guarda
             junto con los datos antes de enviar y la conserva ante un resultado incierto.
-            Reutilizar la misma clave y datos devuelve el reporte original; otros datos causan conflicto.
+            Reutilizar la misma clave y datos devuelve el reporte original; otros datos responden 409 BOOKING_REQUEST_CONFLICT (código compartido con las reservas), sin crear otro reporte.
           schema:
             type: string
             pattern: '^[a-zA-Z0-9_-]{16,100}$'
